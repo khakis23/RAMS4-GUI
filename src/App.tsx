@@ -1,8 +1,8 @@
-import { CoreLayout } from './layout/coreLayout'
+import { CoreLayout } from './layout/CoreLayout'
 
 
 export default function App() {
   return (
-      <CoreLayout children={undefined}/>
+      <CoreLayout />
   )
 }
