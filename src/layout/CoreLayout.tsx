@@ -1,17 +1,19 @@
 // @ts-ignore
 import React from 'react';
 import { SideBarMenu } from './SideBarMenu';
-import { HomeMenu } from './HomeMenu';
+import { HomeView } from './HomeView';
 import { Views } from "../types/Views";
+import { SettingsMenu } from "./SettingsMenu";
 
 
 export const CoreLayout = () => {
     const [currentView, setCurrentView] = React.useState<Views>('home');
+    const [settingsActive, setSettingsActive] = React.useState<boolean>(false);
 
     const renderActiveView = () => {
         switch (currentView) {
             case 'home':
-                return <HomeMenu setView={setCurrentView}/>
+                return <HomeView setView={setCurrentView}/>
             // TODO update returns as implemented
             case 'sequenceBuilder':
                 return <div>Sequence Builder Placeholder</div>
@@ -24,7 +26,7 @@ export const CoreLayout = () => {
             case 'viewData':
                 return <div>View Data Placeholder</div>
             default:
-                return <HomeMenu setView={setCurrentView}/>
+                return <HomeView setView={setCurrentView}/>
         }
     }
 
@@ -34,10 +36,13 @@ export const CoreLayout = () => {
 
             <div
                 className="flex h-full w-full bg-mauve-100 relative">
-                <SideBarMenu currentView={currentView} setView={setCurrentView}/>
+                <SideBarMenu currentView={currentView} setView={setCurrentView} setSettingsActive={setSettingsActive}/>
 
                 <main className="flex-1">
                     {renderActiveView()}
+
+                    {settingsActive &&
+                    <SettingsMenu onClose={() => setSettingsActive(false)}/>}
                 </main>
 
             </div>

@@ -8,10 +8,11 @@ import {NAVIGATION_ITEMS} from "../constants/navigation";
 interface SideBarMenuProps {
     currentView: Views;
     setView: (view: Views) => void;
+    setSettingsActive: (active: boolean) => void;
 }
 
 
-export const SideBarMenu = ({currentView, setView}: SideBarMenuProps) => {
+export const SideBarMenu = ({currentView, setView, setSettingsActive}: SideBarMenuProps) => {
     return (
         <>
             {/* Spacer that pushes the content to the right */}
@@ -34,13 +35,14 @@ export const SideBarMenu = ({currentView, setView}: SideBarMenuProps) => {
                         </a>
                     ))}
 
-                    {/* Settings button */} {/* TODO add button state */}
+                    {/* Settings button */}
                     <div
                         className="absolute bottom-4 left-0 right-0 justify-center flex">
                         <a
                             className="flex items-center justify-center w-10 h-10 rounded-xl text-mauve-800
                             hover:bg-white/10 transition-all duration-200"
-                            aria-label="Settings">
+                            aria-label="Settings"
+                            onClick={() => setSettingsActive(true)}>
                             <Settings className="w-42px h-42px shrink-0"/>
                         </a>
                     </div>

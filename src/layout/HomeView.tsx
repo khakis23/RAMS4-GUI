@@ -9,7 +9,7 @@ interface HomeMenuProps {
 }
 
 
-export const HomeMenu = ({setView}: HomeMenuProps) => {
+export const HomeView = ({setView}: HomeMenuProps) => {
     return (
         <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto">
 
