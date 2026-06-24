@@ -1,7 +1,6 @@
-// @ts-ignore
 import React, { useState } from 'react';
-import {Tabs, TabsOption} from "../../components/Tabs";
-import { GeneralTab } from "./GeneralTab";
+import {Tabs, TabsOption} from "../components/Tabs.tsx";
+import { TabGeneral } from "../features/Configuration/TabGeneral.tsx";
 
 
 type TabName = 'general' | 'daq' | 'xray' | 'dic';
@@ -18,7 +17,7 @@ export const ConfigureView = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'general':
-                return <GeneralTab />;
+                return <TabGeneral />;
             case 'daq':
                 return <p className='text-lg font-medium text-mauve-800'>DAQ Settings Content</p>;
             case 'xray':
@@ -33,8 +32,13 @@ export const ConfigureView = () => {
     return (
         <div className='flex flex-col gap-6 w-full max-w-4xl mx-auto'>
             {/* TODO Place MINI status bar here */}
-            <div>
-                <h1 className='text-3xl font-bold'>Staus Bar Placeholder</h1>
+            <div className="relative w-full h-18 bg-mauve-100 rounded-3xl p-6 flex items-center justify-between shadow-sm
+                                border border-mauve-200 text-center">
+                <div className="text-center w-full">
+                    <span className="text-xl font-bold text-mauve-800">
+                        Mini Status Bar Placeholder
+                    </span>
+                </div>
             </div>
 
             <div className='flex flex-col gap-4'>

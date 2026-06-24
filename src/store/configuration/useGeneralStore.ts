@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+
 interface ConfigureState {
     cycleNumber: string;
     setCycleNumber: (cycle: string) => void;
@@ -10,7 +11,7 @@ interface ConfigureState {
     setRequiredAxes: (axes: string[]) => void;
 }
 
-export const useConfigureStore = create<ConfigureState>()(
+export const useGeneralStore = create<ConfigureState>()(
     persist(
         (set) => ({
             cycleNumber: '',

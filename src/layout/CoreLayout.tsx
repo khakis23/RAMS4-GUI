@@ -1,8 +1,7 @@
-// @ts-ignore
 import React from 'react';
 import { SideBarMenu } from './SideBarMenu';
 import { HomeView } from './HomeView';
-import { ConfigureView } from './Configuration/ConfigureView';
+import { ConfigureView } from './ConfigureView.tsx';
 import { Views } from "../types/Views";
 import { SettingsMenu } from "./SettingsMenu";
 

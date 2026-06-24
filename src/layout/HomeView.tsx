@@ -34,7 +34,7 @@ export const HomeView = ({setView}: HomeMenuProps) => {
                     <button
                     key={item.name}
                     onClick={() => setView(item.view)}
-                    className="flex flex-col p-6 h-48 bg-mauve-100 border border-mauve-200 rounded-3xl
+                    className="flex flex-col p-6 h-48 bg-mauve-50 border border-mauve-200 rounded-3xl
                     text-center cursor-pointer transition-all duration-300 ease-out shadow-md shadow-mauve-200
                     hover:-translate-y-1 hover:shadow-xl hover:shadow-mauve-800/10 justify-center">
                         {/* Button name / icon */}

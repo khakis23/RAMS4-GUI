@@ -1,17 +1,17 @@
 // @ts-ignore
 import React from 'react';
-import { useConfigureStore } from "../../store/useConfigureStore";
-import { InputField } from '../../components/InputField';
+import { useGeneralStore } from "../../store/configuration/useGeneralStore.ts";
+import { InputField } from '../../components/InputField.tsx';
 import { CheckBoxes } from "../../components/CheckBoxes.tsx";
 
 
-export const GeneralTab = () => {
-    const cycleNumber = useConfigureStore((state) => state.cycleNumber);
-    const setCycleNumber = useConfigureStore((state) => state.setCycleNumber);
-    const sampleName = useConfigureStore((state) => state.sampleName);
-    const setSampleName = useConfigureStore((state) => state.setSampleName);
-    const requiredAxes = useConfigureStore((state) => state.requiredAxes);
-    const setRequiredAxes = useConfigureStore((state) => state.setRequiredAxes);
+export const TabGeneral = () => {
+    const cycleNumber = useGeneralStore((state) => state.cycleNumber);
+    const setCycleNumber = useGeneralStore((state) => state.setCycleNumber);
+    const sampleName = useGeneralStore((state) => state.sampleName);
+    const setSampleName = useGeneralStore((state) => state.setSampleName);
+    const requiredAxes = useGeneralStore((state) => state.requiredAxes);
+    const setRequiredAxes = useGeneralStore((state) => state.setRequiredAxes);
 
     const axesOptions = [
         { id: 'tens', label: 'TENS' },
@@ -57,6 +57,7 @@ export const GeneralTab = () => {
                     onChange={setRequiredAxes}
                     direction="horizontal"
                 />
+
 
             </div>
         </div>

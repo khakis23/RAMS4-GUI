@@ -8,7 +8,7 @@ interface SettingsMenuProps {
 }
 
 
-export const SettingsMenu = ({onClose}): SettingsMenuProps => {
+export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
     return (
         <div
             className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">

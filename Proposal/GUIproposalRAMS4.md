@@ -299,11 +299,62 @@ will be saved automatically.
 - Required Axes: checkboxes
 
 #### DAQ config
-- hardware/master frequency: dropdown \[1, 5, 10, 20] (verify?)
+- DAQ Frequency: dropdown \[1, 5, 10, 20]
+  - Aerotech controller data collection frequency.
 - Sample points: number
+  - Total number of data points stored in controller's internal buffer per signal.
+    - ```python
+      sample_pts: int = Field(1000, ge=100)```
 - Handler Profile Builder:
   - mode
-    - Depending on the mode, different fields will populate.
+    - Depending on the mode, different fields will populate (see tables below).
+
+##### Handler Profiles for DAQ Config
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `mode` | String | **Yes** | The handler mode: `"time-series"`, `"peak-valley"`, or `"pso"`. |
+| `filename` | String | **Yes** | The base filename for the output `.h5` file. |
+| `verbose` | Object | **Yes** | Configuration object for monitored signals (see nested table below). |
+| `signal_load` | String or Object | No | The primary load cell signal name (e.g., `"LoadA"`). |
+| `signal_strain` | String or Object | No | The primary strain extensometer signal name (e.g., `"Strain"`). |
+
+`time-series`:
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `frequency` | Float | No | Downsampled logging frequency in Hz (e.g., `50`). |
+| `cycles` | Integer or Array | No | Specific cycles or cycle range to record (e.g., `[0, 10]`). |
+
+`peak-valley`:
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `signal` | Object | **Yes** | The control feedback signal to trace (see nested table below). |
+
+`pso`:
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `pso_axis` | String or Integer | **Yes** | The axis tracking the PSO hardware trigger (e.g., `"RT"` or `1`). |
+
+`verbose`:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `axis` | Integer or List | **Yes** | Axis ID(s) to monitor. |
+| `system` | Integer | **Yes** | System signals logging level. |
+| `task` | Integer or List | No | Task execution logging level (Default: `-1`). |
+| `IO` | Integer | No | Digital/Analog I/O logging level (Default: `-1`). |
+| `ai` | Array | No | Specific analog input signals by name or coordinate list. |
+
+`signal`:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `axis` | String or Integer | **Yes** | Target axis being tracked (e.g., `"B"` or `1`). |
+| `item` | String | **Yes** | Feedback type: `"PositionFeedback"`, `"VelocityFeedback"`, or `"AccelerationFeedback"`. |
+| `prominence` | Float | **Yes** | Threshold value for peak/valley height filtering. |
+
 
 #### DIC config
 - Trigger Mode: \[soft, hard]
@@ -808,13 +859,9 @@ Backend API
 
 ---
 
-## Development Roadmap
+## Development Priority Roadmap
 
-### MVP
-
-
-### Config
-
-### Sequence Builder
-
-### Data viewer / sequencer builder visualization situation
+1. Configuration
+2. Sequence Building Basic
+3. Sequence Building + Nice feedback
+4. Realtime Feedback — Analog RAMS4 Signals
