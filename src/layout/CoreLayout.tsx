@@ -2,6 +2,7 @@
 import React from 'react';
 import { SideBarMenu } from './SideBarMenu';
 import { HomeView } from './HomeView';
+import { ConfigureView } from './Configuration/ConfigureView';
 import { Views } from "../types/Views";
 import { SettingsMenu } from "./SettingsMenu";
 
@@ -22,7 +23,7 @@ export const CoreLayout = () => {
             case 'manualControl':
                 return <div>Manual Control Placeholder</div>
             case 'configure':
-                return <div>Configure Placeholder</div>
+                return <ConfigureView />
             case 'viewData':
                 return <div>View Data Placeholder</div>
             default:

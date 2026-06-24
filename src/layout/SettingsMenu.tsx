@@ -20,7 +20,7 @@ export const SettingsMenu = ({onClose}): SettingsMenuProps => {
                 <button
                     onClick={onClose}
                     className="absolute top=4 right=4 p-1.5 rounded-full text-mauve-800
-                    hover:bg-mauve-200 transition-all duration-200 cursor-pointer"
+                    hover:bg-mauve-300 transition-all duration-200 cursor-pointer"
                     aria-label="Close Settings">
                     <X className="w-5 h-5 shrink-0" />
                 </button>
