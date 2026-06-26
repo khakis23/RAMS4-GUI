@@ -13,6 +13,7 @@ interface CheckBoxesProps {
     onChange: (selectedIds: string[]) => void;
     direction?: 'horizontal' | 'vertical';
     align?: 'left' | 'center';
+    required?: boolean;
 }
 
 export const CheckBoxes = ({
@@ -21,7 +22,8 @@ export const CheckBoxes = ({
                                onChange,
                                selectedIds,
                                direction = 'horizontal',
-                               align = 'left'
+                               align = 'left',
+                               required = true
                            }: CheckBoxesProps) => {
     const handleCheck = (id: string) => {
         if (selectedIds.includes(id)) {
@@ -32,9 +34,13 @@ export const CheckBoxes = ({
         }
     }
 
+    const labelClass = required
+        ? 'text-sm font-semibold text-mauve-800'
+        : 'text-sm font-medium text-mauve-500 opacity-80';
+
     return (
         <div className={`flex flex-col gap-2 w-full ${align === 'center' ? 'text-center items-center' : 'text-left items-start'}`}>
-            {label && <span className="text-sm font-semibold text-mauve-800">{label}</span>}
+            {label && <span className={labelClass}>{label}</span>}
             <div className={`flex ${direction === 'horizontal' ? 'flex-row gap-8' : 'flex-col gap-2'} ${align === 'center' ? 'justify-center' : ''}`}>
                 {options.map((option) => (
                     <label key={option.id} className="flex items-center gap-2 cursor-pointer">

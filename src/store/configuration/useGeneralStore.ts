@@ -22,7 +22,7 @@ export const useGeneralStore = create<ConfigureState>()(
             setRequiredAxes: (axes) => set({ requiredAxes: axes }),
         }),
         {
-            name: 'configure-storage', 
+            name: 'general-config-storage',
         }
     )
 );

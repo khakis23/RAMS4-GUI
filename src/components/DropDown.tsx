@@ -10,11 +10,12 @@ export interface DropdownOption {
 interface DropdownProps {
     label?: string;
     options: DropdownOption[];
-    selectedId: string;
+    selectedId?: string;
     onChange: (id: string) => void;
     placeholder?: string;
     disabled?: boolean;
     align?: 'left' | 'center';
+    required?: boolean;
 }
 
 export const Dropdown = ({
@@ -24,7 +25,8 @@ export const Dropdown = ({
                              onChange,
                              placeholder = 'Select an option',
                              disabled = false,
-                             align = 'left'
+                             align = 'left',
+                             required = true
                          }: DropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -51,6 +53,10 @@ export const Dropdown = ({
         setIsOpen(false);
     };
 
+    const labelClass = required
+        ? 'text-sm font-semibold text-mauve-800'
+        : 'text-sm font-medium text-mauve-500 opacity-80';
+
     return (
         <div
             ref={dropdownRef}
@@ -59,7 +65,7 @@ export const Dropdown = ({
             }`}
         >
             {label && (
-                <label className="text-sm font-semibold text-mauve-800">
+                <label className={labelClass}>
                     {label}
                 </label>
             )}

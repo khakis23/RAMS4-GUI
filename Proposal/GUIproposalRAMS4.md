@@ -63,16 +63,32 @@ Configure the DAQ sampling parameters, modes, and file naming.
   {
   "mode": "peak-valley",
   "filename": "peak_valley_001",
-  "signal":{"axis": 3, "item": "PositionFeedback", "prominence": 0.005},
-  "verbose": {"axis": [0,0,0,1,0], "IO": 0, "system": 0, "task": -1}
+  "signal":
+    {
+      "axis": 3, 
+      "item": "PositionFeedback", 
+      "prominence": 0.005
+    },
+  "verbose": 
+    {
+      "axis": [0,0,0,1,0], 
+      "IO": 0, 
+      "system": 0, 
+      "task": -1
+    }
   },
-
   {
   "mode": "time-series",
   "filename": "time_series_001",
   "frequency": 500,
   "cycles": [[1,10],15,[20,100,10],2005],
-  "verbose": {"axis": 0, "IO": 0, "system": 0, "task": -1}
+  "verbose": 
+    {
+      "axis": 0, 
+      "IO": 0, 
+      "system": 0, 
+      "task": -1
+    }
   }
 ]
 }
@@ -373,6 +389,7 @@ will be saved automatically.
   - beam height: number
   - beam width: number
   - attenuation: number
+    - foil thickeness (mm)
 
 ### API Mappings
 

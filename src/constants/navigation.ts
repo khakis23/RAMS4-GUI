@@ -1,4 +1,4 @@
-import { Views } from '../types/Views'
+import { Views } from '../types/views.ts'
 
 
 export interface NavigationItem {

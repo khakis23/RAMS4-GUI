@@ -1,8 +1,8 @@
 // @ts-ignore
 import React from 'react';
 import { Settings } from 'lucide-react';
-import { Views } from "../types/Views";
-import {NAVIGATION_ITEMS} from "../constants/navigation";
+import { Views } from "../../types/views.ts";
+import {NAVIGATION_ITEMS} from "../../constants/navigation.ts";
 
 
 interface SideBarMenuProps {

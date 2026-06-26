@@ -1,9 +1,9 @@
 import React from 'react';
-import { SideBarMenu } from './SideBarMenu';
-import { HomeView } from './HomeView';
-import { ConfigureView } from './ConfigureView.tsx';
-import { Views } from "../types/Views";
-import { SettingsMenu } from "./SettingsMenu";
+import { SideBarMenu } from './parital/SideBarMenu.tsx';
+import { HomeView } from './view/HomeView.tsx';
+import { ConfigureView } from './view/ConfigureView.tsx';
+import { Views } from "../types/views.ts";
+import { SettingsMenu } from "./parital/SettingsMenu.tsx";
 
 
 export const CoreLayout = () => {
@@ -38,7 +38,7 @@ export const CoreLayout = () => {
                 className="flex h-full w-full bg-mauve-100 relative">
                 <SideBarMenu currentView={currentView} setView={setCurrentView} setSettingsActive={setSettingsActive}/>
 
-                <main className="flex-1">
+                <main className="flex-1 h-full">
                     {renderActiveView()}
 
                     {settingsActive &&

@@ -1,4 +1,4 @@
-import { CoreLayout } from './layout/CoreLayout'
+import { CoreLayout } from './layout/CoreLayout.tsx'
 
 
 export default function App() {

@@ -10,6 +10,7 @@ interface InputFieldProps {
     type?: 'text' | 'number';
     disabled?: boolean;
     align?: 'left' | 'center';
+    required?: boolean;
 }
 
 export const InputField = ({
@@ -20,6 +21,7 @@ export const InputField = ({
     type='text',
     disabled=false,
     align='left',
+    required=true,
 }: InputFieldProps) => {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -27,9 +29,13 @@ export const InputField = ({
         }
     }
 
+    const labelClass = required
+        ? 'text-sm font-semibold text-mauve-800'
+        : 'text-sm font-medium text-mauve-500 opacity-80';
+
     return (
         <div className={`flex flex-col gap-1.5 w-full ${align === 'center' ? 'text-center items-center' : 'text-left items-start'}`}>
-            <label className="text-sm font-semibold text-mauve-800">
+            <label className={labelClass}>
                 {label}
             </label>
 

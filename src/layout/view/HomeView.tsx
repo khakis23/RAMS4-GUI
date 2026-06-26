@@ -1,7 +1,7 @@
 // @ts-ignore
 import React from 'react';
-import {NAVIGATION_ITEMS} from "../constants/navigation";
-import {Views} from "../types/Views";
+import {NAVIGATION_ITEMS} from "../../constants/navigation.ts";
+import {Views} from "../../types/views.ts";
 
 
 interface HomeMenuProps {
