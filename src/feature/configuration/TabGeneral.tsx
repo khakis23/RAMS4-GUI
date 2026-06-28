@@ -1,18 +1,12 @@
-// @ts-ignore
 import React from 'react';
 import { useGeneralStore } from "../../store/configuration/useGeneralStore.ts";
 import { InputField } from '../../components/InputField.tsx';
 import { CheckBoxes } from "../../components/CheckBoxes.tsx";
-import { ConfigTabSection } from "../../layout/parital/ConfigTabSection.tsx";
-
+import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
 
 export const TabGeneral = () => {
-    const cycleNumber = useGeneralStore((state) => state.cycleNumber);
-    const setCycleNumber = useGeneralStore((state) => state.setCycleNumber);
-    const sampleName = useGeneralStore((state) => state.sampleName);
-    const setSampleName = useGeneralStore((state) => state.setSampleName);
-    const requiredAxes = useGeneralStore((state) => state.requiredAxes);
-    const setRequiredAxes = useGeneralStore((state) => state.setRequiredAxes);
+    const { settings, updateGeneralField } = useGeneralStore();
+    const { cycleNumber, sampleName, requiredAxes } = settings.currentConfig;
 
     const axesOptions = [
         { id: 'tens', label: 'TENS' },
@@ -24,36 +18,34 @@ export const TabGeneral = () => {
 
     return (
         <ConfigTabSection title="General Configuration">
-            {/* Column Grid Layout */}
-            <div className="grid grid-cols-2 px-5 gap-x-14 gap-y-6">
-                
-                {/* Cycle Number */}
-                <InputField
-                    label="Cycle Number"
-                    value={cycleNumber}
-                    onChange={setCycleNumber}
-                    placeholder="ex. 2026-02"
-                />
+            <div className="relative bg-mauve-100/50 p-6 rounded-3xl flex flex-col gap-6">
+                <div className="grid grid-cols-2 px-5 gap-x-14 gap-y-6 text-left">
+                    {/* Cycle Number */}
+                    <InputField
+                        label="Cycle Number"
+                        value={cycleNumber}
+                        onChange={(val) => updateGeneralField('cycleNumber', val)}
+                        placeholder="ex. 2026-02"
+                    />
 
-                {/* Sample Name */}
-                <InputField
-                    label="Sample Name"
-                    value={sampleName}
-                    onChange={setSampleName}
-                    placeholder="Enter sample name"
-                />
+                    {/* Sample Name */}
+                    <InputField
+                        label="Sample Name"
+                        value={sampleName}
+                        onChange={(val) => updateGeneralField('sampleName', val)}
+                        placeholder="Enter sample name"
+                    />
 
-                {/* Required Axes */}
-                <CheckBoxes
-                    label="Required Axes"
-                    options={axesOptions}
-                    selectedIds={requiredAxes}
-                    onChange={setRequiredAxes}
-                    direction="horizontal"
-                />
-
-
+                    {/* Required Axes */}
+                    <CheckBoxes
+                        label="Required Axes"
+                        options={axesOptions}
+                        selectedIds={requiredAxes}
+                        onChange={(axes) => updateGeneralField('requiredAxes', axes)}
+                        direction="horizontal"
+                    />
+                </div>
             </div>
         </ConfigTabSection>
-    )
-}
+    );
+};

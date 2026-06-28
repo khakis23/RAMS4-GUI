@@ -195,20 +195,20 @@ Query Parameters:
     },
     ...
   ],
-  xray_profiles: [
-    {
-      "x": <(number)>,
-      "z": <(number)>,
-      "ome_start": <(number)>,
-      "ome_stop": <(number)>,
-      "num_points": <(number)>,
-      "ctime": <(number)>,
-      "beam_height": <(number)>,
-      "beam_width": <(number)>,
-      "atten": <(number)>
-    },
-    ...
-  ],
+//  xray_profiles: [
+//    {
+//      "x": <(number)>,
+//      "z": <(number)>,
+//      "ome_start": <(number)>,
+//      "ome_stop": <(number)>,
+//      "num_points": <(number)>,
+//      "ctime": <(number)>,
+//      "beam_height": <(number)>,
+//      "beam_width": <(number)>,
+//      "atten": <(number)>
+//    },
+//    ...
+//  ],
   //  "dic_profilse": [
   //    {
   //      "x": <(number)>,

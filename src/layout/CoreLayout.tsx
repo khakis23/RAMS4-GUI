@@ -1,9 +1,9 @@
 import React from 'react';
-import { SideBarMenu } from './parital/SideBarMenu.tsx';
+import { SideBarMenu } from './menu/SideBarMenu.tsx';
 import { HomeView } from './view/HomeView.tsx';
 import { ConfigureView } from './view/ConfigureView.tsx';
 import { Views } from "../types/views.ts";
-import { SettingsMenu } from "./parital/SettingsMenu.tsx";
+import { SettingsMenu } from "./menu/SettingsMenu.tsx";
 
 
 export const CoreLayout = () => {

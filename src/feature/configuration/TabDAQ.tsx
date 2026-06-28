@@ -4,7 +4,7 @@ import { DynamicForm } from "../../components/DynamicForm";
 import { daqHandlerSchema } from "./profileSchemas/daqHandlerSchema.ts";
 import { Dropdown } from "../../components/DropDown.tsx";
 import { InputField } from "../../components/InputField.tsx";
-import { ConfigTabSection } from "../../layout/parital/ConfigTabSection.tsx";
+import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
 import { AddButton } from "../../components/AddButton.tsx";
 
 
@@ -99,7 +99,7 @@ export const TabDAQ = () => {
                             label="Add Handler Profile"
                             onClick={addProfile}
                         />
-                        <p className='text-xs font-small text-mauve-800'>* Required</p>
+                        <p className='text-xs font-small text-mauve-800 pl-2 pt-2'>* Required</p>
                     </div>
                 </div>
             </ConfigTabSection>

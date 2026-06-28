@@ -2,7 +2,7 @@ import React from 'react';
 import { useXrayStore, XrayProfile } from "../../store/configuration/useXrayStore.ts";
 import { DynamicForm } from "../../components/DynamicForm";
 import { xraySchema } from "./profileSchemas/xraySchema.ts";
-import { ConfigTabSection } from "../../layout/parital/ConfigTabSection.tsx";
+import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
 import { Dropdown } from "../../components/DropDown.tsx";
 import { Button } from "../../components/Button.tsx";
 import { isProfileValid } from "../../types/schema.ts"
@@ -87,7 +87,7 @@ export const TabXray = () => {
                 />
             </div>
 
-            <p className='text-xs font-small text-mauve-800 mt-4'>* Required</p>
+            <p className='text-xs font-small text-mauve-800 mt-4 text-left pl-2'>* Required</p>
         </ConfigTabSection>
     );
 };
