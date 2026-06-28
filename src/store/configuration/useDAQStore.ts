@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export interface DAQConfig {
+export interface HandlerProfile {
+    id: string;
     mode: string;
     filename: string;
     signalLoad?: string;
@@ -27,20 +28,23 @@ export interface DAQConfig {
     psoAxis?: string;
 }
 
-interface DAQStore {
-    // General DAQ settings
-    frequency: string;
-    setFrequency: (frequency: string) => void;
-    samplePoints: number;
-    setSamplePoints: (points: number) => void;
-
-    // DAQ Handlers
-    config: DAQConfig;
-    setConfig: (config: DAQConfig) => void;
-    resetConfig: () => void;
+export interface DAQSettings {
+    masterFrequency: string;
+    samplePoints: string;
+    handlerProfiles: HandlerProfile[];
 }
 
-const defaultConfig: DAQConfig = {
+interface DAQStore {
+    settings: DAQSettings;
+    setSettings: (settings: DAQSettings) => void;
+    addProfile: () => void;
+    updateProfile: (id: string, updatedProfile: HandlerProfile) => void;
+    removeProfile: (id: string) => void;
+    resetSettings: () => void;
+}
+
+const defaultHandlerProfile = (): HandlerProfile => ({
+    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9),
     mode: 'time-series',
     filename: '',
     signalLoad: '',
@@ -50,21 +54,40 @@ const defaultConfig: DAQConfig = {
     verboseTask: '',
     verboseIO: -1,
     verboseAi: '',
+});
+
+const defaultSettings: DAQSettings = {
+    masterFrequency: '1',
+    samplePoints: '',
+    handlerProfiles: [defaultHandlerProfile()],
 };
 
 export const useDAQStore = create<DAQStore>()(
     persist(
         (set) => ({
-            // General DAQ settings
-            frequency: '',
-            setFrequency: (frequency) => set({ frequency }),
-            samplePoints: 0,
-            setSamplePoints: (points) => set({ samplePoints: points }),
-
-            // DAQ Handlers
-            config: defaultConfig,
-            setConfig: (newConfig) => set({ config: newConfig }),
-            resetConfig: () => set({ config: defaultConfig }),
+            settings: defaultSettings,
+            setSettings: (newSettings) => set({ settings: newSettings }),
+            addProfile: () => set((state) => ({
+                settings: {
+                    ...state.settings,
+                    handlerProfiles: [...state.settings.handlerProfiles, defaultHandlerProfile()],
+                }
+            })),
+            updateProfile: (id, updatedProfile) => set((state) => ({
+                settings: {
+                    ...state.settings,
+                    handlerProfiles: state.settings.handlerProfiles.map((p) =>
+                        p.id === id ? updatedProfile : p
+                    ),
+                }
+            })),
+            removeProfile: (id) => set((state) => ({
+                settings: {
+                    ...state.settings,
+                    handlerProfiles: state.settings.handlerProfiles.filter((p) => p.id !== id),
+                }
+            })),
+            resetSettings: () => set({ settings: defaultSettings }),
         }),
         {
             name: 'daq-config-storage',

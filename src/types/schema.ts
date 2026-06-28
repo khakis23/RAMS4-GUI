@@ -21,3 +21,27 @@ export interface FieldSchema {
     // This decides if the field should be shown based on the previous edge's id.
     showIf?: (currentState: Record<string, any>) => boolean;
 }
+
+/**
+ * Checks if all currently visible required fields in a schema are filled.
+ */
+export const isProfileValid = (data: Record<string, any>, schema: FieldSchema[]): boolean => {
+    return schema.every((field) => {
+        // Check if the field is conditionally visible
+        const isVisible = field.showIf ? field.showIf(data) : true;
+        if (!isVisible) {
+            return true; // Hidden fields are automatically valid/ignored
+        }
+
+        // Check if the field is required
+        const isRequired = field.required !== false;
+        if (isRequired) {
+            const value = data[field.id];
+
+            // Treat undefined, null, and empty strings as unfilled
+            return value !== undefined && value !== null && String(value).trim() !== '';
+        }
+
+        return true;
+    });
+};

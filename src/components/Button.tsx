@@ -18,7 +18,7 @@ export const Button = ({
     const variantStyles = {
         primary: 'bg-mauve-600 text-white hover:bg-mauve-700 focus:ring-mauve-600/20 border border-transparent cursor-pointer',
         secondary: 'bg-mauve-50 border border-mauve-200 text-mauve-800 hover:bg-mauve-100/50 focus:ring-mauve-500/20 cursor-pointer',
-        danger: 'bg-red-500 text-white hover:bg-red-650 focus:ring-red-500/20 border border-transparent cursor-pointer'
+        danger: 'bg-red-600 text-white hover:bg-red-800 focus:ring-red-500/20 border border-transparent cursor-pointer'
     };
 
     return (

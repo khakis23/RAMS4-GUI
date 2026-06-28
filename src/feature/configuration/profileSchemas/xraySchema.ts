@@ -1,61 +1,60 @@
-import { FieldSchema} from "../../../types/schema.ts";
-
+import { FieldSchema } from "../../../types/schema.ts";
 
 export const xraySchema: FieldSchema[] = [
     {
-        id: 'ramsx',
+        id: 'x',
         label: 'X Position (mm)',
         type: 'number',
-        width: 'small',
+        width: 'medium',
         required: true,
     },
     {
-        id: 'ramsz',
+        id: 'z',
         label: 'Z Position (mm)',
         type: 'number',
-        width: 'small',
+        width: 'medium',
         required: true,
     },
     {
-        id: 'ome_start',
+        id: 'omeStart',
         label: 'Initial Angle (ω₀ º)',
         type: 'number',
-        width: 'small',
+        width: 'medium',
         required: true,
     },
     {
-        id: 'ome_start',
+        id: 'omeStop',
         label: 'Final Angle (ω º)',
         type: 'number',
-        width: 'small',
+        width: 'medium',
         required: true,
     },
     {
         id: 'ctime',
         label: 'Exposure Time (s)',
         type: 'number',
-        width: 'small',
+        width: 'medium',
         required: true,
     },
     {
-        id: 'beam_height',
+        id: 'beamHeight',
         label: 'Beam Height (mm)',
         type: 'number',
-        width: 'small',
+        width: 'medium',
         required: true,
     },
     {
-        id: 'beam_width',
+        id: 'beamWidth',
         label: 'Beam Width (mm)',
         type: 'number',
-        width: 'small',
+        width: 'medium',
         required: true,
     },
     {
         id: 'atten',
         label: 'Attenuation (mm)',
         type: 'number',
-        width: 'small',
+        width: 'medium',
         required: true,
     },
 ];
