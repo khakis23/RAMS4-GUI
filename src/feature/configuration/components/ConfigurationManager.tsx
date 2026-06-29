@@ -10,6 +10,8 @@ import { useDAQStore } from "../../../store/configuration/useDAQStore.ts";
 import { compileToBackendPayload } from "../utils/transformers.ts";
 import { postConfigToGateway } from "../../../api/configApi.ts";
 
+// TODO organize a bit? This file is getting a bit messy...
+
 type TabName = 'general' | 'daq' | 'xray' | 'dic';
 
 export const ConfigurationManager = () => {
@@ -35,6 +37,7 @@ export const ConfigurationManager = () => {
         // TODO: Store update - Sync other tab stores (DAQ, X-ray, DIC) with the loaded config sections
     };
 
+    // TODO Maybe break this out into another file somewhere...?
     const handleSave = async () => {
         let name = '';
         if (settings.activeConfigId === 'new-blank') {
@@ -58,7 +61,7 @@ export const ConfigurationManager = () => {
             const apiPayload = compileToBackendPayload(generalState, daqState);
 
             // Sync to the local Python API
-            await postConfigToGateway('testuser', 'config', name, apiPayload);
+            await postConfigToGateway('testuser', 'config', name, apiPayload);  // TODO TEMP: Hardcoded userId!
 
             console.log(`Successfully saved and synced config: "${name}"`);
         } catch (error) {

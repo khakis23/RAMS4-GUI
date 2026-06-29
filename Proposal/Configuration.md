@@ -168,12 +168,34 @@ XrayProfile {
 }
 ```
 
-### Gateway Processing
+## Gateway Processing & User Storage
 
 The Gateway is responsible for handling communication between the frontend and backend,
 and translating the _frontend data_ into the corresponding _backend files_.
 
-#### /api/config POST
+
+### User Storage Directory
+
+A directory in the GUI will store the user's data files. Within the directory, there
+will be subdirectories for each type of data file. Dropdown menus will be populated
+with the names of the items in each subdirectory.
+
+```text
+.
+└── User/
+    ├── configurations/
+    │   ├── config1.json   # includes DAQ Handlers
+    │   ├── config2.json   
+    │   └── ...
+    ├── xray_profiles/
+    │   ├── daq1.json
+    │   └── ...
+    └── dic_profiles/
+        ├── dic1.json
+        └── ...
+```
+
+#### /api/data POST
 When the user saves or loads a new configuration, the POST request will trigger.
 
 Query Parameters:
@@ -196,7 +218,10 @@ Query Parameters:
       "verbose": {"axis": [0,0,0,1,0], "IO": 0, "system": 0, "task": -1}
     },
     ...
-  ],
+  ], 
+  
+/*** These are now handled seperately ***/
+  
 //  xray_profiles: [
 //    {
 //      "x": <(number)>,
@@ -227,37 +252,12 @@ Query Parameters:
 }
 ```
 
----
-
-
-## User Storage Directory
-
-A directory in the GUI will store the user's data files. Within the directory, there
-will be subdirectories for each type of data file. Dropdown menus will be populated
-with the names of the items in each subdirectory.
-
-```text
-.
-└── User/
-    ├── configurations/
-    │   ├── config1.json   # includes DAQ Handlers
-    │   ├── config2.json   
-    │   └── ...
-    ├── xray_profiles/
-    │   ├── daq1.json
-    │   └── ...
-    └── dic_profiles/
-        ├── dic1.json
-        └── ...
-```
-
-### Gateway & Accessing Data
-
-The same gateway that processes the data will also handle storing the data.
-
-#### api/userData GET
+#### api/data GET (all files)
 
 When a user signs in, all the datafiles will be fetched into the GUI's memory.
+
+Query Parameters:
+- `user_id`: <(string)>
 
 ```json
 {
@@ -267,15 +267,29 @@ When a user signs in, all the datafiles will be fetched into the GUI's memory.
 }
 ```
 
-#### api/userData POST
+#### api/data GET (single file)
 
-If a user edits, deletes, or creates a datafile, the POST request will handle the
-changes.
+Getting a single file may be useful.
 
 Query Parameters:
-- `update_type`: <'add' | 'edit' | 'delete'>
+- `user_id`: <(string)>
+- `file_type`: <(string)>
+- `config_name`: <(string)>
 
-`add`
+```json
+{<single file JSON data>}
+```
+
+
+#### ~~api/userData POST~~
+
+~~If a user edits, deletes, or creates a datafile, the POST request will handle the
+changes.~~
+
+~~Query Parameters:~~
+- ~~`update_type`: <'add' | 'edit' | 'delete'>~~
+
+~~`add`~~
 ```json
 {
   "filename": <example.json (string)>,
@@ -283,14 +297,14 @@ Query Parameters:
 }
 ```
 
-`delete`
+~~`delete`~~
 ```json
 {
   "filename": <example.json (string)>
 }
 ```
 
-```edit``` (same as `add`)
+~~`edit`~~ (same as `add`)
 ```json
 {
   "filename": <example.json (string)>,

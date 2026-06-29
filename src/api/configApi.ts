@@ -12,12 +12,11 @@ export const postConfigToGateway = async (
     fileName: string,
     payload: any
 ): Promise<void> => {
-    // strip JSON extension
+    // Strip JSON extension
     const cleanFileName = fileName.replace(/\.json$/, '');
 
-    // Construct URL with query parameters
+    // Encode query params and fetch
     const url = `/api/data/?user_id=${encodeURIComponent(userId)}&file_type=${encodeURIComponent(fileType)}&file_name=${encodeURIComponent(cleanFileName)}`;
-
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -26,6 +25,7 @@ export const postConfigToGateway = async (
         body: JSON.stringify(payload),
     });
 
+    // Error handling (log to console)
     if (!response.ok) {
         let errorDetails = '';
         try {
