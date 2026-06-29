@@ -6,6 +6,9 @@ import { TabGeneral } from "../TabGeneral.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
 import { useGeneralStore } from "../../../store/configuration/useGeneralStore.ts";
+import { useDAQStore } from "../../../store/configuration/useDAQStore.ts";
+import { compileToBackendPayload } from "../utils/transformers.ts";
+import { postConfigToGateway } from "../../../api/configApi.ts";
 
 type TabName = 'general' | 'daq' | 'xray' | 'dic';
 
@@ -32,20 +35,35 @@ export const ConfigurationManager = () => {
         // TODO: Store update - Sync other tab stores (DAQ, X-ray, DIC) with the loaded config sections
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        let name = '';
         if (settings.activeConfigId === 'new-blank') {
-            const name = prompt('Enter a name for this Global Configuration:');
-            if (name && name.trim()) {
-                saveCurrentConfig(name.trim());
-                console.log('Saved new config:', name.trim());
-                // TODO: API call - Send compiled global configuration (including general, DAQ, etc.) to backend
-            }
+            const inputName = prompt('Enter a name for this Global Configuration:');
+            if (!inputName || !inputName.trim()) return;
+            name = inputName.trim();
         } else {
             const active = settings.savedConfigs.find(c => c.id === settings.activeConfigId);
-            const currentName = active ? active.name : 'Saved Config';
-            saveCurrentConfig(currentName);
-            console.log('Saved config:', currentName);
-            // TODO: API call - Send compiled global configuration (including general, DAQ, etc.) to backend
+            name = active ? active.name : 'Saved Config';
+        }
+
+        try {
+            // Save locally in Zustand store
+            saveCurrentConfig(name);
+
+            // Fetch General + DAQ stores
+            const generalState = settings.currentConfig;
+            const daqState = useDAQStore.getState().settings;
+
+            // Transform frontend structures to backend JSON formats
+            const apiPayload = compileToBackendPayload(generalState, daqState);
+
+            // Sync to the local Python API
+            await postConfigToGateway('testuser', 'config', name, apiPayload);
+
+            console.log(`Successfully saved and synced config: "${name}"`);
+        } catch (error) {
+            console.error('Failed to sync configuration to backend gateway', error);
+            alert('Saved locally, but failed to sync to the backend gateway.');
         }
     };
 

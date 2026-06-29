@@ -177,16 +177,18 @@ and translating the _frontend data_ into the corresponding _backend files_.
 When the user saves or loads a new configuration, the POST request will trigger.
 
 Query Parameters:
+- `user_id`: <(string)>
+- `file_type`: <(string)>
 - `config_name`: <(string)>
 
 ```json
 {
-  "cycle": <(number)>,
-  "sample_name": <(string)>,
+  "cycle": <(string)>,
+  "newsample": <(string)>,
   "required_axes": ["RT", "RB", "A", "B"],
-  "master_frequency": <(number)>,
-  "sample_points": <(number)>,
-  "handler_profiles": [
+  "frequency_kHz": <(number)>,
+  "sample_pts": <(number)>,
+  "handlers": [
     {
       "mode": "peak-valley",
       "filename": "peak_valley_001",
@@ -231,8 +233,8 @@ Query Parameters:
 ## User Storage Directory
 
 A directory in the GUI will store the user's data files. Within the directory, there
-will be sub directories for each type of data file. THe user will be able to select
-each of file from these directories.
+will be subdirectories for each type of data file. Dropdown menus will be populated
+with the names of the items in each subdirectory.
 
 ```text
 .
@@ -241,13 +243,94 @@ each of file from these directories.
     │   ├── config1.json   # includes DAQ Handlers
     │   ├── config2.json   
     │   └── ...
-    ├── xrayProfiles/
+    ├── xray_profiles/
     │   ├── daq1.json
     │   └── ...
-    └── dicProfiles/
+    └── dic_profiles/
         ├── dic1.json
         └── ...
 ```
+
+### Gateway & Accessing Data
+
+The same gateway that processes the data will also handle storing the data.
+
+#### api/userData GET
+
+When a user signs in, all the datafiles will be fetched into the GUI's memory.
+
+```json
+{
+  "configurations": [<JSON configurations>, ...],
+  "xrayProfiles": [<JSON xray profiles>, ...],
+  "dicProfiles": [<JSON dic profiles>, ...]
+}
+```
+
+#### api/userData POST
+
+If a user edits, deletes, or creates a datafile, the POST request will handle the
+changes.
+
+Query Parameters:
+- `update_type`: <'add' | 'edit' | 'delete'>
+
+`add`
+```json
+{
+  "filename": <example.json (string)>,
+  "data": <full JSON data>
+}
+```
+
+`delete`
+```json
+{
+  "filename": <example.json (string)>
+}
+```
+
+```edit``` (same as `add`)
+```json
+{
+  "filename": <example.json (string)>,
+  "data": <full JSON data>
+}
+```
+
+### File Structure
+```text
+.
+└── api_gateway/
+    ├── run.py
+    ├── config.py
+    ├── Users/
+    │   ├── user1/
+    │   ├── user2/
+    │   └── ...
+    └── src/
+        ├── main.py
+        ├── routes/
+        │   ├── control.py
+        │   ├── sequence_builder.py
+        │   └── user_config.py
+        ├── sockets/
+        │   └── streamer.py
+        ├── validation/
+        │   ├── control_schemas.py
+        │   ├── sequence_schemas.py
+        │   └── user_config_schema.py
+        ├── translation/
+        │   ├── control_trans.py
+        │   ├── sequence_trans.py
+        │   └── user_config_trans.py
+        ├── rams/
+        │   ├── manager.py
+        │   ├── file_handler.py
+        │   └── ...
+        └── ...
+```
+
 
 ---
 
