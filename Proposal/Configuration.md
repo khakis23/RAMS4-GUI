@@ -2,7 +2,7 @@
 
 ---
 
-## Configuration Data and files
+## Configuration Data & files
 
 ### Backend Files
 
