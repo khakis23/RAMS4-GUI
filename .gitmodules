@@ -1,0 +1,3 @@
+[submodule "RAMS4GUI-gateway"]
+	path = RAMS4GUI-gateway
+	url = git@github.com:khakis23/RAMS4GUI-gateway.git
