@@ -1,5 +1,3 @@
-// @ts-ignore
-import React from 'react';
 import {NAVIGATION_ITEMS} from "../../constants/navigation.ts";
 import {Views} from "../../types/views.ts";
 

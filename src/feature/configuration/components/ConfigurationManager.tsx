@@ -1,85 +1,75 @@
-import React, { useState } from 'react';
-import { Tabs, TabsOption } from "../../../components/Tabs.tsx";
-import { Dropdown } from "../../../components/DropDown.tsx";
-import { Button } from "../../../components/Button.tsx";
-import { TabGeneral } from "../TabGeneral.tsx";
+import { useState } from 'react';
+import { Tabs, TabsOption } from "@/components/Tabs.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
-import { useGeneralStore } from "../../../store/configuration/useGeneralStore.ts";
-import { useDAQStore } from "../../../store/configuration/useDAQStore.ts";
 import { compileToBackendPayload } from "../utils/transformers.ts";
-import { postConfigToGateway } from "../../../api/configApi.ts";
+import { postConfigToGateway } from "@/api/configApi.ts";
+import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 
-// TODO organize a bit? This file is getting a bit messy...
-
-type TabName = 'general' | 'daq' | 'xray' | 'dic';
+type TabName = 'daq' | 'xray' | 'dic';
 
 export const ConfigurationManager = () => {
     const tabs: TabsOption[] = [
-        { id: 'general', label: 'General' },
         { id: 'daq', label: 'DAQ' },
         { id: 'xray', label: 'X-ray' },
         { id: 'dic', label: 'DIC' },
     ];
     
-    const [activeTab, setActiveTab] = useState<TabName>('general');
-    const { settings, selectConfig, saveCurrentConfig, deleteCurrentConfig } = useGeneralStore();
+    const [activeTab, setActiveTab] = useState<TabName>('daq');
+    const [pendingTab, setPendingTab] = useState<TabName | null>(null);
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const { errors: validationErrors, setErrors } = useValidationStore();
 
-    const dropdownOptions = [
-        { id: 'new-blank', label: 'New Blank Config' },
-        ...settings.savedConfigs.map((c) => ({ id: c.id, label: c.name })),
-    ];
-
-    const handleConfigChange = (id: string) => {
-        selectConfig(id);
-        console.log('Selected config ID:', id);
-        // TODO: API call - Fetch / load the selected config ID from backend (api/fetch data here)
-        // TODO: Store update - Sync other tab stores (DAQ, X-ray, DIC) with the loaded config sections
+    const handleTabChange = (nextTab: string) => {
+        const activeTabErrors = validationErrors[activeTab] || [];
+        if (activeTabErrors.length > 0) {
+            setPendingTab(nextTab as TabName);
+            setShowConfirmDialog(true);
+        } else {
+            setActiveTab(nextTab as TabName);
+        }
     };
 
-    // TODO Maybe break this out into another file somewhere...?
+    const { draft, updateDraft } = useConfigurationStore();
+
     const handleSave = async () => {
-        let name = '';
-        if (settings.activeConfigId === 'new-blank') {
-            const inputName = prompt('Enter a name for this Global Configuration:');
-            if (!inputName || !inputName.trim()) return;
-            name = inputName.trim();
-        } else {
-            const active = settings.savedConfigs.find(c => c.id === settings.activeConfigId);
-            name = active ? active.name : 'Saved Config';
-        }
+        const name = draft.sampleName.trim() || 'config';
 
         try {
-            // Save locally in Zustand store
-            saveCurrentConfig(name);
+            const apiPayload = compileToBackendPayload(draft);
 
-            // Fetch General + DAQ stores
-            const generalState = settings.currentConfig;
-            const daqState = useDAQStore.getState().settings;
-
-            // Transform frontend structures to backend JSON formats
-            const apiPayload = compileToBackendPayload(generalState, daqState);
-
-            // Sync to the local Python API
-            await postConfigToGateway('testuser', 'config', name, apiPayload);  // TODO TEMP: Hardcoded userId!
+            await postConfigToGateway(draft.userId.trim() || 'testuser', 'config', name, apiPayload);
 
             console.log(`Successfully saved and synced config: "${name}"`);
+            alert(`Configuration saved and synced to the backend server under "${name}"!`);
         } catch (error) {
             console.error('Failed to sync configuration to backend gateway', error);
-            alert('Saved locally, but failed to sync to the backend gateway.');
+            alert('Failed to sync to the backend gateway.');
         }
     };
 
-    const handleDelete = () => {
-        // TODO: API call - Notify backend to delete the config file
-        console.log('Deleting config:', settings.activeConfigId);
-        deleteCurrentConfig();
+    const handleReset = () => {
+        if (confirm("Are you sure you want to reset all configurations to their default values?")) {
+            updateDraft({
+                cycleNumber: "",
+                sampleName: "",
+                userId: "",
+                experimentNumber: "",
+                requiredAxes: ["A", "B", "RA", "RB"],
+                daqFrequency: 1,
+                samplePoints: 1000,
+                handlerProfiles: [],
+                xrayProfiles: []
+            });
+            setErrors('daq', []);
+            setErrors('xray', []);
+        }
     };
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'general':
-                return <TabGeneral />;
             case 'daq':
                 return <TabDAQ />;
             case 'xray':
@@ -93,43 +83,65 @@ export const ConfigurationManager = () => {
 
     return (
         <div className='flex flex-col gap-6 w-full max-w-4xl mx-auto'>
-            {/* TODO Place MINI status bar here */}
-            <div className="relative w-full h-18 bg-mauve-100 rounded-3xl p-6 flex items-center justify-between shadow-sm
-                                border border-mauve-200 text-center">
-                <div className="text-center w-full">
-                    <span className="text-xl font-bold text-mauve-800">
-                        Mini Status Bar Placeholder
-                    </span>
+            {/* TODO change this later: Metadata Bar */}
+            <div className="grid grid-cols-4 gap-4 bg-mauve-50/50 p-6 rounded-3xl border border-mauve-200/50 text-left shadow-sm">
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-mauve-850">Cycle Number</label>
+                    <Input 
+                        placeholder="Cycle (e.g. 2026-1)" 
+                        value={draft.cycleNumber} 
+                        onChange={(e) => updateDraft({ cycleNumber: e.target.value })}
+                        className="bg-white border-mauve-200 rounded-2xl h-10"
+                    />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-mauve-850">Sample Name</label>
+                    <Input 
+                        placeholder="Sample Name" 
+                        value={draft.sampleName} 
+                        onChange={(e) => updateDraft({ sampleName: e.target.value })}
+                        className="bg-white border-mauve-200 rounded-2xl h-10"
+                    />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-mauve-850">User ID</label>
+                    <Input 
+                        placeholder="User ID (e.g. jdoe)" 
+                        value={draft.userId} 
+                        onChange={(e) => updateDraft({ userId: e.target.value })}
+                        className="bg-white border-mauve-200 rounded-2xl h-10"
+                    />
+                </div>
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-mauve-850">Experiment Number</label>
+                    <Input 
+                        placeholder="Experiment Num" 
+                        value={draft.experimentNumber} 
+                        onChange={(e) => updateDraft({ experimentNumber: e.target.value })}
+                        className="bg-white border-mauve-200 rounded-2xl h-10"
+                    />
                 </div>
             </div>
 
             {/* Tab bar and Global Controls */}
             <div className='flex flex-col gap-4'>
                 <div className='flex items-end justify-between w-full'>
-                    <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
+                    <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
                     <div className='flex flex-row gap-4 items-center'>
-                        <div className="w-64 shrink-0">
-                            <Dropdown
-                                options={dropdownOptions}
-                                onChange={handleConfigChange}
-                                selectedId={settings.activeConfigId}
-                                placeholder="Select a Config File"
-                            />
-                        </div>
-
                         <Button
                             variant="secondary"
                             onClick={handleSave}
+                            className="h-10"
                         >
                             Save Config
                         </Button>
 
                         <Button
-                            variant="danger"
-                            disabled={settings.activeConfigId === 'new-blank'}
-                            onClick={handleDelete}
+                            variant="destructive"
+                            onClick={handleReset}
+                            className="h-10"
                         >
-                            Delete Config
+                            Reset Config
                         </Button>
                     </div>
                 </div>
@@ -140,6 +152,54 @@ export const ConfigurationManager = () => {
                     {activeTab && renderTabContent()}
                 </div>
             </div>
+
+            {showConfirmDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center gap-2.5 text-red-655 font-bold text-lg">
+                            <span>⚠️ Unsaved Validation Errors</span>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600">
+                            You have invalid fields on the current tab that cannot be saved. Leaving will discard these changes.
+                        </p>
+                        
+                        <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex flex-col gap-2 max-h-48 overflow-y-auto">
+                            <span className="text-xs font-bold text-red-800">Please fix the following fields:</span>
+                            <ul className="list-disc list-inside text-xs text-red-700 space-y-1.5 pl-1">
+                                {(validationErrors[activeTab] || []).map((err, i) => (
+                                    <li key={i}>{err}</li>
+                                ))}
+                            </ul>
+                        </div>
+                        
+                        <div className="flex gap-3 justify-end mt-2">
+                            <Button
+                                variant="secondary"
+                                onClick={() => {
+                                    setShowConfirmDialog(false);
+                                    setPendingTab(null);
+                                }}
+                            >
+                                Stay and Fix
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={() => {
+                                    setShowConfirmDialog(false);
+                                    if (pendingTab) {
+                                        setErrors(activeTab, []);
+                                        setActiveTab(pendingTab);
+                                    }
+                                    setPendingTab(null);
+                                }}
+                            >
+                                Discard & Switch
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,108 +1,213 @@
-import React from 'react';
-import { useDAQStore, HandlerProfile } from "../../store/configuration/useDAQStore.ts";
-import { DynamicForm } from "../../components/DynamicForm";
-import { daqHandlerSchema } from "./profileSchemas/daqHandlerSchema.ts";
-import { Dropdown } from "../../components/DropDown.tsx";
-import { InputField } from "../../components/InputField.tsx";
-import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
-import { AddButton } from "../../components/AddButton.tsx";
+import { useEffect } from 'react';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
+import { Input } from '../../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Button } from '../../components/ui/button';
+import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
+import { ConfigTabSection } from './components/ConfigTabSection.tsx';
+import { FieldLabel } from '../../components/ui/FieldLabel.tsx';
+import { DAQProfileCard } from './components/DAQProfileCard.tsx';
+import { useFormAutoSave } from './hooks/useFormAutoSave.ts';
+import { compileFormErrors } from './utils/validationUtils.ts';
+import { daqSchema } from './profileSchemas/daqSchema.ts';
 
-const frequencyOptions = [
-    { id: '1', label: '1 kHz' },
-    { id: '5', label: '5 kHz' },
-    { id: '10', label: '10 kHz' },
-    { id: '20', label: '20 kHz' },
-];
+const daqFieldDescriptions = {
+    requiredAxes: "Which mechanical axes are active/required for the specific test geometry (e.g., [\"A\", \"B\"]).",
+    daqFrequency: "Rate at which sensor measurements are captured.",
+    samplePoints: "Number of buffer data points retained during test runs."
+};
 
 export const TabDAQ = () => {
-    const { settings, setSettings, addProfile, updateProfile, removeProfile } = useDAQStore();
+    const { draft, updateDraft } = useConfigurationStore();
 
-    const handleFrequencyChange = (newFreqId: string) => {
-        setSettings({
-            ...settings,
-            masterFrequency: newFreqId
-        });
-    };
+    const {
+        register,
+        control,
+        watch,
+        formState: { errors },
+    } = useForm<z.infer<typeof daqSchema>>({
+        resolver: zodResolver(daqSchema),
+        mode: "onChange",
+        defaultValues: {
+            requiredAxes: draft.requiredAxes || ["A", "B", "RA", "RB"],
+            daqFrequency: draft.daqFrequency,
+            samplePoints: draft.samplePoints,
+            handlersProfile: (draft.handlerProfiles || []).map(profile => {
+                const rawAi = profile.verboseAi || "";
+                return {
+                    ...profile,
+                    verboseAxis: profile.verboseAxis || "-1",
+                    verboseTask: profile.verboseTask || "-1",
+                    verboseSystem: profile.verboseSystem ?? -1,
+                    verboseIO: profile.verboseIO ?? -1,
+                    aiLoadA: rawAi.includes("LoadA"),
+                    aiStrain: rawAi.includes("Strain"),
+                    aiCustom: rawAi
+                        .split(",")
+                        .map(x => x.trim())
+                        .filter(x => x && x !== "LoadA" && x !== "Strain")
+                        .join(", "),
+                };
+            }),
+        },
+    });
 
-    const handleSamplePointsChange = (val: string) => {
-        setSettings({
-            ...settings,
-            samplePoints: val
-        });
-    };
+    const {
+        fields,
+        append,
+        remove
+    } = useFieldArray({
+        control,
+        name: "handlersProfile",
+    });
+
+    const watchedValues = watch();
+
+    // Map errors to the global validation errors list dynamically
+    const { setErrors } = useValidationStore();
+    useEffect(() => {
+        const errorMessages = compileFormErrors(errors);
+        
+        const existingErrors = useValidationStore.getState().errors['daq'] || [];
+        const hasChanged = 
+            existingErrors.length !== errorMessages.length ||
+            errorMessages.some((msg, idx) => msg !== existingErrors[idx]);
+        
+        if (hasChanged) {
+            setErrors('daq', errorMessages);
+        }
+    }, [errors, setErrors]);
+
+    // Automatically sync changes to Zustand store draft using custom sync hook
+    useFormAutoSave({
+        watchedValues,
+        schema: daqSchema,
+        storeDraft: draft,
+        updateDraft,
+        mapValues: (watched) => ({
+            requiredAxes: watched.requiredAxes,
+            daqFrequency: watched.daqFrequency,
+            samplePoints: watched.samplePoints,
+            handlerProfiles: (watched.handlersProfile || []).map((profile: any) => {
+                const aiArray: string[] = [];
+                if (profile.aiLoadA) aiArray.push("LoadA");
+                if (profile.aiStrain) aiArray.push("Strain");
+                if (profile.aiCustom) {
+                    const customs = profile.aiCustom
+                        .split(",")
+                        .map((x: string) => x.trim())
+                        .filter(Boolean);
+                    aiArray.push(...customs);
+                }
+                
+                return {
+                    mode: profile.mode,
+                    filename: profile.filename,
+                    verboseAxis: profile.verboseAxis,
+                    verboseTask: profile.verboseTask,
+                    verboseSystem: profile.verboseSystem,
+                    verboseIO: profile.verboseIO,
+                    verboseAi: aiArray.join(", "),
+                    frequency: profile.frequency,
+                    cycles: profile.cycles,
+                    signalAxis: profile.signalAxis,
+                    signalItem: profile.signalItem,
+                    signalProminence: profile.signalProminence,
+                    psoAxis: profile.psoAxis,
+                    signalLoad: profile.signalLoad,
+                    signalStrain: profile.signalStrain,
+                };
+            })
+        })
+    });
 
     return (
-        <div className='flex flex-col gap-10 text-left'>
-            <ConfigTabSection
-                title="Data Acquisition Configuration"
-                description="Configure the general parameters for Data Acquisition."
-            >
-                {/* Column Grid Layout */}
-                <div className="grid grid-cols-2 px-5 gap-x-14 gap-y-6">
-                    <Dropdown
-                        label="Sampling Frequency"
-                        options={frequencyOptions}
-                        selectedId={settings.masterFrequency}
-                        onChange={handleFrequencyChange}
-                    />
-
-                    <InputField
-                        label="Sample Points"
-                        value={settings.samplePoints}
-                        type="number"
-                        onChange={handleSamplePointsChange}
-                        placeholder="Enter number of sample points..."
-                    />
-                </div>
-            </ConfigTabSection>
-
-            <ConfigTabSection
-                title="DAQ Handler Profiles"
-                description="Create and save different profiles for how data is acquired."
-            >
-                <div className="flex flex-col gap-6 w-full">
+        <ConfigTabSection
+            title="Data Acquisition Configuration"
+            description="Configure parameters for Data Acquisition."
+            profilesTitle="DAQ Handler Profiles"
+            profiles={
+                <div className="w-full space-y-6">
                     {/* Render handler profile cards */}
-                    {settings.handlerProfiles.map((profile, index) => (
-                        <div
-                            key={profile.id}
-                            className="relative bg-mauve-100/50 p-6 rounded-3xl flex flex-col gap-4"
-                        >
-                            {/* Profile Card Header */}
-                            <div className="flex items-center justify-between border-b border-mauve-150 pb-2">
-                                <span className="text-sm font-bold text-mauve-700">
-                                    Handler Profile #{index + 1}
-                                </span>
-                                {settings.handlerProfiles.length > 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => removeProfile(profile.id)}
-                                        className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer transition-colors duration-200"
-                                    >
-                                        Remove Profile
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* Dynamic form for profile */}
-                            <DynamicForm
-                                schema={daqHandlerSchema}
-                                data={profile}
-                                onChange={(updatedProfile: HandlerProfile) => updateProfile(profile.id, updatedProfile)}
-                                layout="horizontal"
-                            />
-                        </div>
+                    {fields.map((field, index) => (
+                        <DAQProfileCard
+                            key={field.id}
+                            index={index}
+                            control={control}
+                            register={register}
+                            errors={errors}
+                            remove={remove}
+                            currentMode={watch(`handlersProfile.${index}.mode`)}
+                        />
                     ))}
 
-                    <div className="flex flex-col gap-3">
-                        <AddButton
-                            label="Add Handler Profile"
-                            onClick={addProfile}
-                        />
-                        <p className='text-xs font-small text-mauve-800 pl-2 pt-2'>* Required</p>
-                    </div>
+                    {/* Add Profile button inside the card area */}
+                    <Button 
+                        type="button" 
+                        onClick={() => append({ 
+                            mode: "time-series", 
+                            filename: `handlerProfile${fields.length + 1}`,
+                            verboseAxis: "-1",
+                            verboseSystem: -1,
+                            verboseTask: "-1",
+                            verboseIO: -1,
+                            verboseAi: "",
+                            aiLoadA: false,
+                            aiStrain: false,
+                            aiCustom: "",
+                            frequency: 50,
+                            cycles: [{ start: 1, stop: 10, step: 1 }]
+                        })}
+                        className="w-full mt-4"
+                    >
+                        Add Handler Profile
+                    </Button>
                 </div>
-            </ConfigTabSection>
-        </div>
+            }
+        >
+            {/* Sampling Frequency Field */}
+            <div className="flex flex-col gap-2">
+                <FieldLabel text="Sampling Frequency" tooltip={daqFieldDescriptions.daqFrequency} required={true} />
+                <Controller
+                    control={control}
+                    name="daqFrequency"
+                    render={({ field }) => (
+                        <Select 
+                            onValueChange={(val) => field.onChange(Number(val))} 
+                            value={field.value ? String(field.value) : undefined}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="1">1 kHz</SelectItem>
+                                <SelectItem value="5">5 kHz</SelectItem>
+                                <SelectItem value="10">10 kHz</SelectItem>
+                                <SelectItem value="20">20 kHz</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    )}
+                />
+                {errors.daqFrequency && (
+                    <p className="text-xs text-destructive">{errors.daqFrequency.message}</p>
+                )}
+            </div>
+
+            {/* Sample Points Field */}
+            <div className="flex flex-col gap-2">
+                <FieldLabel text="Sample Points" tooltip={daqFieldDescriptions.samplePoints} required={true} />
+                <Input 
+                    type="number" 
+                    placeholder="Enter points (min 100)" 
+                    {...register('samplePoints', { valueAsNumber: true })}
+                />
+                {errors.samplePoints && (
+                    <p className="text-xs text-destructive">{errors.samplePoints.message}</p>
+                )}
+            </div>
+        </ConfigTabSection>
     );
-};
+}

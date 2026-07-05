@@ -1,93 +1,120 @@
-import React from 'react';
-import { useXrayStore, XrayProfile } from "../../store/configuration/useXrayStore.ts";
-import { DynamicForm } from "../../components/DynamicForm";
-import { xraySchema } from "./profileSchemas/xraySchema.ts";
+import { useEffect } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from "../../components/ui/button.tsx";
 import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
-import { Dropdown } from "../../components/DropDown.tsx";
-import { Button } from "../../components/Button.tsx";
-import { isProfileValid } from "../../types/schema.ts"
-
+import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
+import { compileFormErrors } from "./utils/validationUtils.ts";
+import { xrayFormSchema } from "./profileSchemas/xraySchema.ts";
+import { XrayProfileCard } from "./components/XrayProfileCard.tsx";
+import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
 
 export const TabXray = () => {
-    const { settings, selectProfile, updateCurrentField, saveCurrentProfile, deleteCurrentProfile } = useXrayStore();
+    const { draft, updateDraft } = useConfigurationStore();
 
-    const isRequiredFilled = isProfileValid(settings.currentProfile, xraySchema);
-
-    const dropdownOptions = [
-        { id: 'new-blank', label: 'New Blank Profile' },
-        ...settings.savedProfiles.map((p) => ({ id: p.id, label: p.name })),
-    ];
-
-    const handleSave = () => {
-        if (settings.activeProfileId === 'new-blank') {
-            const name = prompt('Enter a name for this X-ray profile:');
-            if (name && name.trim()) {
-                saveCurrentProfile(name.trim());
-            }
-        } else {
-            const currentName = settings.currentProfile.name || 'Saved Profile';
-            saveCurrentProfile(currentName);
+    const {
+        register,
+        control,
+        watch,
+        formState: { errors }
+    } = useForm<z.infer<typeof xrayFormSchema>>({
+        resolver: zodResolver(xrayFormSchema),
+        mode: "onChange",
+        defaultValues: {
+            xrayProfiles: (draft.xrayProfiles || []).map(p => ({
+                id: p.id,
+                name: p.name,
+                x: p.x,
+                z: p.z,
+                omeStart: p.omeStart,
+                omeStop: p.omeStop,
+                ctime: p.ctime,
+                beamHeight: p.beamHeight,
+                beamWidth: p.beamWidth,
+                atten: p.atten,
+            })),
         }
-    };
+    });
+
+    const {
+        fields,
+        append,
+        remove
+    } = useFieldArray({
+        control,
+        name: "xrayProfiles",
+    });
+
+    const watchedValues = watch();
+
+    // Sync form values back to store draft on change if valid
+    useFormAutoSave({
+        watchedValues,
+        schema: xrayFormSchema,
+        storeDraft: draft,
+        updateDraft,
+        mapValues: (watched: any) => ({
+            xrayProfiles: watched.xrayProfiles || []
+        })
+    });
+
+    // Connect errors to validation warning store under 'xray' key
+    const { setErrors } = useValidationStore();
+    useEffect(() => {
+        const errorMessages = compileFormErrors(errors);
+        
+        const existingErrors = useValidationStore.getState().errors['xray'] || [];
+        const hasChanged = 
+            existingErrors.length !== errorMessages.length ||
+            errorMessages.some((msg: string, idx: number) => msg !== existingErrors[idx]);
+        
+        if (hasChanged) {
+            setErrors('xray', errorMessages);
+        }
+    }, [errors, setErrors]);
 
     return (
         <ConfigTabSection
             title="X-ray Scan Profiles"
-            description="Create and save different X-ray scan profiles."
+            description="Configure parameters for X-ray scan sweeps."
+            profilesTitle="X-ray Scan Profiles"
+            profiles={
+                <div className="w-full space-y-6">
+                    {/* Render active scan profiles list */}
+                    {fields.map((field, index) => (
+                        <XrayProfileCard
+                            key={field.id}
+                            index={index}
+                            register={register}
+                            errors={errors}
+                            remove={remove}
+                        />
+                    ))}
+
+                    {/* Add Profile button at bottom */}
+                    <Button 
+                        type="button" 
+                        onClick={() => append({ 
+                            id: `xrayProfile${fields.length + 1}`,
+                            name: `xrayProfile${fields.length + 1}`,
+                            x: "0",
+                            z: "0",
+                            omeStart: "0",
+                            omeStop: "0",
+                            ctime: "1",
+                            beamHeight: "1",
+                            beamWidth: "1",
+                            atten: "0"
+                        })}
+                        className="w-full mt-4"
+                    >
+                        Add X-ray Profile
+                    </Button>
+                </div>
+            }
         >
-            {/* Profile Selection & Actions Bar */}
-            <div className="flex items-end justify-between gap-6 mb-6">
-                <div className="w-64 shrink-0">
-                    <Dropdown
-                        label="Select Profile"
-                        options={dropdownOptions}
-                        selectedId={settings.activeProfileId}
-                        onChange={selectProfile}
-                    />
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="secondary"
-                        disabled={!isRequiredFilled}
-                        onClick={handleSave}
-                    >
-                        Save Profile
-                    </Button>
-                    <Button
-                        variant="danger"
-                        disabled={settings.activeProfileId === 'new-blank'}
-                        onClick={deleteCurrentProfile}
-                    >
-                        Delete Profile
-                    </Button>
-                </div>
-            </div>
-
-            {/* Active Profile Card */}
-            <div className="relative bg-mauve-100/50 p-6 rounded-3xl flex flex-col gap-4">
-                <div className="flex items-center justify-between border-b border-mauve-150 pb-2">
-                    <span className="text-sm font-bold text-mauve-700">
-                        {settings.activeProfileId === 'new-blank' ? 'New Profile Draft' : settings.currentProfile.name}
-                    </span>
-                </div>
-
-                <DynamicForm
-                    schema={xraySchema}
-                    data={settings.currentProfile}
-                    onChange={(updated: XrayProfile) => {
-                        Object.keys(updated).forEach((key) => {
-                            const val = updated[key as keyof XrayProfile];
-                            if (val !== settings.currentProfile[key as keyof XrayProfile]) {
-                                updateCurrentField(key as keyof XrayProfile, val);
-                            }
-                        });
-                    }}
-                    layout="horizontal"
-                />
-            </div>
-
-            <p className='text-xs font-small text-mauve-800 mt-4 text-left pl-2'>* Required</p>
+            <></>
         </ConfigTabSection>
     );
 };
