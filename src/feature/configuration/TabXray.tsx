@@ -78,7 +78,6 @@ export const TabXray = () => {
         <ConfigTabSection
             title="X-ray Scan Profiles"
             description="Configure parameters for X-ray scan sweeps."
-            profilesTitle="X-ray Scan Profiles"
             profiles={
                 <div className="w-full space-y-6">
                     {/* Render active scan profiles list */}
@@ -113,8 +112,6 @@ export const TabXray = () => {
                     </Button>
                 </div>
             }
-        >
-            <></>
-        </ConfigTabSection>
+        />
     );
 };

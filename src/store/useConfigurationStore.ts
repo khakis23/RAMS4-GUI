@@ -83,14 +83,14 @@ const defaultDraftConfig = (): GlobalConfig => ({
         {
             id: "xrayProfile1",
             name: "xrayProfile1",
-            x: "",
-            z: "",
-            omeStart: "",
-            omeStop: "",
-            ctime: "",
-            beamHeight: "",
-            beamWidth: "",
-            atten: "",
+            x: "0",
+            z: "0",
+            omeStart: "0",
+            omeStop: "0",
+            ctime: "1",
+            beamHeight: "1",
+            beamWidth: "1",
+            atten: "0",
         }
     ]
 });

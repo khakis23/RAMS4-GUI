@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Tabs, TabsOption } from "../../../components/Tabs.tsx";
+import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs.tsx";
 import { Button } from "../../../components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
 import { postConfigToGateway, fetchPaths } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
+import { PencilLine } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
 
 type TabName = 'daq' | 'xray' | 'dic';
 
 export const ConfigurationManager = () => {
-    const tabs: TabsOption[] = [
+    const tabs: { id: TabName; label: string }[] = [
         { id: 'daq', label: 'DAQ' },
         { id: 'xray', label: 'X-ray' },
         { id: 'dic', label: 'DIC' },
@@ -19,6 +21,7 @@ export const ConfigurationManager = () => {
     const [activeTab, setActiveTab] = useState<TabName>('daq');
     const [pendingTab, setPendingTab] = useState<TabName | null>(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [isManualPath, setIsManualPath] = useState(false);
     const { errors: validationErrors, setErrors } = useValidationStore();
 
     const handleTabChange = (nextTab: string) => {
@@ -166,41 +169,57 @@ export const ConfigurationManager = () => {
     };
 
     return (
-        <div className='flex flex-col gap-6 w-full max-w-4xl mx-auto'>
-            {/* Tab bar and Global Controls */}
-            <div className='flex flex-col gap-4'>
-                <div className='flex items-end justify-between w-full'>
-                    <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
-                    <div className='flex flex-row gap-4 items-center'>
-                        <Button
-                            variant="secondary"
-                            onClick={handleSave}
-                            disabled={!isConfigValid}
-                            className="h-10"
-                        >
-                            Save Config
-                        </Button>
-
-                        <Button
-                            variant="destructive"
-                            onClick={handleReset}
-                            className="h-10"
-                        >
-                            Reset Config
-                        </Button>
-                    </div>
+        <div className='flex flex-col gap-3 w-full max-w-4xl mx-auto text-left h-full min-h-0'>
+            {/* Header Row */}
+            <div className="flex flex-row justify-between items-center w-full">
+                <h1 className="text-2xl font-bold text-mauve-900 tracking-tight">Configure RAMS4</h1>
+                <div className="flex flex-row gap-3 items-center">
+                    <Button
+                        variant="secondary"
+                        onClick={handleSave}
+                        disabled={!isConfigValid}
+                        className="h-10 px-5 shadow-sm"
+                    >
+                        Save Configuration
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        onClick={handleReset}
+                        className="h-10 px-5 shadow-sm"
+                    >
+                        Reset Configuration
+                    </Button>
                 </div>
-
-                {/* Metadata Card */}
-                <div className="grid grid-cols-4 gap-4 bg-mauve-50/50 p-6 rounded-3xl border border-mauve-200/50 text-left shadow-sm mt-2">
-                    <div className="flex flex-col gap-2">
-                        <label className="text-xs font-bold text-mauve-850">Cycle Number</label>
+            </div>
+            
+            {/* Merged Navigation and Metadata Toolbar */}
+            <div className="flex flex-row justify-between items-end w-full pb-3 gap-4">
+                <div className="pb-1">
+                    <Tabs value={activeTab} onValueChange={handleTabChange}>
+                        <TabsList className="bg-transparent p-0 gap-1.5 border-b border-transparent">
+                            {tabs.map(tab => (
+                                <TabsTrigger 
+                                    key={tab.id}
+                                    value={tab.id}
+                                    className="py-2 px-4 rounded-xl text-sm transition-all cursor-pointer font-medium text-mauve-600 hover:bg-mauve-50 hover:text-mauve-600 data-[state=active]:bg-mauve-400 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:font-semibold"
+                                >
+                                    {tab.label}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </Tabs>
+                </div>
+                
+                {/* Compact Metadata Selectors */}
+                <div className="flex flex-row items-end gap-3.5 text-xs text-mauve-600 font-medium">
+                    <div className="flex flex-col gap-1 items-start">
+                        <span className="text-sm font-medium text-mauve-850">Cycle</span>
                         <Select 
                             value={draft.cycleNumber} 
                             onValueChange={(val) => updateDraft({ cycleNumber: val })}
                         >
-                            <SelectTrigger className="w-full bg-white border-mauve-200 rounded-2xl h-10">
-                                <SelectValue placeholder="Select Cycle" />
+                            <SelectTrigger className="h-8 w-[110px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
+                                <SelectValue placeholder="Cycle" />
                             </SelectTrigger>
                             <SelectContent>
                                 {pathOptions.cycles.map(c => (
@@ -209,14 +228,15 @@ export const ConfigurationManager = () => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-xs font-bold text-mauve-850">User ID</label>
+
+                    <div className="flex flex-col gap-1.5 items-start">
+                        <span className="text-sm font-medium text-mauve-850">User ID</span>
                         <Select 
                             value={draft.userId} 
                             onValueChange={(val) => updateDraft({ userId: val })}
                         >
-                            <SelectTrigger className="w-full bg-white border-mauve-200 rounded-2xl h-10">
-                                <SelectValue placeholder="Select User" />
+                            <SelectTrigger className="h-8 w-[200px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
+                                <SelectValue placeholder="User" />
                             </SelectTrigger>
                             <SelectContent>
                                 {pathOptions.users.map(u => (
@@ -225,14 +245,15 @@ export const ConfigurationManager = () => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-xs font-bold text-mauve-850">Sample Name</label>
+
+                    <div className="flex flex-col gap-1.5 items-start">
+                        <span className="text-sm font-medium text-mauve-850">Sample Name</span>
                         <Select 
                             value={draft.sampleName} 
                             onValueChange={handleSampleChange}
                         >
-                            <SelectTrigger className="w-full bg-white border-mauve-200 rounded-2xl h-10">
-                                <SelectValue placeholder="Select Sample" />
+                            <SelectTrigger className="h-8 w-[200px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
+                                <SelectValue placeholder="Sample" />
                             </SelectTrigger>
                             <SelectContent>
                                 {pathOptions.samples.map(s => (
@@ -244,33 +265,55 @@ export const ConfigurationManager = () => {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-xs font-bold text-mauve-850">Experiment Number</label>
+
+                    <div className="flex flex-col gap-1.5 items-start">
+                        <span className="text-sm font-medium text-mauve-850">Experiment</span>
                         <Select 
                             value={draft.experimentNumber} 
                             onValueChange={handleExperimentChange}
                         >
-                            <SelectTrigger className="w-full bg-white border-mauve-200 rounded-2xl h-10">
-                                <SelectValue placeholder="Select Experiment" />
+                            <SelectTrigger className="h-8 w-[75px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
+                                <SelectValue placeholder="Exp" />
                             </SelectTrigger>
                             <SelectContent>
                                 {pathOptions.experimentNumbers.map(e => (
                                     <SelectItem key={e} value={e}>{e}</SelectItem>
                                 ))}
                                 <SelectItem value="new-experiment-action" className="font-semibold text-mauve-800 border-t mt-1">
-                                    + New Experiment...
+                                    + New Exp...
                                 </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-                </div>
 
-                {/* Tab Content */}
-                <div className='mt-2 min-h-20 bg-white p-6 rounded-3xl border border-mauve-200 shadow-sm
-                max-h-[calc(100vh-260px)] overflow-y-auto'>
-                    {activeTab && renderTabContent()}
+                    {/* Manual Path Mode Toggle Button with Tooltip */}
+                    <TooltipProvider delayDuration={350}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setIsManualPath(!isManualPath)}
+                                    className={`h-8 w-8 p-0 rounded-xl border border-mauve-200 transition-colors ${
+                                        isManualPath 
+                                            ? 'bg-mauve-600 text-white hover:bg-mauve-700' 
+                                            : 'bg-white text-mauve-600 hover:bg-mauve-50'
+                                    }`}
+                                >
+                                    <PencilLine className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs text-xs p-2 duration-300">
+                                {isManualPath ? "Switch back to path select dropdowns" : "Configure path manually"}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             </div>
+
+              {/* Tab Content Card (flex-grow dynamically to fill remaining height) */}
+              <div className='flex-1 min-h-0 bg-white p-6 rounded-3xl border border-mauve-200 shadow-sm overflow-y-auto'>
+                  {activeTab && renderTabContent()}
+              </div>
 
             {showConfirmDialog && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">

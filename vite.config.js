@@ -9,6 +9,7 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    base: '/RAMS4-GUI/',
     server: {
         proxy: {
             '/api': {

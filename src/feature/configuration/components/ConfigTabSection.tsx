@@ -3,10 +3,21 @@ import React from 'react';
 interface ConfigTabSectionProps {
     title: string;
     description?: string;
-    children: React.ReactNode;
+    children?: React.ReactNode;
     profiles?: React.ReactNode;
     profilesTitle?: string;
 }
+
+const hasChildren = (children: React.ReactNode): boolean => {
+    if (!children) return false;
+    const childArray = React.Children.toArray(children);
+    return childArray.some(child => {
+        if (React.isValidElement(child) && child.type === React.Fragment) {
+            return React.Children.count((child.props as any).children) > 0;
+        }
+        return child !== null && child !== undefined && child !== '';
+    });
+};
 
 export const ConfigTabSection = ({
     title,
@@ -24,9 +35,11 @@ export const ConfigTabSection = ({
             </div>
 
             {/* Children components */}
-            <div className="grid grid-cols-2 gap-x-12 gap-y-6 text-left">
-                {children}
-            </div>
+            {hasChildren(children) && (
+                <div className="grid grid-cols-2 gap-x-12 gap-y-6 text-left">
+                    {children}
+                </div>
+            )}
 
             {/* Profiles section */}
             {profiles && (

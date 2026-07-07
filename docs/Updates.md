@@ -115,5 +115,3 @@ Example Directory:
             ├── config2.json      # frontend file
             └── ...
 ```
-
-

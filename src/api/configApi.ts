@@ -37,9 +37,9 @@ export const fetchPaths = async (): Promise<PathsResponse> => {
 
     // Mock directory names
     return {
-        cycles: ["2026-2", "2026-1", "2025-3", "2025-2"],
-        users: ["jdoe", "asmith", "rjackson"],
-        samples: ["aluminum-123", "steel-specimen-3b", "titanium-cell-02"],
-        experimentNumbers: ["1", "2", "3", "4"],
+        cycles: ["2026-2", "2026-1", "2025-03", "2025-2"],
+        users: ["jdoe", "asmith", "rjackson", "abcdefghij-1234-a"],
+        samples: ["aluminum-123", "steel-specimen-3b", "titanium-cell-02", "A-really-long-specimen-name-123"],
+        experimentNumbers: ["1", "2", "3", "4", "99"],
     };
 };
