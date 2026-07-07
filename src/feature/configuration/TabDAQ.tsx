@@ -11,7 +11,7 @@ import { ConfigTabSection } from './components/ConfigTabSection.tsx';
 import { FieldLabel } from '../../components/ui/FieldLabel.tsx';
 import { DAQProfileCard } from './components/DAQProfileCard.tsx';
 import { useFormAutoSave } from './hooks/useFormAutoSave.ts';
-import { compileFormErrors } from './utils/validationUtils.ts';
+import { compileZodErrors } from './utils/validationUtils.ts';
 import { daqSchema } from './profileSchemas/daqSchema.ts';
 
 const daqFieldDescriptions = {
@@ -66,20 +66,66 @@ export const TabDAQ = () => {
 
     const watchedValues = watch();
 
-    // Map errors to the global validation errors list dynamically
+    // Map errors to the global validation errors list dynamically by validating watchedValues against Zod schema
     const { setErrors } = useValidationStore();
     useEffect(() => {
-        const errorMessages = compileFormErrors(errors);
-        
-        const existingErrors = useValidationStore.getState().errors['daq'] || [];
-        const hasChanged = 
-            existingErrors.length !== errorMessages.length ||
-            errorMessages.some((msg, idx) => msg !== existingErrors[idx]);
-        
-        if (hasChanged) {
-            setErrors('daq', errorMessages);
+        const mappedProfiles = (watchedValues.handlersProfile || []).map((profile: any) => {
+            const aiArray: string[] = [];
+            if (profile.aiLoadA) aiArray.push("LoadA");
+            if (profile.aiStrain) aiArray.push("Strain");
+            if (profile.aiCustom) {
+                const customs = profile.aiCustom
+                    .split(",")
+                    .map((x: string) => x.trim())
+                    .filter(Boolean);
+                aiArray.push(...customs);
+            }
+            
+            return {
+                mode: profile.mode,
+                filename: profile.filename,
+                verboseAxis: profile.verboseAxis,
+                verboseTask: profile.verboseTask,
+                verboseSystem: profile.verboseSystem,
+                verboseIO: profile.verboseIO,
+                verboseAi: aiArray.join(", "),
+                frequency: profile.frequency,
+                cycles: profile.cycles,
+                signalAxis: profile.signalAxis,
+                signalItem: profile.signalItem,
+                signalProminence: profile.signalProminence,
+                psoAxis: profile.psoAxis,
+                signalLoad: profile.signalLoad,
+                signalStrain: profile.signalStrain,
+            };
+        });
+
+        const validationPayload = {
+            requiredAxes: watchedValues.requiredAxes,
+            daqFrequency: watchedValues.daqFrequency,
+            samplePoints: watchedValues.samplePoints,
+            handlersProfile: mappedProfiles
+        };
+
+        const result = daqSchema.safeParse(validationPayload);
+        if (!result.success) {
+            const errorMessages = compileZodErrors(result.error);
+            
+            const existingErrors = useValidationStore.getState().errors['daq'] || [];
+            const hasChanged = 
+                existingErrors.length !== errorMessages.length ||
+                errorMessages.some((msg, idx) => msg !== existingErrors[idx]);
+            
+            if (hasChanged) {
+                setErrors('daq', errorMessages);
+            }
+        } else {
+            const existingErrors = useValidationStore.getState().errors['daq'] || [];
+            if (existingErrors.length > 0) {
+                setErrors('daq', []);
+            }
         }
-    }, [errors, setErrors]);
+    }, [watchedValues, setErrors]);
 
     // Automatically sync changes to Zustand store draft using custom sync hook
     useFormAutoSave({
@@ -87,11 +133,8 @@ export const TabDAQ = () => {
         schema: daqSchema,
         storeDraft: draft,
         updateDraft,
-        mapValues: (watched) => ({
-            requiredAxes: watched.requiredAxes,
-            daqFrequency: watched.daqFrequency,
-            samplePoints: watched.samplePoints,
-            handlerProfiles: (watched.handlersProfile || []).map((profile: any) => {
+        mapValues: (watched) => {
+            const mappedProfiles = (watched.handlersProfile || []).map((profile: any) => {
                 const aiArray: string[] = [];
                 if (profile.aiLoadA) aiArray.push("LoadA");
                 if (profile.aiStrain) aiArray.push("Strain");
@@ -120,8 +163,15 @@ export const TabDAQ = () => {
                     signalLoad: profile.signalLoad,
                     signalStrain: profile.signalStrain,
                 };
-            })
-        })
+            });
+
+            return {
+                requiredAxes: watched.requiredAxes,
+                daqFrequency: watched.daqFrequency,
+                samplePoints: watched.samplePoints,
+                handlerProfiles: mappedProfiles
+            };
+        }
     });
 
     return (
@@ -149,7 +199,7 @@ export const TabDAQ = () => {
                         type="button" 
                         onClick={() => append({ 
                             mode: "time-series", 
-                            filename: `handlerProfile${fields.length + 1}`,
+                            filename: "",
                             verboseAxis: "-1",
                             verboseSystem: -1,
                             verboseTask: "-1",
@@ -158,8 +208,8 @@ export const TabDAQ = () => {
                             aiLoadA: false,
                             aiStrain: false,
                             aiCustom: "",
-                            frequency: 50,
-                            cycles: [{ start: 1, stop: 10, step: 1 }]
+                            frequency: undefined as any,
+                            cycles: []
                         })}
                         className="w-full mt-4"
                     >

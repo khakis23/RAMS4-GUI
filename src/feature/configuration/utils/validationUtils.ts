@@ -1,4 +1,12 @@
 import { FieldErrors } from 'react-hook-form';
+import { ZodError } from 'zod';
+
+export const compileZodErrors = (error: ZodError): string[] => {
+    return error.issues.map((issue) => {
+        const cleanPath = formatErrorPath(issue.path.map(String));
+        return `${cleanPath}: ${issue.message}`;
+    });
+};
 
 /**
  * Recursively walks the React Hook Form errors object and returns an array of human-readable error messages.
@@ -43,7 +51,7 @@ const formatErrorPath = (path: string[]): string => {
     for (let i = 0; i < path.length; i++) {
         const part = path[i];
 
-        if (part === 'handlersProfile' && i + 1 < path.length) {
+        if ((part === 'handlersProfile' || part === 'xrayProfiles') && i + 1 < path.length) {
             const index = Number(path[i + 1]);
             if (!isNaN(index)) {
                 parts.push(`Profile #${index + 1}`);

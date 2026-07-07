@@ -79,20 +79,7 @@ const defaultDraftConfig = (): GlobalConfig => ({
     daqFrequency: 1,
     samplePoints: 1000,
     handlerProfiles: [],
-    xrayProfiles: [
-        {
-            id: "xrayProfile1",
-            name: "xrayProfile1",
-            x: "0",
-            z: "0",
-            omeStart: "0",
-            omeStop: "0",
-            ctime: "1",
-            beamHeight: "1",
-            beamWidth: "1",
-            atten: "0",
-        }
-    ]
+    xrayProfiles: []
 });
 
 export const useConfigurationStore = create<ConfigurationState>()(

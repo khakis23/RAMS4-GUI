@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Button } from "../../components/ui/button.tsx";
 import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
-import { compileFormErrors } from "./utils/validationUtils.ts";
+import { compileZodErrors } from "./utils/validationUtils.ts";
 import { xrayFormSchema } from "./profileSchemas/xraySchema.ts";
 import { XrayProfileCard } from "./components/XrayProfileCard.tsx";
 import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
@@ -59,20 +59,28 @@ export const TabXray = () => {
         })
     });
 
-    // Connect errors to validation warning store under 'xray' key
+    // Connect errors to validation warning store under 'xray' key by validating watchedValues against Zod schema
     const { setErrors } = useValidationStore();
     useEffect(() => {
-        const errorMessages = compileFormErrors(errors);
-        
-        const existingErrors = useValidationStore.getState().errors['xray'] || [];
-        const hasChanged = 
-            existingErrors.length !== errorMessages.length ||
-            errorMessages.some((msg: string, idx: number) => msg !== existingErrors[idx]);
-        
-        if (hasChanged) {
-            setErrors('xray', errorMessages);
+        const result = xrayFormSchema.safeParse(watchedValues);
+        if (!result.success) {
+            const errorMessages = compileZodErrors(result.error);
+            
+            const existingErrors = useValidationStore.getState().errors['xray'] || [];
+            const hasChanged = 
+                existingErrors.length !== errorMessages.length ||
+                errorMessages.some((msg: string, idx: number) => msg !== existingErrors[idx]);
+            
+            if (hasChanged) {
+                setErrors('xray', errorMessages);
+            }
+        } else {
+            const existingErrors = useValidationStore.getState().errors['xray'] || [];
+            if (existingErrors.length > 0) {
+                setErrors('xray', []);
+            }
         }
-    }, [errors, setErrors]);
+    }, [watchedValues, setErrors]);
 
     return (
         <ConfigTabSection
@@ -95,16 +103,16 @@ export const TabXray = () => {
                     <Button 
                         type="button" 
                         onClick={() => append({ 
-                            id: `xrayProfile${fields.length + 1}`,
-                            name: `xrayProfile${fields.length + 1}`,
-                            x: "0",
-                            z: "0",
-                            omeStart: "0",
-                            omeStop: "0",
-                            ctime: "1",
-                            beamHeight: "1",
-                            beamWidth: "1",
-                            atten: "0"
+                            id: `xrayProfile${Date.now()}`,
+                            name: "",
+                            x: "",
+                            z: "",
+                            omeStart: "",
+                            omeStop: "",
+                            ctime: "",
+                            beamHeight: "",
+                            beamWidth: "",
+                            atten: ""
                         })}
                         className="w-full mt-4"
                     >
