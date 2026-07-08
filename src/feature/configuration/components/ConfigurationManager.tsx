@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs.tsx";
 import { Button } from "../../../components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select.tsx";
@@ -53,18 +53,25 @@ export const ConfigurationManager = () => {
     const parseDirectoryPath = (path: string) => {
         const parts = path.split('/').filter(Boolean);
         if (parts.length >= 8 && parts[0] === 'nfs' && parts[1] === 'chess' && parts[2] === 'aux' && parts[3] === 'cycles') {
+            const hasMetadata = parts[7] === 'metadata';
+            if (hasMetadata && parts.length < 9) return null;
             return {
                 cycle: parts[4],
                 station: parts[5],
                 btr: parts[6],
-                sample: parts[7]
+                sample: hasMetadata ? parts[8] : parts[7]
             };
         }
         return null;
     };
 
+    const hasLoadedInitial = useRef(false);
+
     // Load initial root Cycle list, and reconstruct options chain if configDirectory exists
     useEffect(() => {
+        if (hasLoadedInitial.current) return;
+        hasLoadedInitial.current = true;
+
         const loadInitialData = async () => {
             try {
                 const cycles = await fetchDirItems('cycle', "");
@@ -242,9 +249,29 @@ export const ConfigurationManager = () => {
           }
       };
 
-      const handleManualToggleClick = () => {
+      const handleManualToggleClick = async () => {
           if (isManualPath) {
               setIsManualPath(false);
+              if (draft.configDirectory) {
+                  const parsed = parseDirectoryPath(draft.configDirectory);
+                  if (parsed) {
+                      try {
+                          const stations = await fetchDirItems('station', parsed.cycle);
+                          setStationOptions(stations);
+                          
+                          const btrs = await fetchDirItems('btr', parsed.cycle);
+                          setBtrOptions(btrs);
+                          
+                          const samples = await fetchDirItems('sample', parsed.btr);
+                          setSampleOptions(samples);
+                          
+                          const exps = await fetchDirItems('experiment', parsed.sample);
+                          setExperimentOptions(exps);
+                      } catch (error) {
+                          console.error("Failed to refresh options when exiting manual path mode", error);
+                      }
+                  }
+              }
           } else {
               const isDismissed = sessionStorage.getItem('dismissManualWarning') === 'true';
               if (isDismissed) {

@@ -30,7 +30,7 @@ export interface PathsResponse {
 /**
  * /nfs/chess/aux/cycles/current/id1a3/<BTR>/metadata/
  */
-export const fetchDirItems = async (getDir: PathType, prevDir: string): Promise<string[]> => {
+export const fetchDirItems = async (getDir: PathType, prevDirName: string): Promise<string[]> => {
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -41,7 +41,7 @@ export const fetchDirItems = async (getDir: PathType, prevDir: string): Promise<
         case 'station':
             return ['id1a3', 'id1b3'];
         case 'btr':
-            switch (prevDir) {
+            switch (prevDirName) {
                 case '2026-2':
                     return ['sjobs-123', 'tcook-456', 'jternus789']
                 case '2026-1':
@@ -50,7 +50,7 @@ export const fetchDirItems = async (getDir: PathType, prevDir: string): Promise<
                     return [];
             }
         case 'sample':
-            switch (prevDir) {
+            switch (prevDirName) {
                 case 'sjobs-123':
                     return ["titanium_specimen_02", "titanium_tensile_01"];
                 case 'tcook-456':
@@ -65,7 +65,7 @@ export const fetchDirItems = async (getDir: PathType, prevDir: string): Promise<
                     return [];
         }
         case 'experiment':
-            switch (prevDir) {
+            switch (prevDirName) {
                 case 'titanium_specimen_02':
                 case 'aluminum_shear_02':
                     return ['1', '2', '3'];

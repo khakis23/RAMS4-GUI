@@ -18,6 +18,7 @@ dist-ssr
 .idea
 .DS_Store
 .agents/*
+CLAUDE.md
 *.suo
 *.ntvs*
 *.njsproj
