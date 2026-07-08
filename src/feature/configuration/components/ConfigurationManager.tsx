@@ -4,10 +4,12 @@ import { Button } from "../../../components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
-import { postConfigToGateway, fetchPaths } from "../../../api/configApi.ts";
+import { postConfigToGateway, fetchDirItems } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { PencilLine } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
+import { Input } from "../../../components/ui/input.tsx";
+import { Checkbox } from "../../../components/ui/checkbox.tsx";
 
 type TabName = 'daq' | 'xray' | 'dic';
 
@@ -22,6 +24,8 @@ export const ConfigurationManager = () => {
     const [pendingTab, setPendingTab] = useState<TabName | null>(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [isManualPath, setIsManualPath] = useState(false);
+    const [dontShowWarningAgain, setDontShowWarningAgain] = useState(false);
+    const [showManualWarningModal, setShowManualWarningModal] = useState(false);
     const { errors: validationErrors, setErrors } = useValidationStore();
 
     const handleTabChange = (nextTab: string) => {
@@ -36,85 +40,228 @@ export const ConfigurationManager = () => {
 
     const { draft, updateDraft } = useConfigurationStore();
 
-    // State to hold path parameters retrieved from filesystem crawler API
-    const [pathOptions, setPathOptions] = useState<{
-        cycles: string[];
-        users: string[];
-        samples: string[];
-        experimentNumbers: string[];
-    }>({
-        cycles: [],
-        users: [],
-        samples: [],
-        experimentNumbers: []
-    });
+    // Option states for the dropdown selectors
+    const [cycleOptions, setCycleOptions] = useState<string[]>([]);
+    const [stationOptions, setStationOptions] = useState<string[]>([]);
+    const [btrOptions, setBtrOptions] = useState<string[]>([]);
+    const [sampleOptions, setSampleOptions] = useState<string[]>([]);
+    const [experimentOptions, setExperimentOptions] = useState<string[]>([]);
+    
+    const [selectedStation, setSelectedStation] = useState<string>("");
 
-    // Load path options dynamically from backend
+    // Helper to parse cycle, station, btr, sample from a path string
+    const parseDirectoryPath = (path: string) => {
+        const parts = path.split('/').filter(Boolean);
+        if (parts.length >= 8 && parts[0] === 'nfs' && parts[1] === 'chess' && parts[2] === 'aux' && parts[3] === 'cycles') {
+            return {
+                cycle: parts[4],
+                station: parts[5],
+                btr: parts[6],
+                sample: parts[7]
+            };
+        }
+        return null;
+    };
+
+    // Load initial root Cycle list, and reconstruct options chain if configDirectory exists
     useEffect(() => {
-        const loadPaths = async () => {
+        const loadInitialData = async () => {
             try {
-                const paths = await fetchPaths();
-                setPathOptions({
-                    cycles: paths.cycles,
-                    users: paths.users,
-                    samples: paths.samples,
-                    experimentNumbers: paths.experimentNumbers
-                });
+                const cycles = await fetchDirItems('cycle', "");
+                setCycleOptions(cycles);
 
-                // Auto-fill metadata defaults from last accessed directory if currently blank
-                updateDraft({
-                    cycleNumber: draft.cycleNumber,
-                    userId: draft.userId,
-                    sampleName: draft.sampleName,
-                    experimentNumber: draft.experimentNumber,
-                });
+                if (draft.configDirectory) {
+                    const parsed = parseDirectoryPath(draft.configDirectory);
+                    if (parsed) {
+                        setSelectedStation(parsed.station);
+                        
+                        // Load options for the pre-saved paths sequentially
+                        const stations = await fetchDirItems('station', parsed.cycle);
+                        setStationOptions(stations);
+                        
+                        const btrs = await fetchDirItems('btr', parsed.cycle);
+                        setBtrOptions(btrs);
+                        
+                        const samples = await fetchDirItems('sample', parsed.btr);
+                        setSampleOptions(samples);
+                        
+                        const exps = await fetchDirItems('experiment', parsed.sample);
+                        setExperimentOptions(exps);
+
+                        updateDraft({
+                            cycleNumber: parsed.cycle,
+                            userId: parsed.btr,
+                            sampleName: parsed.sample
+                        });
+                    }
+                } else {
+                    // Fallback: if dropdown keys exist individually, reconstruct
+                    if (draft.cycleNumber) {
+                        const stations = await fetchDirItems('station', draft.cycleNumber);
+                        setStationOptions(stations);
+                    }
+                }
             } catch (error) {
-                console.error("Failed to load CHESS paths from gateway", error);
+                console.error("Failed to load initial directories from gateway", error);
             }
         };
-        loadPaths();
-    }, [updateDraft]);
-    const handleSampleChange = (val: string) => {
+        loadInitialData();
+    }, [draft.configDirectory, updateDraft]);
+
+    const handleCycleChange = async (val: string) => {
+        updateDraft({
+            cycleNumber: val,
+            userId: "",
+            sampleName: "",
+            experimentNumber: "",
+            configDirectory: ""
+        });
+        setSelectedStation("");
+        setStationOptions([]);
+        setBtrOptions([]);
+        setSampleOptions([]);
+        setExperimentOptions([]);
+
+        if (val) {
+            try {
+                const stations = await fetchDirItems('station', val);
+                setStationOptions(stations);
+            } catch (error) {
+                console.error("Failed to load stations for cycle", error);
+            }
+        }
+    };
+
+    const handleStationChange = async (val: string) => {
+        setSelectedStation(val);
+        updateDraft({
+            userId: "",
+            sampleName: "",
+            experimentNumber: "",
+            configDirectory: ""
+        });
+        setBtrOptions([]);
+        setSampleOptions([]);
+        setExperimentOptions([]);
+
+        if (val && draft.cycleNumber) {
+            try {
+                const btrs = await fetchDirItems('btr', draft.cycleNumber);
+                setBtrOptions(btrs);
+            } catch (error) {
+                console.error("Failed to load users for station", error);
+            }
+        }
+    };
+
+    const handleBtrChange = async (val: string) => {
+        updateDraft({
+            userId: val,
+            sampleName: "",
+            experimentNumber: "",
+            configDirectory: ""
+        });
+        setSampleOptions([]);
+        setExperimentOptions([]);
+
+        if (val) {
+            try {
+                const samples = await fetchDirItems('sample', val);
+                setSampleOptions(samples);
+            } catch (error) {
+                console.error("Failed to load samples for user/btr", error);
+            }
+        }
+    };
+
+    const handleSampleChange = async (val: string) => {
+        const updateAndFetchDir = async (sampleVal: string) => {
+            const fullDir = `/nfs/chess/aux/cycles/${draft.cycleNumber}/${selectedStation}/${draft.userId}/metadata/${sampleVal}/`;
+            updateDraft({
+                sampleName: sampleVal,
+                experimentNumber: "",
+                configDirectory: fullDir
+            });
+            setExperimentOptions([]);
+            try {
+                const exps = await fetchDirItems('experiment', sampleVal);
+                setExperimentOptions(exps);
+            } catch (error) {
+                console.error("Failed to load experiments for sample", error);
+            }
+        };
+
         if (val === "new-sample-action") {
-            const currentName = draft.sampleName;
             const newName = prompt("Enter new sample name:");
             if (newName && newName.trim()) {
                 const cleaned = newName.trim();
-                if (!pathOptions.samples.includes(cleaned)) {
-                    setPathOptions(prev => ({
-                        ...prev,
-                        samples: [...prev.samples, cleaned]
-                    }));
+                if (!sampleOptions.includes(cleaned)) {
+                    setSampleOptions(prev => [...prev, cleaned]);
                 }
-                updateDraft({ sampleName: cleaned });
-            } else {
-                updateDraft({ sampleName: currentName });
+                await updateAndFetchDir(cleaned);
             }
         } else {
-            updateDraft({ sampleName: val });
+            if (val) {
+                await updateAndFetchDir(val);
+            } else {
+                updateDraft({ sampleName: "", configDirectory: "" });
+                setExperimentOptions([]);
+            }
         }
     };
 
     const handleExperimentChange = (val: string) => {
         if (val === "new-experiment-action") {
-            const numbers = pathOptions.experimentNumbers
+            const numbers = experimentOptions
                 .map(item => parseInt(item, 10))
                 .filter(num => !isNaN(num));
             
             const nextNum = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
             const nextExpStr = String(nextNum);
 
-            if (!pathOptions.experimentNumbers.includes(nextExpStr)) {
-                setPathOptions(prev => ({
-                    ...prev,
-                    experimentNumbers: [...prev.experimentNumbers, nextExpStr]
-                }));
+            if (!experimentOptions.includes(nextExpStr)) {
+                setExperimentOptions(prev => [...prev, nextExpStr]);
             }
             updateDraft({ experimentNumber: nextExpStr });
-        } else {
-            updateDraft({ experimentNumber: val });
-        }
-    };
+          } else {
+              updateDraft({ experimentNumber: val });
+          }
+      };
+
+      // Handler for direct manual editing of the directory path string
+      const handleManualDirectoryChange = (val: string) => {
+          updateDraft({ configDirectory: val });
+          const parsed = parseDirectoryPath(val);
+          if (parsed) {
+              setSelectedStation(parsed.station);
+              updateDraft({
+                  cycleNumber: parsed.cycle,
+                  userId: parsed.btr,
+                  sampleName: parsed.sample
+              });
+          }
+      };
+
+      const handleManualToggleClick = () => {
+          if (isManualPath) {
+              setIsManualPath(false);
+          } else {
+              const isDismissed = sessionStorage.getItem('dismissManualWarning') === 'true';
+              if (isDismissed) {
+                  setIsManualPath(true);
+              } else {
+                  setShowManualWarningModal(true);
+              }
+          }
+      };
+
+      const handleConfirmManualProceed = () => {
+          if (dontShowWarningAgain) {
+              sessionStorage.setItem('dismissManualWarning', 'true');
+          }
+          setIsManualPath(true);
+          setShowManualWarningModal(false);
+      };
     const isConfigValid = Object.values(validationErrors).flat().length === 0;
 
     const handleSave = async () => {
@@ -210,89 +357,129 @@ export const ConfigurationManager = () => {
                     </Tabs>
                 </div>
                 
-                {/* Compact Metadata Selectors */}
-                <div className="flex flex-row items-end gap-3.5 text-xs text-mauve-600 font-medium">
-                    <div className="flex flex-col gap-1 items-start">
-                        <span className="text-sm font-medium text-mauve-850">Cycle</span>
-                        <Select 
-                            value={draft.cycleNumber} 
-                            onValueChange={(val) => updateDraft({ cycleNumber: val })}
-                        >
-                            <SelectTrigger className="h-8 w-[110px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
-                                <SelectValue placeholder="Cycle" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {pathOptions.cycles.map(c => (
-                                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                {/* Compact Metadata Selectors or Manual Path Input */}
+                <div className="flex flex-row items-end gap-2 text-xs text-mauve-600 font-medium flex-1 justify-end">
+                    {isManualPath ? (
+                        <div className="flex flex-col gap-1.5 items-start flex-1 max-w-xl">
+                            <span className="text-sm font-medium text-mauve-850">Configuration Directory</span>
+                            <Input 
+                                value={draft.configDirectory}
+                                onChange={(e: any) => handleManualDirectoryChange(e.target.value)}
+                                placeholder="/nfs/chess/aux/cycles/..."
+                                className="h-8 w-full bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm focus-visible:ring-mauve-400"
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            {/* 1. Cycle Select */}
+                            <div className="flex flex-col gap-1 items-start">
+                                <span className="text-sm font-medium text-mauve-850">Cycle</span>
+                                <Select 
+                                    value={draft.cycleNumber} 
+                                    onValueChange={handleCycleChange}
+                                >
+                                    <SelectTrigger className="h-8 w-[110px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
+                                        <SelectValue placeholder="" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {cycleOptions.map(c => (
+                                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                    <div className="flex flex-col gap-1.5 items-start">
-                        <span className="text-sm font-medium text-mauve-850">User ID</span>
-                        <Select 
-                            value={draft.userId} 
-                            onValueChange={(val) => updateDraft({ userId: val })}
-                        >
-                            <SelectTrigger className="h-8 w-[200px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
-                                <SelectValue placeholder="User" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {pathOptions.users.map(u => (
-                                    <SelectItem key={u} value={u}>{u}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                            {/* 2. Station Select */}
+                            <div className="flex flex-col gap-1 items-start">
+                                <span className="text-sm font-medium text-mauve-850">Station</span>
+                                <Select 
+                                    value={selectedStation} 
+                                    onValueChange={handleStationChange}
+                                    disabled={!draft.cycleNumber}
+                                >
+                                    <SelectTrigger className="h-8 w-[95px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm disabled:opacity-50">
+                                        <SelectValue placeholder="" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {stationOptions.map(st => (
+                                            <SelectItem key={st} value={st}>{st}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                    <div className="flex flex-col gap-1.5 items-start">
-                        <span className="text-sm font-medium text-mauve-850">Sample Name</span>
-                        <Select 
-                            value={draft.sampleName} 
-                            onValueChange={handleSampleChange}
-                        >
-                            <SelectTrigger className="h-8 w-[200px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
-                                <SelectValue placeholder="Sample" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {pathOptions.samples.map(s => (
-                                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                                ))}
-                                <SelectItem value="new-sample-action" className="font-semibold text-mauve-800 border-t mt-1">
-                                    + New Sample...
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                            {/* 3. BTR / User ID Select */}
+                            <div className="flex flex-col gap-1.5 items-start">
+                                <span className="text-sm font-medium text-mauve-850">BTR</span>
+                                <Select 
+                                    value={draft.userId} 
+                                    onValueChange={handleBtrChange}
+                                    disabled={!selectedStation}
+                                >
+                                    <SelectTrigger className="h-8 w-[150px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm disabled:opacity-50">
+                                        <SelectValue placeholder="" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {btrOptions.map(b => (
+                                            <SelectItem key={b} value={b}>{b}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                    <div className="flex flex-col gap-1.5 items-start">
-                        <span className="text-sm font-medium text-mauve-850">Experiment</span>
-                        <Select 
-                            value={draft.experimentNumber} 
-                            onValueChange={handleExperimentChange}
-                        >
-                            <SelectTrigger className="h-8 w-[75px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm">
-                                <SelectValue placeholder="Exp" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {pathOptions.experimentNumbers.map(e => (
-                                    <SelectItem key={e} value={e}>{e}</SelectItem>
-                                ))}
-                                <SelectItem value="new-experiment-action" className="font-semibold text-mauve-800 border-t mt-1">
-                                    + New Exp...
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                            {/* 4. Sample Name Select */}
+                            <div className="flex flex-col gap-1.5 items-start">
+                                <span className="text-sm font-medium text-mauve-850">Sample Name</span>
+                                <Select 
+                                    value={draft.sampleName} 
+                                    onValueChange={handleSampleChange}
+                                    disabled={!draft.userId}
+                                >
+                                    <SelectTrigger className="h-8 w-[190px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm disabled:opacity-50">
+                                        <SelectValue placeholder="" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {sampleOptions.map(s => (
+                                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                                        ))}
+                                        <SelectItem value="new-sample-action" className="font-semibold text-mauve-800 border-t mt-1">
+                                            + New Sample...
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
+                            {/* 5. Experiment Select */}
+                            <div className="flex flex-col gap-1.5 items-start">
+                                <span className="text-sm font-medium text-mauve-850">Exp. #</span>
+                                <Select 
+                                    value={draft.experimentNumber} 
+                                    onValueChange={handleExperimentChange}
+                                    disabled={!draft.sampleName}
+                                >
+                                    <SelectTrigger className="h-8 w-[70px] bg-white border-mauve-200 rounded-xl text-sm px-3 shadow-sm disabled:opacity-50">
+                                        <SelectValue placeholder="" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {experimentOptions.map(e => (
+                                            <SelectItem key={e} value={e}>{e}</SelectItem>
+                                        ))}
+                                        <SelectItem value="new-experiment-action" className="font-semibold text-mauve-800 border-t mt-1">
+                                            + New Exp...
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </>
+                    )}
+                    
                     {/* Manual Path Mode Toggle Button with Tooltip */}
                     <TooltipProvider delayDuration={350}>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
                                     variant="ghost"
-                                    onClick={() => setIsManualPath(!isManualPath)}
+                                    onClick={handleManualToggleClick}
                                     className={`h-8 w-8 p-0 rounded-xl border border-mauve-200 transition-colors ${
                                         isManualPath 
                                             ? 'bg-mauve-600 text-white hover:bg-mauve-700' 
@@ -310,58 +497,116 @@ export const ConfigurationManager = () => {
                 </div>
             </div>
 
-              {/* Tab Content Card (flex-grow dynamically to fill remaining height) */}
-              <div className='flex-1 min-h-0 bg-white p-6 rounded-3xl border border-mauve-200 shadow-sm overflow-y-auto'>
-                  {activeTab && renderTabContent()}
-              </div>
+            {/* Tab Content Card (flex-grow dynamically to fill remaining height) */}
+            <div className='flex-1 min-h-0 bg-white p-6 rounded-3xl border border-mauve-200 shadow-sm overflow-y-auto'>
+                {activeTab && renderTabContent()}
+            </div>
 
-            {showConfirmDialog && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center gap-2.5 text-red-655 font-bold text-lg">
-                            <span>⚠️ Unsaved Validation Errors</span>
-                        </div>
-                        
-                        <p className="text-sm text-gray-600">
-                            You have invalid fields on the current tab that cannot be saved. Leaving will discard these changes.
-                        </p>
-                        
-                        <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex flex-col gap-2 max-h-48 overflow-y-auto">
-                            <span className="text-xs font-bold text-red-800">Please fix the following fields:</span>
-                            <ul className="list-disc list-inside text-xs text-red-700 space-y-1.5 pl-1">
-                                {(validationErrors[activeTab] || []).map((err, i) => (
-                                    <li key={i}>{err}</li>
-                                ))}
-                            </ul>
-                        </div>
-                        
-                        <div className="flex gap-3 justify-end mt-2">
-                            <Button
-                                variant="secondary"
-                                onClick={() => {
-                                    setShowConfirmDialog(false);
-                                    setPendingTab(null);
-                                }}
-                            >
-                                Stay and Fix
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                onClick={() => {
-                                    setShowConfirmDialog(false);
-                                    if (pendingTab) {
-                                        setErrors(activeTab, []);
-                                        setActiveTab(pendingTab);
-                                    }
-                                    setPendingTab(null);
-                                }}
-                            >
-                                Discard & Switch
-                            </Button>
-                        </div>
-                    </div>
+            {/* Tab Switch Unsaved Validation Warning */}
+            <WarningModal
+                isOpen={showConfirmDialog}
+                title="Unsaved Validation Errors"
+                description="You have invalid fields on the current tab that cannot be saved. Leaving will discard these changes."
+                confirmText="Discard & Switch"
+                cancelText="Stay and Fix"
+                onConfirm={() => {
+                    setShowConfirmDialog(false);
+                    if (pendingTab) {
+                        setErrors(activeTab, []);
+                        setActiveTab(pendingTab);
+                    }
+                    setPendingTab(null);
+                }}
+                onCancel={() => {
+                    setShowConfirmDialog(false);
+                    setPendingTab(null);
+                }}
+            >
+                <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex flex-col gap-2 max-h-48 overflow-y-auto">
+                    <span className="text-xs font-bold text-red-800">Please fix the following fields:</span>
+                    <ul className="list-disc list-inside text-xs text-red-700 space-y-1.5 pl-1">
+                        {(validationErrors[activeTab] || []).map((err, i) => (
+                            <li key={i}>{err}</li>
+                        ))}
+                    </ul>
                 </div>
-            )}
+            </WarningModal>
+
+            {/* Advanced Manual Path Warning Dialog */}
+            <WarningModal
+                isOpen={showManualWarningModal}
+                title="Advanced Action Required"
+                description={
+                    <>Editing the path manually is an <strong>advanced feature</strong>. Incorrect paths can prevent your configuration from loading correctly or modify files on the CHESS system.</>
+                }
+                confirmText="Proceed"
+                cancelText="Cancel"
+                onConfirm={handleConfirmManualProceed}
+                onCancel={() => {
+                    setShowManualWarningModal(false);
+                    setDontShowWarningAgain(false);
+                }}
+            >
+                <div className="flex items-center gap-2 mt-1">
+                    <Checkbox 
+                        id="dontShowAgain"
+                        checked={dontShowWarningAgain}
+                        onCheckedChange={(checked) => setDontShowWarningAgain(!!checked)}
+                        className="border-mauve-300 data-checked:bg-mauve-600 data-checked:border-mauve-600 data-checked:text-white focus-visible:ring-mauve-400"
+                    />
+                    <label htmlFor="dontShowAgain" className="text-xs text-gray-505 font-medium select-none cursor-pointer">
+                        Don't show warning again for this session
+                    </label>
+                </div>
+            </WarningModal>
+        </div>
+    );
+};
+
+// Reusable Warning Modal Sub-component
+interface WarningModalProps {
+    isOpen: boolean;
+    title: string;
+    titleColorClass?: string;
+    description: string | React.ReactNode;
+    confirmText: string;
+    cancelText: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+    children?: React.ReactNode;
+}
+
+const WarningModal = ({
+    isOpen,
+    title,
+    titleColorClass = "text-destructive",
+    description,
+    confirmText,
+    cancelText,
+    onConfirm,
+    onCancel,
+    children
+}: WarningModalProps) => {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200">
+                <div className={`flex items-center gap-2.5 font-bold text-lg ${titleColorClass}`}>
+                    <span>{title}</span>
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                    {description}
+                </p>
+                {children}
+                <div className="flex gap-3 justify-end mt-2">
+                    <Button variant="secondary" onClick={onCancel}>
+                        {cancelText}
+                    </Button>
+                    <Button variant="destructive" onClick={onConfirm}>
+                        {confirmText}
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 };

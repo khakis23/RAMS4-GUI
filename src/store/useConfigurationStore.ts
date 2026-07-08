@@ -26,6 +26,7 @@ export interface GlobalConfig {
     sampleName: string;
     userId: string;
     experimentNumber: string;
+    configDirectory: string;
 
     // DAQ
     requiredAxes: string[];
@@ -75,6 +76,7 @@ const defaultDraftConfig = (): GlobalConfig => ({
     sampleName: "",
     userId: "",
     experimentNumber: "",
+    configDirectory: "",
     requiredAxes: ["A", "B", "RA", "RB"],
     daqFrequency: 1,
     samplePoints: 1000,
