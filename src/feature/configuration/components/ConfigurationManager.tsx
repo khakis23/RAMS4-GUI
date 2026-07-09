@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs.tsx";
 import { Button } from "../../../components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
-import { postConfigToGateway, fetchDirItems } from "../../../api/configApi.ts";
+import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { PencilLine } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
@@ -28,6 +28,36 @@ export const ConfigurationManager = () => {
     const [showManualWarningModal, setShowManualWarningModal] = useState(false);
     const { errors: validationErrors, setErrors } = useValidationStore();
 
+    // Baseline configuration ref for dirty checking
+    const savedConfigRef = useRef<any>(null);
+
+    // Trackers for last committed path selectors to support reversions
+    const { draft, updateDraft } = useConfigurationStore();
+    const [selectedStation, setSelectedStation] = useState<string>("");
+
+    const lastCycle = useRef(draft.cycleNumber);
+    const lastStation = useRef(selectedStation);
+    const lastBtr = useRef(draft.userId);
+    const lastSample = useRef(draft.sampleName);
+    const lastExp = useRef(draft.experimentNumber);
+    const lastManualPath = useRef(draft.configDirectory);
+    const lastIsManualPath = useRef(isManualPath);
+
+    // State for pending path changes
+    interface PendingPathChange {
+        type: 'cycle' | 'station' | 'btr' | 'sample' | 'experiment' | 'manual' | 'manualToggle';
+        val: any;
+    }
+    const [pendingPathChange, setPendingPathChange] = useState<PendingPathChange | null>(null);
+    const [showDiscardModal, setShowDiscardModal] = useState(false);
+
+    // Deep compare draft vs saved config to compute dirty state
+    const isDirty = useMemo(() => {
+        if (!savedConfigRef.current) return false;
+        const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles'] as const;
+        return keys.some(key => JSON.stringify(draft[key]) !== JSON.stringify(savedConfigRef.current[key]));
+    }, [draft]);
+
     const handleTabChange = (nextTab: string) => {
         const activeTabErrors = validationErrors[activeTab] || [];
         if (activeTabErrors.length > 0) {
@@ -38,16 +68,12 @@ export const ConfigurationManager = () => {
         }
     };
 
-    const { draft, updateDraft } = useConfigurationStore();
-
     // Option states for the dropdown selectors
     const [cycleOptions, setCycleOptions] = useState<string[]>([]);
     const [stationOptions, setStationOptions] = useState<string[]>([]);
     const [btrOptions, setBtrOptions] = useState<string[]>([]);
     const [sampleOptions, setSampleOptions] = useState<string[]>([]);
     const [experimentOptions, setExperimentOptions] = useState<string[]>([]);
-    
-    const [selectedStation, setSelectedStation] = useState<string>("");
 
     // Helper to parse cycle, station, btr, sample from a path string
     const parseDirectoryPath = (path: string) => {
@@ -66,6 +92,16 @@ export const ConfigurationManager = () => {
     };
 
     const hasLoadedInitial = useRef(false);
+
+    const commitPathRefs = () => {
+        lastCycle.current = draft.cycleNumber;
+        lastStation.current = selectedStation;
+        lastBtr.current = draft.userId;
+        lastSample.current = draft.sampleName;
+        lastExp.current = draft.experimentNumber;
+        lastManualPath.current = draft.configDirectory;
+        lastIsManualPath.current = isManualPath;
+    };
 
     // Load initial root Cycle list, and reconstruct options chain if configDirectory exists
     useEffect(() => {
@@ -100,6 +136,15 @@ export const ConfigurationManager = () => {
                             userId: parsed.btr,
                             sampleName: parsed.sample
                         });
+
+                        // Set initial committed refs
+                        lastCycle.current = parsed.cycle;
+                        lastStation.current = parsed.station;
+                        lastBtr.current = parsed.btr;
+                        lastSample.current = parsed.sample;
+                        lastExp.current = draft.experimentNumber;
+                        lastManualPath.current = draft.configDirectory;
+                        lastIsManualPath.current = isManualPath;
                     }
                 } else {
                     // Fallback: if dropdown keys exist individually, reconstruct
@@ -113,9 +158,77 @@ export const ConfigurationManager = () => {
             }
         };
         loadInitialData();
-    }, [draft.configDirectory, updateDraft]);
+    }, [draft.configDirectory, updateDraft, draft.cycleNumber, draft.experimentNumber, isManualPath, selectedStation]);
 
-    const handleCycleChange = async (val: string) => {
+    // Hook to dynamically load config file from gateway when path changes
+    useEffect(() => {
+        const dir = draft.configDirectory;
+        const exp = draft.experimentNumber;
+
+        if (!dir || !exp) {
+            savedConfigRef.current = null;
+            return;
+        }
+
+        const loadConfig = async () => {
+            try {
+                const fetched = await fetchConfigFromGateway(dir, exp);
+                if (fetched) {
+                    // Loaded existing JSON configuration
+                    updateDraft({
+                        requiredAxes: fetched.requiredAxes || ["A", "B", "RA", "RB"],
+                        daqFrequency: fetched.daqFrequency ?? 1,
+                        samplePoints: fetched.samplePoints ?? 1000,
+                        handlerProfiles: fetched.handlerProfiles || [],
+                        xrayProfiles: fetched.xrayProfiles || []
+                    });
+                    savedConfigRef.current = JSON.parse(JSON.stringify(fetched));
+                } else {
+                    // Initialize blank default setup config
+                    const defaults = {
+                        cycleNumber: draft.cycleNumber,
+                        userId: draft.userId,
+                        sampleName: draft.sampleName,
+                        experimentNumber: draft.experimentNumber,
+                        configDirectory: draft.configDirectory,
+                        requiredAxes: ["A", "B", "RA", "RB"],
+                        daqFrequency: 1,
+                        samplePoints: 1000,
+                        handlerProfiles: [],
+                        xrayProfiles: []
+                    };
+                    updateDraft({
+                        requiredAxes: ["A", "B", "RA", "RB"],
+                        daqFrequency: 1,
+                        samplePoints: 1000,
+                        handlerProfiles: [],
+                        xrayProfiles: []
+                    });
+                    savedConfigRef.current = defaults;
+                }
+                commitPathRefs();
+            } catch (err) {
+                console.error("Failed to fetch path config from gateway", err);
+            }
+        };
+
+        loadConfig();
+    }, [draft.configDirectory, draft.experimentNumber]);
+
+    const revertPathSelectors = () => {
+        updateDraft({
+            cycleNumber: lastCycle.current,
+            userId: lastBtr.current,
+            sampleName: lastSample.current,
+            experimentNumber: lastExp.current,
+            configDirectory: lastManualPath.current
+        });
+        setSelectedStation(lastStation.current);
+        setIsManualPath(lastIsManualPath.current);
+    };
+
+    // Transition execution triggers
+    const executeCycleChange = async (val: string) => {
         updateDraft({
             cycleNumber: val,
             userId: "",
@@ -137,9 +250,15 @@ export const ConfigurationManager = () => {
                 console.error("Failed to load stations for cycle", error);
             }
         }
+        lastCycle.current = val;
+        lastStation.current = "";
+        lastBtr.current = "";
+        lastSample.current = "";
+        lastExp.current = "";
+        lastManualPath.current = "";
     };
 
-    const handleStationChange = async (val: string) => {
+    const executeStationChange = async (val: string) => {
         setSelectedStation(val);
         updateDraft({
             userId: "",
@@ -159,9 +278,14 @@ export const ConfigurationManager = () => {
                 console.error("Failed to load users for station", error);
             }
         }
+        lastStation.current = val;
+        lastBtr.current = "";
+        lastSample.current = "";
+        lastExp.current = "";
+        lastManualPath.current = "";
     };
 
-    const handleBtrChange = async (val: string) => {
+    const executeBtrChange = async (val: string) => {
         updateDraft({
             userId: val,
             sampleName: "",
@@ -179,9 +303,13 @@ export const ConfigurationManager = () => {
                 console.error("Failed to load samples for user/btr", error);
             }
         }
+        lastBtr.current = val;
+        lastSample.current = "";
+        lastExp.current = "";
+        lastManualPath.current = "";
     };
 
-    const handleSampleChange = async (val: string) => {
+    const executeSampleChange = async (val: string) => {
         const updateAndFetchDir = async (sampleVal: string) => {
             const fullDir = `/nfs/chess/aux/cycles/${draft.cycleNumber}/${selectedStation}/${draft.userId}/metadata/${sampleVal}/`;
             updateDraft({
@@ -196,6 +324,9 @@ export const ConfigurationManager = () => {
             } catch (error) {
                 console.error("Failed to load experiments for sample", error);
             }
+            lastSample.current = sampleVal;
+            lastExp.current = "";
+            lastManualPath.current = fullDir;
         };
 
         if (val === "new-sample-action") {
@@ -206,6 +337,8 @@ export const ConfigurationManager = () => {
                     setSampleOptions(prev => [...prev, cleaned]);
                 }
                 await updateAndFetchDir(cleaned);
+            } else {
+                revertPathSelectors();
             }
         } else {
             if (val) {
@@ -213,11 +346,14 @@ export const ConfigurationManager = () => {
             } else {
                 updateDraft({ sampleName: "", configDirectory: "" });
                 setExperimentOptions([]);
+                lastSample.current = "";
+                lastExp.current = "";
+                lastManualPath.current = "";
             }
         }
     };
 
-    const handleExperimentChange = (val: string) => {
+    const executeExperimentChange = (val: string) => {
         if (val === "new-experiment-action") {
             const numbers = experimentOptions
                 .map(item => parseInt(item, 10))
@@ -230,65 +366,176 @@ export const ConfigurationManager = () => {
                 setExperimentOptions(prev => [...prev, nextExpStr]);
             }
             updateDraft({ experimentNumber: nextExpStr });
-          } else {
-              updateDraft({ experimentNumber: val });
-          }
-      };
+            lastExp.current = nextExpStr;
+        } else {
+            updateDraft({ experimentNumber: val });
+            lastExp.current = val;
+        }
+    };
 
-      // Handler for direct manual editing of the directory path string
-      const handleManualDirectoryChange = (val: string) => {
-          updateDraft({ configDirectory: val });
-          const parsed = parseDirectoryPath(val);
-          if (parsed) {
-              setSelectedStation(parsed.station);
-              updateDraft({
-                  cycleNumber: parsed.cycle,
-                  userId: parsed.btr,
-                  sampleName: parsed.sample
-              });
-          }
-      };
+    const executeManualDirectoryChange = (val: string) => {
+        updateDraft({ configDirectory: val });
+        const parsed = parseDirectoryPath(val);
+        if (parsed) {
+            setSelectedStation(parsed.station);
+            updateDraft({
+                cycleNumber: parsed.cycle,
+                userId: parsed.btr,
+                sampleName: parsed.sample
+            });
+            lastCycle.current = parsed.cycle;
+            lastStation.current = parsed.station;
+            lastBtr.current = parsed.btr;
+            lastSample.current = parsed.sample;
+        }
+        lastManualPath.current = val;
+    };
 
-      const handleManualToggleClick = async () => {
-          if (isManualPath) {
-              setIsManualPath(false);
-              if (draft.configDirectory) {
-                  const parsed = parseDirectoryPath(draft.configDirectory);
-                  if (parsed) {
-                      try {
-                          const stations = await fetchDirItems('station', parsed.cycle);
-                          setStationOptions(stations);
-                          
-                          const btrs = await fetchDirItems('btr', parsed.cycle);
-                          setBtrOptions(btrs);
-                          
-                          const samples = await fetchDirItems('sample', parsed.btr);
-                          setSampleOptions(samples);
-                          
-                          const exps = await fetchDirItems('experiment', parsed.sample);
-                          setExperimentOptions(exps);
-                      } catch (error) {
-                          console.error("Failed to refresh options when exiting manual path mode", error);
-                      }
-                  }
-              }
-          } else {
-              const isDismissed = sessionStorage.getItem('dismissManualWarning') === 'true';
-              if (isDismissed) {
-                  setIsManualPath(true);
-              } else {
-                  setShowManualWarningModal(true);
-              }
-          }
-      };
+    const executeManualToggleClick = async () => {
+        if (isManualPath) {
+            setIsManualPath(false);
+            lastIsManualPath.current = false;
+            if (draft.configDirectory) {
+                const parsed = parseDirectoryPath(draft.configDirectory);
+                if (parsed) {
+                    try {
+                        const stations = await fetchDirItems('station', parsed.cycle);
+                        setStationOptions(stations);
+                        
+                        const btrs = await fetchDirItems('btr', parsed.cycle);
+                        setBtrOptions(btrs);
+                        
+                        const samples = await fetchDirItems('sample', parsed.btr);
+                        setSampleOptions(samples);
+                        
+                        const exps = await fetchDirItems('experiment', parsed.sample);
+                        setExperimentOptions(exps);
+                    } catch (error) {
+                        console.error("Failed to refresh options when exiting manual path mode", error);
+                    }
+                }
+            }
+        } else {
+            const isDismissed = sessionStorage.getItem('dismissManualWarning') === 'true';
+            if (isDismissed) {
+                setIsManualPath(true);
+                lastIsManualPath.current = true;
+            } else {
+                setShowManualWarningModal(true);
+            }
+        }
+    };
 
-      const handleConfirmManualProceed = () => {
-          if (dontShowWarningAgain) {
-              sessionStorage.setItem('dismissManualWarning', 'true');
-          }
-          setIsManualPath(true);
-          setShowManualWarningModal(false);
-      };
+    // User change interceptors (gate with Discard modal if dirty)
+    const handleCycleChange = (val: string) => {
+        if (isDirty) {
+            setPendingPathChange({ type: 'cycle', val });
+            setShowDiscardModal(true);
+        } else {
+            executeCycleChange(val);
+        }
+    };
+
+    const handleStationChange = (val: string) => {
+        if (isDirty) {
+            setPendingPathChange({ type: 'station', val });
+            setShowDiscardModal(true);
+        } else {
+            executeStationChange(val);
+        }
+    };
+
+    const handleBtrChange = (val: string) => {
+        if (isDirty) {
+            setPendingPathChange({ type: 'btr', val });
+            setShowDiscardModal(true);
+        } else {
+            executeBtrChange(val);
+        }
+    };
+
+    const handleSampleChange = (val: string) => {
+        if (isDirty) {
+            setPendingPathChange({ type: 'sample', val });
+            setShowDiscardModal(true);
+        } else {
+            executeSampleChange(val);
+        }
+    };
+
+    const handleExperimentChange = (val: string) => {
+        if (isDirty) {
+            setPendingPathChange({ type: 'experiment', val });
+            setShowDiscardModal(true);
+        } else {
+            executeExperimentChange(val);
+        }
+    };
+
+    const handleManualDirectoryChange = (val: string) => {
+        if (isDirty) {
+            setPendingPathChange({ type: 'manual', val });
+            setShowDiscardModal(true);
+        } else {
+            executeManualDirectoryChange(val);
+        }
+    };
+
+    const handleManualToggleClick = () => {
+        if (isDirty) {
+            setPendingPathChange({ type: 'manualToggle', val: null });
+            setShowDiscardModal(true);
+        } else {
+            executeManualToggleClick();
+        }
+    };
+
+    const handleConfirmDiscard = async () => {
+        setShowDiscardModal(false);
+        if (pendingPathChange) {
+            const { type, val } = pendingPathChange;
+            switch (type) {
+                case 'cycle':
+                    await executeCycleChange(val);
+                    break;
+                case 'station':
+                    await executeStationChange(val);
+                    break;
+                case 'btr':
+                    await executeBtrChange(val);
+                    break;
+                case 'sample':
+                    await executeSampleChange(val);
+                    break;
+                case 'experiment':
+                    executeExperimentChange(val);
+                    break;
+                case 'manual':
+                    executeManualDirectoryChange(val);
+                    break;
+                case 'manualToggle':
+                    await executeManualToggleClick();
+                    break;
+            }
+        }
+        setPendingPathChange(null);
+    };
+
+    const handleCancelDiscard = () => {
+        setShowDiscardModal(false);
+        revertPathSelectors();
+        setPendingPathChange(null);
+    };
+
+    const handleConfirmManualProceed = () => {
+        if (dontShowWarningAgain) {
+            sessionStorage.setItem('dismissManualWarning', 'true');
+        }
+        setIsManualPath(true);
+        lastIsManualPath.current = true;
+        setShowManualWarningModal(false);
+    };
+
     const isConfigValid = Object.values(validationErrors).flat().length === 0;
 
     const handleSave = async () => {
@@ -300,10 +547,13 @@ export const ConfigurationManager = () => {
         const name = "rams4/" + draft.sampleName.trim() + `/config${draft.experimentNumber.trim()}.json`;
 
         try {
-            // Sends the full, raw Zustand draft config object
             await postConfigToGateway(draft);
-
             console.log(`Successfully saved and synced config: ${name}`);
+            
+            // Sync is baseline clean
+            savedConfigRef.current = JSON.parse(JSON.stringify(draft));
+            commitPathRefs();
+
             alert(`Configuration successfully loaded and saved to: ${name}`);
         } catch (error) {
             console.error('Failed to sync configuration to backend gateway', error);
@@ -481,7 +731,7 @@ export const ConfigurationManager = () => {
                                     <Button
                                         variant="secondary"
                                         onClick={handleSave}
-                                        disabled={!isConfigValid}
+                                        disabled={!isConfigValid || !isDirty}
                                         className="h-7 px-3.5 shadow-sm text-xs font-semibold rounded-lg"
                                     >
                                         Save Configuration
@@ -517,7 +767,19 @@ export const ConfigurationManager = () => {
 
                 {/* Tab Content view */}
                 <div className="flex-1 overflow-y-auto p-5 min-h-0">
-                    {activeTab && renderTabContent()}
+                    {draft.configDirectory && draft.experimentNumber ? (
+                        activeTab && renderTabContent()
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full min-h-[300px] border-2 border-dashed border-mauve-200 rounded-2xl p-8 text-center bg-mauve-50/10">
+                            <div className="h-10 w-10 rounded-full bg-mauve-100 flex items-center justify-center mb-3">
+                                <PencilLine className="h-5 w-5 text-mauve-650" />
+                            </div>
+                            <h3 className="text-sm font-bold text-mauve-850">Set Configuration Path</h3>
+                            <p className="text-xs text-mauve-600 max-w-xs mt-1 leading-relaxed">
+                                Please select a Cycle, Station, BTR, Sample, and Experiment to create or load a configuration.
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -551,6 +813,17 @@ export const ConfigurationManager = () => {
                 </div>
             </WarningModal>
 
+            {/* Path Selector Discard Changes Warning Dialog */}
+            <WarningModal
+                isOpen={showDiscardModal}
+                title="Discard Changes?"
+                description="You have unsaved changes in your current configuration. Changing the path will discard these changes."
+                confirmText="Discard & Proceed"
+                cancelText="Keep Changes"
+                onConfirm={handleConfirmDiscard}
+                onCancel={handleCancelDiscard}
+            />
+
             {/* Advanced Manual Path Warning Dialog */}
             <WarningModal
                 isOpen={showManualWarningModal}
@@ -573,7 +846,7 @@ export const ConfigurationManager = () => {
                         onCheckedChange={(checked) => setDontShowWarningAgain(!!checked)}
                         className="border-mauve-300 data-checked:bg-mauve-600 data-checked:border-mauve-600 data-checked:text-white focus-visible:ring-mauve-400"
                     />
-                    <label htmlFor="dontShowAgain" className="text-xs text-gray-505 font-medium select-none cursor-pointer">
+                    <label htmlFor="dontShowAgain" className="text-xs text-gray-550 font-medium select-none cursor-pointer">
                         Don't show warning again for this session
                     </label>
                 </div>

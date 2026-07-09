@@ -12,9 +12,45 @@ export const postConfigToGateway = async (
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // Log path parameters and full JSON structure for inspection
-    console.log("Saving Config to backend...");
-    console.log("Full Staged JSON Payload:", payload);
+    console.log("Saving Config to backend gateway for path:", payload?.configDirectory);
+
+    const response = await fetch('/mock-gateway-api', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to save configuration to mock gateway');
+    }
+};
+
+
+/**
+ * Simulates reading a configuration JSON file from the gateway server at the specified path.
+ */
+export const fetchConfigFromGateway = async (
+    directory: string,
+    experiment: string
+): Promise<any | null> => {
+    // Simulate API latency
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    
+    const filePath = directory + `config${experiment}.json`;
+    console.log(`Checking config file: ${filePath}`);
+    
+    try {
+        const response = await fetch(`/mock-gateway-api?path=${encodeURIComponent(filePath)}`);
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (err) {
+        console.error("Failed to load configuration from mock gateway server", err);
+    }
+    
+    return null; // File does not exist, initialize defaults
 };
 
 
@@ -34,7 +70,7 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // Mock directory names
+    // TODO TEMP Mock directory names
     switch (getDir) {
         case 'cycle':
             return ['2026-2', '2026-1'];
@@ -68,13 +104,13 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
             switch (prevDirName) {
                 case 'titanium_specimen_02':
                 case 'aluminum_shear_02':
-                    return ['1', '2', '3'];
+                    return ['1', '2'];
                 case 'titanium_tensile_01':
                 case 'aluminum_dogbone_06':
                 case 'glassy_carbon_pillar_05':
-                    return ['1', '2', '3', '4'];
+                    return ['1', '2', '3'];
                 default:
-                    return ['1', '2'];
+                    return [];
             }
     }
 };

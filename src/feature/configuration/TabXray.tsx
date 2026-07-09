@@ -85,6 +85,7 @@ export const TabXray = () => {
     return (
         <ConfigTabSection
             title="X-ray Scan Profiles"
+            titleTooltip="Coordinates grid scan configurations for incident X-ray beam data collection layers."
             description="Configure parameters for X-ray scan sweeps."
             profiles={
                 <div className="w-full space-y-6">

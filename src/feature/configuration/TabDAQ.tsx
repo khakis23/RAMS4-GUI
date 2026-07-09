@@ -179,6 +179,7 @@ export const TabDAQ = () => {
             title="Data Acquisition Configuration"
             description="Configure parameters for Data Acquisition."
             profilesTitle="DAQ Handler Profiles"
+            profilesTitleTooltip="Operating mode configurations for data acquisition. Supports Logging, Peak-Valley, and PSO triggering modes."
             profiles={
                 <div className="w-full space-y-6">
                     {/* Render handler profile cards */}
