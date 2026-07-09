@@ -9,16 +9,11 @@ import { Button } from '../../components/ui/button';
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { ConfigTabSection } from './components/ConfigTabSection.tsx';
 import { FieldLabel } from '../../components/ui/FieldLabel.tsx';
-import { DAQProfileCard } from './components/DAQProfileCard.tsx';
-import { useFormAutoSave } from './hooks/useFormAutoSave.ts';
-import { compileZodErrors } from './utils/validationUtils.ts';
-import { daqSchema } from './profileSchemas/daqSchema.ts';
-
-const daqFieldDescriptions = {
-    requiredAxes: "Which mechanical axes are active/required for the specific test geometry (e.g., [\"A\", \"B\"]).",
-    daqFrequency: "Rate at which sensor measurements are captured.",
-    samplePoints: "Number of buffer data points retained during test runs."
-};
+import { compileZodErrors } from "./utils/validationUtils.ts";
+import { daqSchema } from "./profileSchemas/daqSchema.ts";
+import { DAQProfileCard } from "./components/DAQProfileCard.tsx";
+import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
+import { tooltips } from "@/config/tooltips.ts";
 
 export const TabDAQ = () => {
     const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
@@ -208,9 +203,10 @@ export const TabDAQ = () => {
     return (
         <ConfigTabSection
             title="Data Acquisition Configuration"
+            titleTooltip={tooltips.daqSectionTitle}
             description="Configure parameters for Data Acquisition."
             profilesTitle="DAQ Handler Profiles"
-            profilesTitleTooltip="Operating mode configurations for data acquisition. Supports Logging, Peak-Valley, and PSO triggering modes."
+            profilesTitleTooltip={tooltips.daqProfilesHeader}
             profiles={
                 <div className="w-full space-y-6">
                     {/* Render handler profile cards */}
@@ -252,7 +248,7 @@ export const TabDAQ = () => {
         >
             {/* Sampling Frequency Field */}
             <div className="flex flex-col gap-2">
-                <FieldLabel text="Sampling Frequency" tooltip={daqFieldDescriptions.daqFrequency} required={true} />
+                <FieldLabel text="Sampling Frequency" tooltip={tooltips.daqFrequency} required={true} />
                 <Controller
                     control={control}
                     name="daqFrequency"
@@ -280,7 +276,7 @@ export const TabDAQ = () => {
 
             {/* Sample Points Field */}
             <div className="flex flex-col gap-2">
-                <FieldLabel text="Sample Points" tooltip={daqFieldDescriptions.samplePoints} required={true} />
+                <FieldLabel text="Sample Points" tooltip={tooltips.samplePoints} required={true} />
                 <Input 
                     type="number" 
                     placeholder="Enter points (min 100)" 

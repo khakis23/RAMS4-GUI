@@ -4,6 +4,7 @@ import { Input } from '../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Button } from '../../../components/ui/button';
 import { FieldLabel } from '../../../components/ui/FieldLabel';
+import { tooltips } from "@/config/tooltips.ts";
 
 const verboseAxisOptions = [
     { label: "None", value: -1 },
@@ -32,22 +33,6 @@ const verboseIOOptions = [
     { label: "Analog Outputs", value: 2 },
 ];
 
-export const profileFieldDescriptions = {
-    mode: "Operating mode for data acquisition. Time-series logs raw signals; Peak-valley captures wave peaks/valleys; PSO logs at spatial hardware triggers.",
-    filename: "The base output filename (saved as .h5). The backend automatically appends an incrementing index counter suffix.",
-    frequency: "The logging write rate in Hz. This must be less than or equal to the master DAQ sampling frequency.",
-    cycles: "Specifies which cycle ranges are logged. Supports ranges [start, stop], range steps [start, stop, step], and single cycles.",
-    signalAxis: "The mechanical axis driving the cycle wave monitored by the peak-finding algorithm.",
-    signalItem: "The controller feedback signal type to trace for wave detection: Position, Velocity, or Acceleration.",
-    signalProminence: "The minimum amplitude threshold required to identify a wave peak/valley, filtering out high-frequency noise.",
-    psoAxis: "The mechanical axis that generates spatial hardware pulses to trigger data capture.",
-    verboseAxis: "Telemetry details to collect for physical axes, ranging from basic feedback to commands and diagnostics.",
-    verboseTask: "Telemetry level for controller automation script execution tasks, from states to execution pointers.",
-    verboseSystem: "Diagnostics level for controller CPU and hardware system telemetry timers.",
-    verboseIO: "Telemetry level for general controller I/O board registers, including analog and digital inputs/outputs.",
-    verboseAi: "Active analog input logs. Check to enable standard sensors or enter custom raw indexes (e.g. [1,0])."
-};
-
 interface CyclesFieldArrayProps {
     control: Control<any>;
     register: UseFormRegister<any>;
@@ -62,7 +47,7 @@ const CyclesFieldArray = ({ control, register, profileIndex }: CyclesFieldArrayP
 
     return (
         <div className="flex flex-col gap-4 text-left border-t border-mauve-150 pt-4 mt-2">
-            <FieldLabel text="Cycles Configuration" tooltip={profileFieldDescriptions.cycles} />
+            <FieldLabel text="Cycles Configuration" tooltip={tooltips.daqProfileCycles} />
             
             <div className="space-y-4">
                 {fields.map((field, cycleIndex) => (
@@ -154,7 +139,7 @@ export const DAQProfileCard = ({
             {/* Common Inputs: Mode Selector and Name */}
             <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col gap-2">
-                    <FieldLabel text="Mode" tooltip={profileFieldDescriptions.mode} required={true} />
+                    <FieldLabel text="Mode" tooltip={tooltips.daqProfileMode} required={true} />
                     <Controller
                         control={control}
                         name={`handlersProfile.${index}.mode`}
@@ -174,7 +159,7 @@ export const DAQProfileCard = ({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <FieldLabel text="Name" tooltip={profileFieldDescriptions.filename} required={true} />
+                    <FieldLabel text="Name" tooltip={tooltips.daqProfileFilename} required={true} />
                     <Input 
                         placeholder="Enter handler name"
                         className={profileErrors?.filename ? "border-destructive focus-visible:ring-destructive" : ""}
@@ -190,7 +175,7 @@ export const DAQProfileCard = ({
             {currentMode === "time-series" && (
                 <div className="flex flex-col gap-4 p-4 bg-white border rounded-xl shadow-inner">
                     <div className="flex flex-col gap-2 max-w-xs">
-                        <FieldLabel text="Frequency (Hz)" tooltip={profileFieldDescriptions.frequency} required={true} />
+                        <FieldLabel text="Frequency (Hz)" tooltip={tooltips.daqProfileFrequency} required={true} />
                         <Input 
                             type="number" 
                             className={profileErrors?.frequency ? "border-destructive focus-visible:ring-destructive" : ""}
@@ -212,7 +197,7 @@ export const DAQProfileCard = ({
             {currentMode === "peak-valley" && (
                 <div className="grid grid-cols-3 gap-6 bg-white p-4 border rounded-xl shadow-inner">
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="Signal Axis" tooltip={profileFieldDescriptions.signalAxis} required={true} />
+                        <FieldLabel text="Signal Axis" tooltip={tooltips.daqProfileSignalAxis} required={true} />
                         <Input 
                             className={profileErrors?.signalAxis ? "border-destructive focus-visible:ring-destructive" : ""}
                             {...register(`handlersProfile.${index}.signalAxis`)} 
@@ -222,7 +207,7 @@ export const DAQProfileCard = ({
                         )}
                     </div>
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="Signal Item" tooltip={profileFieldDescriptions.signalItem} required={true} />
+                        <FieldLabel text="Signal Item" tooltip={tooltips.daqProfileSignalItem} required={true} />
                         <Controller
                             control={control}
                             name={`handlersProfile.${index}.signalItem`}
@@ -244,7 +229,7 @@ export const DAQProfileCard = ({
                         )}
                     </div>
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="Prominence" tooltip={profileFieldDescriptions.signalProminence} required={true} />
+                        <FieldLabel text="Prominence" tooltip={tooltips.daqProfileProminence} required={true} />
                         <Input 
                             type="number" 
                             className={profileErrors?.signalProminence ? "border-destructive focus-visible:ring-destructive" : ""}
@@ -260,7 +245,7 @@ export const DAQProfileCard = ({
             {/* Conditionally show PSO fields */}
             {currentMode === "pso" && (
                 <div className="flex flex-col gap-2 bg-white p-4 border rounded-xl shadow-inner">
-                    <FieldLabel text="PSO Axis" tooltip={profileFieldDescriptions.psoAxis} required={true} />
+                    <FieldLabel text="PSO Axis" tooltip={tooltips.daqProfilePsoAxis} required={true} />
                     <Input 
                         className={profileErrors?.psoAxis ? "border-destructive focus-visible:ring-destructive" : ""}
                         {...register(`handlersProfile.${index}.psoAxis`)} 
@@ -280,7 +265,7 @@ export const DAQProfileCard = ({
                 <div className="grid grid-cols-2 gap-6 mt-4 pl-2">
                     {/* Axis Logging */}
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="Axis Logging Level" tooltip={profileFieldDescriptions.verboseAxis} />
+                        <FieldLabel text="Axis Logging Level" tooltip={tooltips.daqProfileAxisLevel} />
                         <Controller
                             control={control}
                             name={`handlersProfile.${index}.verboseAxis`}
@@ -301,7 +286,7 @@ export const DAQProfileCard = ({
 
                     {/* Task Logging */}
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="Task Logging Level" tooltip={profileFieldDescriptions.verboseTask} />
+                        <FieldLabel text="Task Logging Level" tooltip={tooltips.daqProfileTaskLevel} />
                         <Controller
                             control={control}
                             name={`handlersProfile.${index}.verboseTask`}
@@ -322,7 +307,7 @@ export const DAQProfileCard = ({
 
                     {/* System Logging */}
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="System Logging Level" tooltip={profileFieldDescriptions.verboseSystem} />
+                        <FieldLabel text="System Logging Level" tooltip={tooltips.daqProfileSystemLevel} />
                         <Controller
                             control={control}
                             name={`handlersProfile.${index}.verboseSystem`}
@@ -346,7 +331,7 @@ export const DAQProfileCard = ({
 
                     {/* I/O Logging */}
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="I/O Logging Level" tooltip={profileFieldDescriptions.verboseIO} />
+                        <FieldLabel text="I/O Logging Level" tooltip={tooltips.daqProfileIOLevel} />
                         <Controller
                             control={control}
                             name={`handlersProfile.${index}.verboseIO`}
@@ -370,10 +355,10 @@ export const DAQProfileCard = ({
 
                     {/* Analog Inputs Checkboxes & Custom Input */}
                     <div className="col-span-2 border-t pt-4 mt-2">
-                        <FieldLabel text="Analog Inputs" tooltip={profileFieldDescriptions.verboseAi} />
+                        <FieldLabel text="Analog Inputs" tooltip={tooltips.daqProfileAnalogInputs} />
                         
                         <div className="flex items-center gap-6 mt-3">
-                            <label className="flex items-center gap-2 text-sm font-medium">
+                           <label className="flex items-center gap-2 text-sm font-medium">
                                 <input 
                                     type="checkbox" 
                                     className="rounded border-gray-300 text-mauve-600 focus:ring-mauve-500 h-4 w-4"

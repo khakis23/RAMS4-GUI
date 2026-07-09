@@ -10,6 +10,7 @@ import { PencilLine } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
 import { Input } from "../../../components/ui/input.tsx";
 import { Checkbox } from "../../../components/ui/checkbox.tsx";
+import { tooltips } from "@/config/tooltips.ts";
 
 type TabName = 'daq' | 'xray' | 'dic';
 
@@ -617,7 +618,7 @@ export const ConfigurationManager = () => {
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="text-[10px] p-2">
-                            {isManualPath ? "Switch back to path select dropdowns" : "Configure path manually"}
+                            {isManualPath ? "Switch back to path select dropdowns" : tooltips.manualPath}
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
@@ -740,7 +741,7 @@ export const ConfigurationManager = () => {
                                 </span>
                             </TooltipTrigger>
                             <TooltipContent side="bottom" className="text-[10px] p-2">
-                                Save the current configuration to the file path
+                                {tooltips.saveConfig}
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>

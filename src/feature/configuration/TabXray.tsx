@@ -9,6 +9,7 @@ import { compileZodErrors } from "./utils/validationUtils.ts";
 import { xrayFormSchema } from "./profileSchemas/xraySchema.ts";
 import { XrayProfileCard } from "./components/XrayProfileCard.tsx";
 import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
+import { tooltips } from "@/config/tooltips.ts";
 
 export const TabXray = () => {
     const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
@@ -108,7 +109,7 @@ export const TabXray = () => {
     return (
         <ConfigTabSection
             title="X-ray Scan Profiles"
-            titleTooltip="Coordinates grid scan configurations for incident X-ray beam data collection layers."
+            titleTooltip={tooltips.xraySectionTitle}
             description="Configure parameters for X-ray scan sweeps."
             profiles={
                 <div className="w-full space-y-6">
