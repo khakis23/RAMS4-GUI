@@ -37,8 +37,8 @@ export const CoreLayout = () => {
 
             {/* Right Content Area */}
             <div className="flex-1 h-full flex flex-col min-w-0">
-                {/* Top Status Bar */}
-                <StatusBar />
+                {/* Top Status Bar with View Title */}
+                <StatusBar currentView={currentView} />
 
                 {/* Active View Content viewport with padding and scroll */}
                 <main className="flex-1 overflow-y-auto p-8 min-h-0">
