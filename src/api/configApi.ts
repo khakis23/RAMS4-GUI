@@ -1,10 +1,40 @@
+
+
+// Temporary fallback database for static frontend builds (e.g. GitHub Pages) where no active Node.js mock server is running.
+// This allows reviewers and users on static hosts to fully interact with the configuration cascades.
+const staticMockData: Record<string, (prev: string) => string[]> = {
+    cycle: () => ['2026-2', '2026-1'],
+    station: () => ['id1a3', 'id1b3'],
+    btr: (prev) => {
+        const cycle = prev.split('/')[0];
+        if (cycle === '2026-2') {
+            return ['sjobs-123', 'tcook-456', 'jternus789'];
+        } else if (cycle === '2026-1') {
+            return ['assmith-10001-a', 'jdeer-4453-6b'];
+        }
+        return ['sjobs-123', 'tcook-456'];
+    },
+    sample: (prev) => {
+        const parts = prev.split('/');
+        const btr = parts[2] || parts[0];
+        if (btr === 'sjobs-123') return ["titanium_specimen_02", "titanium_tensile_01"];
+        if (btr === 'tcook-456') return ["aluminum_shear_02", "nickel_superalloy_01", "copper_alloy_01"];
+        if (btr === 'jternus789') return ["nickel_superalloy_04", "copper_alloy_03"];
+        if (btr === 'assmith-10001-a') return ["zircaloy_tube_02", "glassy_carbon_pillar_05", "ti_64_printed_tensile_11"];
+        return ["titanium_specimen_02"];
+    },
+    experiment: (prev) => {
+        const parts = prev.split('/');
+        const sample = parts[parts.length - 1];
+        if (sample === 'titanium_specimen_02' || sample === 'aluminum_shear_02') return ['1', '2', '3'];
+        if (sample === 'titanium_tensile_01' || sample === 'glassy_carbon_pillar_05') return ['1', '2', '3', '4'];
+        return ['1', '2'];
+    }
+};
+
 /**
  * Sends a single complete JSON file to the user's data directory on the Python gateway server.
- *
- * @param userId    Unique User ID
- * @param fileType  Type of file being saved
- * @param fileName  Name of the file being saved (without extension)
- * @param payload   Full JSON data to be saved
+ * Includes a temporary fallback for static host environments.
  */
 export const postConfigToGateway = async (
     payload: any
@@ -14,22 +44,28 @@ export const postConfigToGateway = async (
 
     console.log("Saving Config to backend gateway for path:", payload?.configDirectory);
 
-    const response = await fetch('/mock-gateway-api', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-    });
+    try {
+        const response = await fetch('/mock-gateway-api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
 
-    if (!response.ok) {
-        throw new Error('Failed to save configuration to mock gateway');
+        if (!response.ok) {
+            throw new Error('Failed to save configuration to mock gateway');
+        }
+    } catch (err) {
+        // Fallback for static hosts
+        console.warn("Backend mock server unavailable. Simulating a successful file save in-memory for static demo pages.", err);
     }
 };
 
 
 /**
  * Simulates reading a configuration JSON file from the gateway server at the specified path.
+ * Includes a temporary fallback for static host environments to keep demo layouts pre-populated.
  */
 export const fetchConfigFromGateway = async (
     directory: string,
@@ -47,7 +83,34 @@ export const fetchConfigFromGateway = async (
             return await response.json();
         }
     } catch (err) {
-        console.error("Failed to load configuration from mock gateway server", err);
+        console.warn("Backend mock server unavailable. Resolving in-memory mock configuration presets for static demo pages.", err);
+    }
+    
+    // Temporary static fallback configuration to ensure titanium_specimen_02 runs with realistic inputs in demo builds
+    if (directory.includes("titanium_specimen_02") && experiment === "1") {
+        return {
+            cycleNumber: "2026-2",
+            userId: "sjobs-123",
+            sampleName: "titanium_specimen_02",
+            experimentNumber: "1",
+            configDirectory: "/nfs/chess/aux/cycles/2026-2/id1a3/sjobs-123/metadata/titanium_specimen_02/",
+            requiredAxes: ["A", "B", "RA"],
+            daqFrequency: 10,
+            samplePoints: 500,
+            handlerProfiles: [
+                {
+                    mode: "time-series",
+                    filename: "ts_specimen_1",
+                    verboseAxis: "A",
+                    verboseSystem: 1,
+                    verboseTask: "A",
+                    verboseIO: 0,
+                    verboseAi: "A",
+                    frequency: 10
+                }
+            ],
+            xrayProfiles: []
+        };
     }
     
     return null; // File does not exist, initialize defaults
@@ -98,8 +161,10 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
             return await response.json();
         }
     } catch (err) {
-        console.error(`Failed to list mock directories for ${getDir}`, err);
+        console.warn(`Backend mock server unavailable. Falling back to static demo directory listing for ${getDir}`, err);
     }
     
-    return [];
+    // Return temporary static options list for browser demo environments
+    const fallbackFn = staticMockData[getDir];
+    return fallbackFn ? fallbackFn(prevDirName) : [];
 };
