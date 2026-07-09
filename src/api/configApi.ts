@@ -70,47 +70,36 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    // TODO TEMP Mock directory names
+    let relativePath = '';
     switch (getDir) {
         case 'cycle':
-            return ['2026-2', '2026-1'];
+            relativePath = 'nfs/chess/aux/cycles/';
+            break;
         case 'station':
-            return ['id1a3', 'id1b3'];
+            relativePath = `nfs/chess/aux/cycles/${prevDirName}/`;
+            break;
         case 'btr':
-            switch (prevDirName) {
-                case '2026-2':
-                    return ['sjobs-123', 'tcook-456', 'jternus789']
-                case '2026-1':
-                    return ['assmith-10001-a', 'jdeer-4453-6b']
-                default:
-                    return [];
-            }
+            // prevDirName is '<cycle>/<station>'
+            relativePath = `nfs/chess/aux/cycles/${prevDirName}/`;
+            break;
         case 'sample':
-            switch (prevDirName) {
-                case 'sjobs-123':
-                    return ["titanium_specimen_02", "titanium_tensile_01"];
-                case 'tcook-456':
-                    return ["aluminum_shear_02", "nickel_superalloy_01", "copper_alloy_01"];
-                case 'jternus789':
-                    return ["nickel_superalloy_04", "copper_alloy_03"];
-                case 'assmith-10001-a':
-                    return ["zircaloy_tube_02", "glassy_carbon_pillar_05", "ti_64_printed_tensile_11"];
-                case 'jdeer-4453-6b':
-                    return [];
-                default:
-                    return [];
-        }
+            // prevDirName is '<cycle>/<station>/<btr>'
+            relativePath = `nfs/chess/aux/cycles/${prevDirName}/metadata/`;
+            break;
         case 'experiment':
-            switch (prevDirName) {
-                case 'titanium_specimen_02':
-                case 'aluminum_shear_02':
-                    return ['1', '2'];
-                case 'titanium_tensile_01':
-                case 'aluminum_dogbone_06':
-                case 'glassy_carbon_pillar_05':
-                    return ['1', '2', '3'];
-                default:
-                    return [];
-            }
+            // prevDirName is '<cycle>/<station>/<btr>/metadata/<sample>'
+            relativePath = `nfs/chess/aux/cycles/${prevDirName}/`;
+            break;
     }
+
+    try {
+        const response = await fetch(`/mock-gateway-api?action=list&path=${encodeURIComponent(relativePath)}`);
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (err) {
+        console.error(`Failed to list mock directories for ${getDir}`, err);
+    }
+    
+    return [];
 };

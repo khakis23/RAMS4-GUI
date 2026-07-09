@@ -16,7 +16,9 @@ export interface XrayProfile {
 
 export interface ConfigurationState {
     draft: GlobalConfig;
+    lastLoadedPath: string;
     updateDraft: (fieldsToUpdate: Partial<GlobalConfig>) => void;
+    setLastLoadedPath: (path: string) => void;
 }
 
 // All configuration settings (metadata, DAQ, and X-ray) live here
@@ -88,12 +90,14 @@ export const useConfigurationStore = create<ConfigurationState>()(
     persist(
         (set) => ({
             draft: defaultDraftConfig(),
+            lastLoadedPath: "",
             updateDraft: (fieldsToUpdate) => set((state) => ({
                 draft: {
                     ...state.draft,
                     ...fieldsToUpdate,
                 },
             })),
+            setLastLoadedPath: (path) => set({ lastLoadedPath: path }),
         }),
         {
             name: 'configuration-store',

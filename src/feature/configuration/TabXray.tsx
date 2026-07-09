@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,12 +11,14 @@ import { XrayProfileCard } from "./components/XrayProfileCard.tsx";
 import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
 
 export const TabXray = () => {
-    const { draft, updateDraft } = useConfigurationStore();
+    const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
+    const loadedPathRef = useRef<string>("");
 
     const {
         register,
         control,
         watch,
+        reset,
         formState: { errors }
     } = useForm<z.infer<typeof xrayFormSchema>>({
         resolver: zodResolver(xrayFormSchema),
@@ -36,6 +38,27 @@ export const TabXray = () => {
             })),
         }
     });
+
+    // Re-initialize form defaultValues when a new file is loaded from the gateway
+    useEffect(() => {
+        if (lastLoadedPath && lastLoadedPath !== loadedPathRef.current) {
+            loadedPathRef.current = lastLoadedPath;
+            reset({
+                xrayProfiles: (draft.xrayProfiles || []).map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    x: p.x,
+                    z: p.z,
+                    omeStart: p.omeStart,
+                    omeStop: p.omeStop,
+                    ctime: p.ctime,
+                    beamHeight: p.beamHeight,
+                    beamWidth: p.beamWidth,
+                    atten: p.atten,
+                })),
+            });
+        }
+    }, [lastLoadedPath, reset, draft]);
 
     const {
         fields,

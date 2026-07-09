@@ -32,7 +32,7 @@ export const ConfigurationManager = () => {
     const savedConfigRef = useRef<any>(null);
 
     // Trackers for last committed path selectors to support reversions
-    const { draft, updateDraft } = useConfigurationStore();
+    const { draft, updateDraft, setLastLoadedPath } = useConfigurationStore();
     const [selectedStation, setSelectedStation] = useState<string>("");
 
     const lastCycle = useRef(draft.cycleNumber);
@@ -122,13 +122,13 @@ export const ConfigurationManager = () => {
                         const stations = await fetchDirItems('station', parsed.cycle);
                         setStationOptions(stations);
                         
-                        const btrs = await fetchDirItems('btr', parsed.cycle);
+                        const btrs = await fetchDirItems('btr', parsed.cycle + "/" + parsed.station);
                         setBtrOptions(btrs);
                         
-                        const samples = await fetchDirItems('sample', parsed.btr);
+                        const samples = await fetchDirItems('sample', parsed.cycle + "/" + parsed.station + "/" + parsed.btr);
                         setSampleOptions(samples);
                         
-                        const exps = await fetchDirItems('experiment', parsed.sample);
+                        const exps = await fetchDirItems('experiment', parsed.cycle + "/" + parsed.station + "/" + parsed.btr + "/metadata/" + parsed.sample);
                         setExperimentOptions(exps);
 
                         updateDraft({
@@ -206,6 +206,7 @@ export const ConfigurationManager = () => {
                     });
                     savedConfigRef.current = defaults;
                 }
+                setLastLoadedPath(`${dir}::${exp}`);
                 commitPathRefs();
             } catch (err) {
                 console.error("Failed to fetch path config from gateway", err);
@@ -272,7 +273,7 @@ export const ConfigurationManager = () => {
 
         if (val && draft.cycleNumber) {
             try {
-                const btrs = await fetchDirItems('btr', draft.cycleNumber);
+                const btrs = await fetchDirItems('btr', draft.cycleNumber + "/" + val);
                 setBtrOptions(btrs);
             } catch (error) {
                 console.error("Failed to load users for station", error);
@@ -297,7 +298,7 @@ export const ConfigurationManager = () => {
 
         if (val) {
             try {
-                const samples = await fetchDirItems('sample', val);
+                const samples = await fetchDirItems('sample', draft.cycleNumber + "/" + selectedStation + "/" + val);
                 setSampleOptions(samples);
             } catch (error) {
                 console.error("Failed to load samples for user/btr", error);
@@ -319,7 +320,7 @@ export const ConfigurationManager = () => {
             });
             setExperimentOptions([]);
             try {
-                const exps = await fetchDirItems('experiment', sampleVal);
+                const exps = await fetchDirItems('experiment', draft.cycleNumber + "/" + selectedStation + "/" + draft.userId + "/metadata/" + sampleVal);
                 setExperimentOptions(exps);
             } catch (error) {
                 console.error("Failed to load experiments for sample", error);
@@ -402,13 +403,13 @@ export const ConfigurationManager = () => {
                         const stations = await fetchDirItems('station', parsed.cycle);
                         setStationOptions(stations);
                         
-                        const btrs = await fetchDirItems('btr', parsed.cycle);
+                        const btrs = await fetchDirItems('btr', parsed.cycle + "/" + parsed.station);
                         setBtrOptions(btrs);
                         
-                        const samples = await fetchDirItems('sample', parsed.btr);
+                        const samples = await fetchDirItems('sample', parsed.cycle + "/" + parsed.station + "/" + parsed.btr);
                         setSampleOptions(samples);
                         
-                        const exps = await fetchDirItems('experiment', parsed.sample);
+                        const exps = await fetchDirItems('experiment', parsed.cycle + "/" + parsed.station + "/" + parsed.btr + "/metadata/" + parsed.sample);
                         setExperimentOptions(exps);
                     } catch (error) {
                         console.error("Failed to refresh options when exiting manual path mode", error);

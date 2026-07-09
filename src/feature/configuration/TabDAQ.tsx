@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,12 +21,14 @@ const daqFieldDescriptions = {
 };
 
 export const TabDAQ = () => {
-    const { draft, updateDraft } = useConfigurationStore();
+    const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
+    const loadedPathRef = useRef<string>("");
 
     const {
         register,
         control,
         watch,
+        reset,
         formState: { errors },
     } = useForm<z.infer<typeof daqSchema>>({
         resolver: zodResolver(daqSchema),
@@ -54,6 +56,35 @@ export const TabDAQ = () => {
             }),
         },
     });
+
+    // Re-initialize form defaultValues when a new file is loaded from the gateway
+    useEffect(() => {
+        if (lastLoadedPath && lastLoadedPath !== loadedPathRef.current) {
+            loadedPathRef.current = lastLoadedPath;
+            reset({
+                requiredAxes: draft.requiredAxes || ["A", "B", "RA", "RB"],
+                daqFrequency: draft.daqFrequency,
+                samplePoints: draft.samplePoints,
+                handlersProfile: (draft.handlerProfiles || []).map(profile => {
+                    const rawAi = profile.verboseAi || "";
+                    return {
+                        ...profile,
+                        verboseAxis: profile.verboseAxis || "-1",
+                        verboseTask: profile.verboseTask || "-1",
+                        verboseSystem: profile.verboseSystem ?? -1,
+                        verboseIO: profile.verboseIO ?? -1,
+                        aiLoadA: rawAi.includes("LoadA"),
+                        aiStrain: rawAi.includes("Strain"),
+                        aiCustom: rawAi
+                            .split(",")
+                            .map(x => x.trim())
+                            .filter(x => x && x !== "LoadA" && x !== "Strain")
+                            .join(", "),
+                    };
+                }),
+            });
+        }
+    }, [lastLoadedPath, reset, draft]);
 
     const {
         fields,

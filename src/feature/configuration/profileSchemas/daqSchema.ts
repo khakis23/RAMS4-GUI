@@ -6,22 +6,32 @@ export const cycleRangeSchema = z.object({
     step: z.number().min(1, "Must be at least 1."),
 });
 
+const safeNullableNumber = z.preprocess(
+    (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
+    z.number().optional()
+) as z.ZodType<number | undefined, any, any>;
+
+const safeRequiredNumber = z.preprocess(
+    (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? -1 : Number(val)),
+    z.number()
+) as z.ZodType<number, any, any>;
+
 export const handlerProfileSchema = z.object({
     mode: z.string().min(1, "Mode is required."),
     filename: z.string().min(1, "Name is required."),
     verboseAxis: z.string(),
-    verboseSystem: z.number(),
+    verboseSystem: safeRequiredNumber,
     verboseTask: z.string(),
-    verboseIO: z.number(),
+    verboseIO: safeRequiredNumber,
     verboseAi: z.string(),
     aiLoadA: z.boolean().optional(),
     aiStrain: z.boolean().optional(),
     aiCustom: z.string().optional(),
-    frequency: z.number().optional(),
+    frequency: safeNullableNumber,
     cycles: z.array(cycleRangeSchema).optional(),
     signalAxis: z.string().optional(),
     signalItem: z.string().optional(),
-    signalProminence: z.number().optional(),
+    signalProminence: safeNullableNumber,
     psoAxis: z.string().optional(),
     signalLoad: z.string().optional(),
     signalStrain: z.string().optional(),
