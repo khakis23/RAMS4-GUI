@@ -1,0 +1,289 @@
+import { useEffect, useRef } from 'react';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from "../../components/ui/button.tsx";
+import { Input } from "../../components/ui/input.tsx";
+import { Checkbox } from "../../components/ui/checkbox.tsx";
+import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
+import { FieldLabel } from "../../components/ui/FieldLabel.tsx";
+import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
+import { compileZodErrors } from "./utils/validationUtils.ts";
+import { settingsSchema } from "./profileSchemas/settingsSchema.ts";
+import { SettingsAxisCard } from "./components/SettingsAxisCard.tsx";
+import { SettingsSignalCard } from "./components/SettingsSignalCard.tsx";
+import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
+import { tooltips } from "@/config/tooltips.ts";
+import { Plus } from 'lucide-react';
+
+export const TabSettings = () => {
+    const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
+    const loadedPathRef = useRef<string>("");
+
+    const {
+        register,
+        control,
+        watch,
+        reset,
+        formState: { errors }
+    } = useForm<z.infer<typeof settingsSchema>>({
+        resolver: zodResolver(settingsSchema),
+        mode: "onChange",
+        defaultValues: {
+            specHost: draft.specHost || "id1a3.classe.cornell.edu:spec",
+            requireSpecEnable: draft.requireSpecEnable ?? true,
+            systemName: draft.systemName || "RAMS4_CHESS",
+            controllerHost: draft.controllerHost || "10.0.0.1",
+            axisCount: draft.axisCount ?? 5,
+            taskCount: draft.taskCount ?? 5,
+            axesSettings: (draft.axesSettings || []).map(a => ({
+                name: a.name,
+                max_velocity: a.max_velocity,
+                max_acceleration: a.max_acceleration
+            })),
+            signalSettings: (draft.signalSettings || []).map(s => ({
+                name: s.name,
+                slope: s.slope,
+                intercept: s.intercept,
+                channel: s.channel
+            }))
+        }
+    });
+
+    const {
+        fields: axesFields,
+        append: appendAxis,
+        remove: removeAxis
+    } = useFieldArray({
+        control,
+        name: "axesSettings"
+    });
+
+    const {
+        fields: signalsFields,
+        append: appendSignal,
+        remove: removeSignal
+    } = useFieldArray({
+        control,
+        name: "signalSettings"
+    });
+
+    const watchedValues = watch();
+
+    // Auto-save form updates into store draft state on valid entries
+    useFormAutoSave({
+        watchedValues,
+        schema: settingsSchema,
+        storeDraft: draft,
+        updateDraft,
+        mapValues: (watched: any) => ({
+            specHost: watched.specHost,
+            requireSpecEnable: watched.requireSpecEnable,
+            systemName: watched.systemName,
+            controllerHost: watched.controllerHost,
+            axisCount: watched.axisCount,
+            taskCount: watched.taskCount,
+            axesSettings: watched.axesSettings || [],
+            signalSettings: watched.signalSettings || []
+        })
+    });
+
+    // Connect validation errors to central validation store under 'settings' key
+    const { setErrors } = useValidationStore();
+    useEffect(() => {
+        const result = settingsSchema.safeParse(watchedValues);
+        if (!result.success) {
+            const errorMessages = compileZodErrors(result.error);
+            const existingErrors = useValidationStore.getState().errors['settings'] || [];
+            const hasChanged = 
+                existingErrors.length !== errorMessages.length ||
+                errorMessages.some((msg: string, idx: number) => msg !== existingErrors[idx]);
+            
+            if (hasChanged) {
+                setErrors('settings', errorMessages);
+            }
+        } else {
+            const existingErrors = useValidationStore.getState().errors['settings'] || [];
+            if (existingErrors.length > 0) {
+                setErrors('settings', []);
+            }
+        }
+    }, [watchedValues, setErrors]);
+
+    // Reset defaults or synchronize when a new configuration folder is loaded
+    useEffect(() => {
+        if (lastLoadedPath && lastLoadedPath !== loadedPathRef.current) {
+            loadedPathRef.current = lastLoadedPath;
+            reset({
+                specHost: draft.specHost || "id1a3.classe.cornell.edu:spec",
+                requireSpecEnable: draft.requireSpecEnable ?? true,
+                systemName: draft.systemName || "RAMS4_CHESS",
+                controllerHost: draft.controllerHost || "10.0.0.1",
+                axisCount: draft.axisCount ?? 5,
+                taskCount: draft.taskCount ?? 5,
+                axesSettings: (draft.axesSettings || []).map(a => ({
+                    name: a.name,
+                    max_velocity: a.max_velocity,
+                    max_acceleration: a.max_acceleration
+                })),
+                signalSettings: (draft.signalSettings || []).map(s => ({
+                    name: s.name,
+                    slope: s.slope,
+                    intercept: s.intercept,
+                    channel: s.channel
+                }))
+            });
+        }
+    }, [lastLoadedPath, reset, draft]);
+
+    return (
+        <ConfigTabSection
+            title="System & Workflow Settings"
+            titleTooltip={tooltips.settingsSectionTitle}
+            description="Configure controllers, SPEC server integrations, axis limits, and analog/digital telemetry channels."
+            profilesTitle="Axes & Calibrations"
+            profilesTitleTooltip="Define controller boundaries and calibration matrices."
+            profiles={
+                <div className="w-full space-y-8">
+                    {/* Axis limits Mini Section */}
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm text-mauve-850">Axis Parameters</span>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700"
+                                onClick={() => appendAxis({ name: "", max_velocity: 10, max_acceleration: 20 })}
+                            >
+                                <Plus className="h-3.5 w-3.5 mr-1" /> Add Axis
+                            </Button>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            {axesFields.map((field, idx) => (
+                                <SettingsAxisCard 
+                                    key={field.id}
+                                    index={idx}
+                                    register={register}
+                                    errors={errors}
+                                    remove={removeAxis}
+                                    showRemove={axesFields.length > 1}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Input Calibration Signal Mini Section */}
+                    <div className="flex flex-col gap-4 border-t border-mauve-150 pt-6">
+                        <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm text-mauve-850">Input Signals</span>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700"
+                                onClick={() => appendSignal({ name: "", slope: 1.0, intercept: 0.0, channel: 0 })}
+                            >
+                                <Plus className="h-3.5 w-3.5 mr-1" /> Add Signal
+                            </Button>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            {signalsFields.map((field, idx) => (
+                                <SettingsSignalCard 
+                                    key={field.id}
+                                    index={idx}
+                                    register={register}
+                                    errors={errors}
+                                    remove={removeSignal}
+                                    showRemove={signalsFields.length > 1}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            }
+        >
+            {/* SPEC configurations card */}
+            <div className="flex flex-col gap-6 w-full">
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="Spec Host" tooltip={tooltips.settingsSpecHost} required={true} />
+                    <Input 
+                        placeholder="e.g. host:spec"
+                        className={errors.specHost ? "border-destructive focus-visible:ring-destructive" : ""}
+                        {...register('specHost')}
+                    />
+                    {errors.specHost && (
+                        <p className="text-xs text-destructive">{errors.specHost.message}</p>
+                    )}
+                </div>
+
+                <div className="flex flex-row items-center justify-between border border-mauve-150 p-4 bg-mauve-50/20 rounded-2xl">
+                    <div className="flex flex-col gap-1 pr-4">
+                        <FieldLabel text="Require SPEC Connection" tooltip={tooltips.settingsRequireSpecEnable} />
+                        <span className="text-[10px] text-muted-foreground">Force connection to proceed with experimental scans</span>
+                    </div>
+                    <Controller
+                        control={control}
+                        name="requireSpecEnable"
+                        render={({ field }) => (
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        )}
+                    />
+                </div>
+            </div>
+
+            {/* Aerotech Controller parameters card */}
+            <div className="flex flex-col gap-6 w-full border-t border-mauve-150 pt-6 mt-6">
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="System Name" tooltip={tooltips.settingsSystemName} required={true} />
+                    <Input 
+                        placeholder="e.g. RAMS4_CHESS"
+                        className={errors.systemName ? "border-destructive focus-visible:ring-destructive" : ""}
+                        {...register('systemName')}
+                    />
+                    {errors.systemName && (
+                        <p className="text-xs text-destructive">{errors.systemName.message}</p>
+                    )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="Aerotech Hostname / IP" tooltip={tooltips.settingsHostname} required={true} />
+                    <Input 
+                        placeholder="e.g. 10.0.0.1"
+                        className={errors.controllerHost ? "border-destructive focus-visible:ring-destructive" : ""}
+                        {...register('controllerHost')}
+                    />
+                    {errors.controllerHost && (
+                        <p className="text-xs text-destructive">{errors.controllerHost.message}</p>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                        <FieldLabel text="Axis Count" tooltip={tooltips.settingsAxisCount} required={true} />
+                        <Input 
+                            type="number" 
+                            placeholder="e.g. 5"
+                            className={errors.axisCount ? "border-destructive focus-visible:ring-destructive" : ""}
+                            {...register('axisCount', { valueAsNumber: true })}
+                        />
+                        {errors.axisCount && (
+                            <p className="text-xs text-destructive">{errors.axisCount.message}</p>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <FieldLabel text="Task Count" tooltip={tooltips.settingsTaskCount} required={true} />
+                        <Input 
+                            type="number" 
+                            placeholder="e.g. 5"
+                            className={errors.taskCount ? "border-destructive focus-visible:ring-destructive" : ""}
+                            {...register('taskCount', { valueAsNumber: true })}
+                        />
+                        {errors.taskCount && (
+                            <p className="text-xs text-destructive">{errors.taskCount.message}</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </ConfigTabSection>
+    );
+};

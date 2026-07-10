@@ -4,7 +4,8 @@ import { Button } from "../../../components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
-import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway } from "../../../api/configApi.ts";
+import { TabSettings } from "../TabSettings.tsx";
+import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway, fetchSettingsFromGateway, postSettingsToGateway } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { PencilLine } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
@@ -12,13 +13,14 @@ import { Input } from "../../../components/ui/input.tsx";
 import { Checkbox } from "../../../components/ui/checkbox.tsx";
 import { tooltips } from "@/config/tooltips.ts";
 
-type TabName = 'daq' | 'xray' | 'dic';
+type TabName = 'daq' | 'xray' | 'settings' | 'dic';
 
 export const ConfigurationManager = () => {
     const tabs: { id: TabName; label: string }[] = [
         { id: 'daq', label: 'DAQ' },
         { id: 'xray', label: 'X-ray' },
         { id: 'dic', label: 'DIC' },
+        { id: 'settings', label: 'Settings' },
     ];
     
     const [activeTab, setActiveTab] = useState<TabName>('daq');
@@ -55,9 +57,13 @@ export const ConfigurationManager = () => {
     // Deep compare draft vs saved config to compute dirty state
     const isDirty = useMemo(() => {
         if (!savedConfigRef.current) return false;
+        if (activeTab === 'settings') {
+            const keys = ['specHost', 'requireSpecEnable', 'systemName', 'controllerHost', 'axisCount', 'taskCount', 'axesSettings', 'signalSettings'] as const;
+            return keys.some(key => JSON.stringify(draft[key]) !== JSON.stringify(savedConfigRef.current[key]));
+        }
         const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles'] as const;
         return keys.some(key => JSON.stringify(draft[key]) !== JSON.stringify(savedConfigRef.current[key]));
-    }, [draft]);
+    }, [draft, activeTab]);
 
     const handleTabChange = (nextTab: string) => {
         const activeTabErrors = validationErrors[activeTab] || [];
@@ -174,6 +180,32 @@ export const ConfigurationManager = () => {
         const loadConfig = async () => {
             try {
                 const fetched = await fetchConfigFromGateway(dir, exp);
+                const fetchedSettings = await fetchSettingsFromGateway(dir, exp);
+
+                // Set default settings if none loaded
+                const defaultSettings = {
+                    specHost: draft.specHost || "id1a3.classe.cornell.edu:spec",
+                    requireSpecEnable: draft.requireSpecEnable ?? true,
+                    systemName: draft.systemName || "RAMS4_CHESS",
+                    controllerHost: draft.controllerHost || "10.0.0.1",
+                    axisCount: draft.axisCount ?? 5,
+                    taskCount: draft.taskCount ?? 5,
+                    axesSettings: draft.axesSettings && draft.axesSettings.length > 0 ? draft.axesSettings : [
+                        { name: "A", max_velocity: 50, max_acceleration: 100 },
+                        { name: "B", max_velocity: 50, max_acceleration: 100 },
+                        { name: "RA", max_velocity: 10, max_acceleration: 20 },
+                        { name: "RB", max_velocity: 10, max_acceleration: 20 },
+                        { name: "TENS", max_velocity: 5, max_acceleration: 10 }
+                    ],
+                    signalSettings: draft.signalSettings && draft.signalSettings.length > 0 ? draft.signalSettings : [
+                        { name: "LoadA", slope: 1.0, intercept: 0.0, channel: 0 },
+                        { name: "LoadB", slope: 1.0, intercept: 0.0, channel: 1 },
+                        { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
+                    ]
+                };
+
+                const settingsToApply = fetchedSettings || defaultSettings;
+
                 if (fetched) {
                     // Loaded existing JSON configuration
                     updateDraft({
@@ -181,9 +213,13 @@ export const ConfigurationManager = () => {
                         daqFrequency: fetched.daqFrequency ?? 1,
                         samplePoints: fetched.samplePoints ?? 1000,
                         handlerProfiles: fetched.handlerProfiles || [],
-                        xrayProfiles: fetched.xrayProfiles || []
+                        xrayProfiles: fetched.xrayProfiles || [],
+                        ...settingsToApply
                     });
-                    savedConfigRef.current = JSON.parse(JSON.stringify(fetched));
+                    savedConfigRef.current = {
+                        ...fetched,
+                        ...settingsToApply
+                    };
                 } else {
                     // Initialize blank default setup config
                     const defaults = {
@@ -196,14 +232,16 @@ export const ConfigurationManager = () => {
                         daqFrequency: 1,
                         samplePoints: 1000,
                         handlerProfiles: [],
-                        xrayProfiles: []
+                        xrayProfiles: [],
+                        ...settingsToApply
                     };
                     updateDraft({
                         requiredAxes: ["A", "B", "RA", "RB"],
                         daqFrequency: 1,
                         samplePoints: 1000,
                         handlerProfiles: [],
-                        xrayProfiles: []
+                        xrayProfiles: [],
+                        ...settingsToApply
                     });
                     savedConfigRef.current = defaults;
                 }
@@ -546,17 +584,22 @@ export const ConfigurationManager = () => {
             alert("Cannot save configuration: Please resolve all validation errors first.");
             return;
         }
-        const name = "rams4/" + draft.sampleName.trim() + `/config${draft.experimentNumber.trim()}.json`;
 
         try {
-            await postConfigToGateway(draft);
-            console.log(`Successfully saved and synced config: ${name}`);
+            if (activeTab === 'settings') {
+                await postSettingsToGateway(draft.configDirectory, draft.experimentNumber, draft);
+                console.log(`Successfully saved Settings configurations to ${draft.configDirectory}`);
+                alert(`Settings successfully saved to settings${draft.experimentNumber}.json`);
+            } else {
+                await postConfigToGateway(draft);
+                const name = "rams4/" + draft.sampleName.trim() + `/config${draft.experimentNumber.trim()}.json`;
+                console.log(`Successfully saved and synced config: ${name}`);
+                alert(`Configuration successfully loaded and saved to: ${name}`);
+            }
             
             // Sync is baseline clean
             savedConfigRef.current = JSON.parse(JSON.stringify(draft));
             commitPathRefs();
-
-            alert(`Configuration successfully loaded and saved to: ${name}`);
         } catch (error) {
             console.error('Failed to sync configuration to backend gateway', error);
             alert('Failed to sync to the backend gateway.');
@@ -569,6 +612,8 @@ export const ConfigurationManager = () => {
                 return <TabDAQ />;
             case 'xray':
                 return <TabXray />;
+            case 'settings':
+                return <TabSettings />;
             case 'dic':
                 return <p className='text-lg font-medium text-mauve-800'>DIC Configuration Not Currently Supported</p>;
             default:

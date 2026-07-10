@@ -14,6 +14,19 @@ export interface XrayProfile {
     atten: string;
 }
 
+export interface AxisSetting {
+    name: string;
+    max_velocity: number;
+    max_acceleration: number;
+}
+
+export interface SignalSetting {
+    name: string;
+    slope: number;
+    intercept: number;
+    channel: number;
+}
+
 export interface ConfigurationState {
     draft: GlobalConfig;
     lastLoadedPath: string;
@@ -38,6 +51,16 @@ export interface GlobalConfig {
 
     // X-ray
     xrayProfiles: XrayProfile[];
+
+    // Settings
+    specHost: string;
+    requireSpecEnable: boolean;
+    systemName: string;
+    controllerHost: string;
+    axisCount: number;
+    taskCount: number;
+    axesSettings: AxisSetting[];
+    signalSettings: SignalSetting[];
 }
 
 export interface HandlerProfileCycle {
@@ -83,7 +106,25 @@ const defaultDraftConfig = (): GlobalConfig => ({
     daqFrequency: 1,
     samplePoints: 1000,
     handlerProfiles: [],
-    xrayProfiles: []
+    xrayProfiles: [],
+    specHost: "id1a3.classe.cornell.edu:spec",
+    requireSpecEnable: true,
+    systemName: "RAMS4_CHESS",
+    controllerHost: "10.0.0.1",
+    axisCount: 5,
+    taskCount: 5,
+    axesSettings: [
+        { name: "A", max_velocity: 50, max_acceleration: 100 },
+        { name: "B", max_velocity: 50, max_acceleration: 100 },
+        { name: "RA", max_velocity: 10, max_acceleration: 20 },
+        { name: "RB", max_velocity: 10, max_acceleration: 20 },
+        { name: "TENS", max_velocity: 5, max_acceleration: 10 }
+    ],
+    signalSettings: [
+        { name: "LoadA", slope: 1.0, intercept: 0.0, channel: 0 },
+        { name: "LoadB", slope: 1.0, intercept: 0.0, channel: 1 },
+        { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
+    ]
 });
 
 export const useConfigurationStore = create<ConfigurationState>()(

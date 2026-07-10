@@ -94,6 +94,7 @@ const mockGatewayPlugin = () => {
                 if (url.pathname === '/mock-gateway-api') {
                     const queryPath = url.searchParams.get('path');
                     const action = url.searchParams.get('action');
+                    const queryType = url.searchParams.get('type');
                     const mockStorageRoot = path.resolve(__dirname, './mock_gateway_storage');
 
                     if (action === 'list') {
@@ -109,17 +110,23 @@ const mockGatewayPlugin = () => {
                         if (fs.existsSync(targetDir)) {
                             try {
                                 const dirents = fs.readdirSync(targetDir, { withFileTypes: true });
-                                const items = dirents
-                                    .map(dirent => {
-                                        if (dirent.isFile() && dirent.name.startsWith('config') && dirent.name.endsWith('.json')) {
+                                let items;
+
+                                if (queryType === 'experiment') {
+                                    items = dirents
+                                        .filter(dirent => dirent.isFile() && /^config\d+\.json$/.test(dirent.name))
+                                        .map(dirent => {
                                             const match = dirent.name.match(/^config(\d+)\.json$/);
                                             return match ? match[1] : dirent.name;
-                                        }
-                                        return dirent.name;
-                                    })
-                                    .filter(name => !name.startsWith('.') && name !== 'metadata');
+                                        });
+                                    items.sort((a, b) => Number(a) - Number(b));
+                                } else {
+                                    items = dirents
+                                        .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('.') && dirent.name !== 'metadata')
+                                        .map(dirent => dirent.name);
+                                    items.sort();
+                                }
 
-                                items.sort();
                                 res.setHeader('Content-Type', 'application/json');
                                 res.end(JSON.stringify(items));
                             } catch (err) {
@@ -161,12 +168,22 @@ const mockGatewayPlugin = () => {
                             req.on('end', () => {
                                 try {
                                     const payload = JSON.parse(body);
-                                    const filePath = payload.configDirectory + `config${payload.experimentNumber}.json`;
-                                    const cleanPath = filePath.replace(/^\//, '');
-                                    const targetFile = path.join(mockStorageRoot, cleanPath);
+                                    let targetFile;
+                                    let dataToWrite;
+
+                                    if (payload.customFilePath && payload.data) {
+                                        const cleanPath = payload.customFilePath.replace(/^\//, '');
+                                        targetFile = path.join(mockStorageRoot, cleanPath);
+                                        dataToWrite = payload.data;
+                                    } else {
+                                        const filePath = payload.configDirectory + `config${payload.experimentNumber}.json`;
+                                        const cleanPath = filePath.replace(/^\//, '');
+                                        targetFile = path.join(mockStorageRoot, cleanPath);
+                                        dataToWrite = payload;
+                                    }
 
                                     fs.mkdirSync(path.dirname(targetFile), { recursive: true });
-                                    fs.writeFileSync(targetFile, JSON.stringify(payload, null, 2), 'utf8');
+                                    fs.writeFileSync(targetFile, JSON.stringify(dataToWrite, null, 2), 'utf8');
 
                                     res.setHeader('Content-Type', 'application/json');
                                     res.end(JSON.stringify({ success: true, savedPath: targetFile }));

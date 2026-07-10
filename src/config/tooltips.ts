@@ -40,5 +40,25 @@ export const tooltips = {
     xrayProfileCtime: "Exposure count time per step in seconds.",
     xrayProfileAtten: "The attenuator foil thickness in mm. Must be in 0.25 mm increments from 0 to 20 mm.",
     xrayProfileBeamHeight: "Vertical slit height of the incident X-ray beam in mm.",
-    xrayProfileBeamWidth: "Horizontal slit width of the incident X-ray beam in mm."
+    xrayProfileBeamWidth: "Horizontal slit width of the incident X-ray beam in mm.",
+
+    // --- SETTINGS TAB FIELDS ---
+    settingsSectionTitle: "Configuration variables for system networking, safety boundaries, and input channel scaling.",
+    settingsSpecHost: "The network address of the external SPEC server (e.g. id1a3.classe.cornell.edu:spec).",
+    settingsRequireSpecEnable: "If enabled, the system requires connection to SPEC to proceed with scans.",
+    settingsSystemName: "Name of the mechanical testing system (e.g. RAMS4_CHESS).",
+    settingsHostname: "Network IP address of the Aerotech controller.",
+    settingsAxisCount: "The total number of mechanical axes available on the controller.",
+    settingsTaskCount: "The total number of concurrent execution tasks supported by the controller.",
+    
+    // --- AXES MINI SECTION ---
+    settingsAxisName: "Physical name designation of the axis (e.g. RT, RB, TEN, A, B).",
+    settingsAxisMaxVelocity: "Maximum safety velocity limit for the axis.",
+    settingsAxisMaxAcceleration: "Maximum safety acceleration limit for the axis.",
+    
+    // --- SIGNALS MINI SECTION ---
+    settingsSignalName: "Designated name for the analog or digital channel (e.g. LoadA, Strain).",
+    settingsSignalScale: "Calibration multiplier slope to convert voltage into engineering units.",
+    settingsSignalOffset: "Calibration y-intercept offset value.",
+    settingsSignalChannel: "Board channel number on the controller for this signal."
 };

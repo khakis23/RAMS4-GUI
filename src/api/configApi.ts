@@ -156,7 +156,7 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
     }
 
     try {
-        const response = await fetch(`/mock-gateway-api?action=list&path=${encodeURIComponent(relativePath)}`);
+        const response = await fetch(`/mock-gateway-api?action=list&path=${encodeURIComponent(relativePath)}&type=${getDir}`);
         if (response.ok) {
             return await response.json();
         }
@@ -167,4 +167,97 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
     // Return temporary static options list for browser demo environments
     const fallbackFn = staticMockData[getDir];
     return fallbackFn ? fallbackFn(prevDirName) : [];
+};
+
+
+/**
+ * Simulates reading the settings configuration file (settings<experiment>.json)
+ * from the gateway server at the specified directory path.
+ * Includes a temporary fallback for static host environments.
+ */
+export const fetchSettingsFromGateway = async (directory: string, experiment: string): Promise<any | null> => {
+    // Simulate API latency
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    const filePath = directory + `settings${experiment}.json`;
+    console.log(`Checking settings file: ${filePath}`);
+
+    try {
+        const response = await fetch(`/mock-gateway-api?path=${encodeURIComponent(filePath)}`);
+        if (response.ok) {
+            const data = await response.json();
+            return {
+                specHost: data.specHost,
+                requireSpecEnable: data.requireSpecEnable,
+                systemName: data.systemName,
+                controllerHost: data.controllerHost,
+                axisCount: data.axisCount,
+                taskCount: data.taskCount,
+                axesSettings: data.axesSettings,
+                signalSettings: data.signalSettings
+            };
+        }
+    } catch (err) {
+        console.warn("Backend mock server unavailable or settings file not found. Resolving in-memory mock configuration presets.", err);
+    }
+
+    // Temporary static fallback configuration to ensure titanium_specimen_02 runs with realistic inputs in demo builds
+    if (directory.includes("titanium_specimen_02") && experiment === "1") {
+        return {
+            specHost: "id1a3.classe.cornell.edu:spec",
+            requireSpecEnable: true,
+            systemName: "RAMS4_CHESS",
+            controllerHost: "10.0.0.1",
+            axisCount: 5,
+            taskCount: 5,
+            axesSettings: [
+                { name: "A", max_velocity: 50, max_acceleration: 100 },
+                { name: "B", max_velocity: 50, max_acceleration: 100 },
+                { name: "RA", max_velocity: 10, max_acceleration: 20 },
+                { name: "RB", max_velocity: 10, max_acceleration: 20 },
+                { name: "TENS", max_velocity: 5, max_acceleration: 10 }
+            ],
+            signalSettings: [
+                { name: "LoadA", slope: 1.0, intercept: 0.0, channel: 0 },
+                { name: "LoadB", slope: 1.0, intercept: 0.0, channel: 1 },
+                { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
+            ]
+        };
+    }
+
+    return null;
+};
+
+/**
+ * Saves settings properties to gateway server as a single settings<experiment>.json file.
+ * Includes a temporary fallback for static host environments.
+ */
+export const postSettingsToGateway = async (directory: string, experiment: string, settings: any): Promise<void> => {
+    // Simulate API latency
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    const filePath = directory + `settings${experiment}.json`;
+    const payload = {
+        specHost: settings.specHost,
+        requireSpecEnable: settings.requireSpecEnable,
+        systemName: settings.systemName,
+        controllerHost: settings.controllerHost,
+        axisCount: settings.axisCount,
+        taskCount: settings.taskCount,
+        axesSettings: settings.axesSettings,
+        signalSettings: settings.signalSettings
+    };
+
+    try {
+        const response = await fetch('/mock-gateway-api', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customFilePath: filePath, data: payload })
+        });
+        if (!response.ok) {
+            throw new Error('Failed to save settings configuration');
+        }
+    } catch (err) {
+        console.warn("Failed to save settings config to gateway. Simulating in-memory success.", err);
+    }
 };
