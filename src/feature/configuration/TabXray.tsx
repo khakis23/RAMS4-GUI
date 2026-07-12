@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from "../../components/ui/button.tsx";
 import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
@@ -10,6 +9,7 @@ import { xrayFormSchema } from "./profileSchemas/xraySchema.ts";
 import { XrayProfileCard } from "./components/XrayProfileCard.tsx";
 import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
 import { tooltips } from "@/config/tooltips.ts";
+import { Plus } from 'lucide-react';
 
 export const TabXray = () => {
     const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
@@ -21,21 +21,36 @@ export const TabXray = () => {
         watch,
         reset,
         formState: { errors }
-    } = useForm<z.infer<typeof xrayFormSchema>>({
+    } = useForm<any>({
         resolver: zodResolver(xrayFormSchema),
         mode: "onChange",
         defaultValues: {
             xrayProfiles: (draft.xrayProfiles || []).map(p => ({
                 id: p.id,
                 name: p.name,
-                x: p.x,
-                z: p.z,
-                omeStart: p.omeStart,
-                omeStop: p.omeStop,
-                ctime: p.ctime,
-                beamHeight: p.beamHeight,
-                beamWidth: p.beamWidth,
-                atten: p.atten,
+                mode: p.mode || 'rotation-series',
+                ramsx: p.ramsx ?? null,
+                ramsz: p.ramsz ?? null,
+                ome: p.ome ?? null,
+                ctime: p.ctime ?? null,
+                beamHeight: p.beamHeight ?? null,
+                beamWidth: p.beamWidth ?? null,
+                atten: p.atten ?? null,
+                numPoints: p.numPoints ?? null,
+                omeStart: p.omeStart ?? null,
+                omeStop: p.omeStop ?? null,
+                layerStart: p.layerStart ?? null,
+                layerEnd: p.layerEnd ?? null,
+                numLayers: p.numLayers ?? null,
+                stillPoints: p.stillPoints || [],
+                axis1Name: p.axis1Name || "ramsx",
+                axis1Start: p.axis1Start ?? null,
+                axis1Stop: p.axis1Stop ?? null,
+                axis1Images: p.axis1Images ?? null,
+                axis2Name: p.axis2Name || "ramsz",
+                axis2Start: p.axis2Start ?? null,
+                axis2Stop: p.axis2Stop ?? null,
+                axis2Images: p.axis2Images ?? null
             })),
         }
     });
@@ -48,14 +63,29 @@ export const TabXray = () => {
                 xrayProfiles: (draft.xrayProfiles || []).map(p => ({
                     id: p.id,
                     name: p.name,
-                    x: p.x,
-                    z: p.z,
-                    omeStart: p.omeStart,
-                    omeStop: p.omeStop,
-                    ctime: p.ctime,
-                    beamHeight: p.beamHeight,
-                    beamWidth: p.beamWidth,
-                    atten: p.atten,
+                    mode: p.mode || 'rotation-series',
+                    ramsx: p.ramsx ?? null,
+                    ramsz: p.ramsz ?? null,
+                    ome: p.ome ?? null,
+                    ctime: p.ctime ?? null,
+                    beamHeight: p.beamHeight ?? null,
+                    beamWidth: p.beamWidth ?? null,
+                    atten: p.atten ?? null,
+                    numPoints: p.numPoints ?? null,
+                    omeStart: p.omeStart ?? null,
+                    omeStop: p.omeStop ?? null,
+                    layerStart: p.layerStart ?? null,
+                    layerEnd: p.layerEnd ?? null,
+                    numLayers: p.numLayers ?? null,
+                    stillPoints: p.stillPoints || [],
+                    axis1Name: p.axis1Name || "ramsx",
+                    axis1Start: p.axis1Start ?? null,
+                    axis1Stop: p.axis1Stop ?? null,
+                    axis1Images: p.axis1Images ?? null,
+                    axis2Name: p.axis2Name || "ramsz",
+                    axis2Start: p.axis2Start ?? null,
+                    axis2Stop: p.axis2Stop ?? null,
+                    axis2Images: p.axis2Images ?? null
                 })),
             });
         }
@@ -72,10 +102,9 @@ export const TabXray = () => {
 
     const watchedValues = watch();
 
-    // Sync form values back to store draft on change if valid
+    // Sync form values to the store draft on every change — including partial/invalid state
     useFormAutoSave({
         watchedValues,
-        schema: xrayFormSchema,
         storeDraft: draft,
         updateDraft,
         mapValues: (watched: any) => ({
@@ -110,7 +139,7 @@ export const TabXray = () => {
         <ConfigTabSection
             title="X-ray Scan Profiles"
             titleTooltip={tooltips.xraySectionTitle}
-            description="Configure parameters for X-ray scan sweeps."
+            description="Configure parameters for X-ray scan sweeps, layers, and grids."
             profiles={
                 <div className="w-full space-y-6">
                     {/* Render active scan profiles list */}
@@ -120,7 +149,8 @@ export const TabXray = () => {
                             index={index}
                             register={register}
                             errors={errors}
-                            remove={remove}
+                            control={control}
+                            removeProfile={remove}
                         />
                     ))}
 
@@ -130,18 +160,20 @@ export const TabXray = () => {
                         onClick={() => append({ 
                             id: `xrayProfile${Date.now()}`,
                             name: "",
-                            x: "",
-                            z: "",
-                            omeStart: "",
-                            omeStop: "",
-                            ctime: "",
-                            beamHeight: "",
-                            beamWidth: "",
-                            atten: ""
+                            mode: "rotation-series",
+                            ramsx: null,
+                            ramsz: null,
+                            ome: null,
+                            ctime: null,
+                            beamHeight: null,
+                            beamWidth: null,
+                            atten: null,
+                            numPoints: null,
+                            stillPoints: []
                         })}
-                        className="w-full mt-4"
+                        className="w-full mt-4 flex items-center justify-center gap-2"
                     >
-                        Add X-ray Profile
+                        <Plus className="h-4 w-4" /> Add X-ray Profile
                     </Button>
                 </div>
             }

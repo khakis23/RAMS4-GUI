@@ -27,7 +27,7 @@ export const CoreLayout = () => {
     };
 
     return (
-        <div className="flex h-screen w-screen bg-mauve-100 text-mauve-800 overflow-hidden">
+        <div className="flex h-screen w-full bg-mauve-100 text-mauve-800 overflow-hidden">
             {/* Left Fixed Sidebar */}
             <SideBarMenu 
                 currentView={currentView} 

@@ -153,10 +153,9 @@ export const TabDAQ = () => {
         }
     }, [watchedValues, setErrors]);
 
-    // Automatically sync changes to Zustand store draft using custom sync hook
+    // Sync form values to the store draft on every change — including partial/invalid state
     useFormAutoSave({
         watchedValues,
-        schema: daqSchema,
         storeDraft: draft,
         updateDraft,
         mapValues: (watched) => {
@@ -229,14 +228,14 @@ export const TabDAQ = () => {
                             mode: "time-series", 
                             filename: "",
                             verboseAxis: "-1",
-                            verboseSystem: -1,
+                            verboseSystem: null,
                             verboseTask: "-1",
-                            verboseIO: -1,
+                            verboseIO: null,
                             verboseAi: "",
                             aiLoadA: false,
                             aiStrain: false,
                             aiCustom: "",
-                            frequency: undefined as any,
+                            frequency: null,
                             cycles: []
                         })}
                         className="w-full mt-4"

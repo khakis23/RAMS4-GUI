@@ -1,17 +1,44 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+export interface XrayStillPoint {
+    ramsx: number;
+    ramsz: number;
+    ome: number;
+    numPoints: number;
+}
+
 export interface XrayProfile {
     id: string;
     name: string;
-    x: string;
-    z: string;
-    omeStart: string;
-    omeStop: string;
-    ctime: string;
-    beamHeight: string;
-    beamWidth: string;
-    atten: string;
+    mode: 'rotation-series' | 'stills' | 'tseries' | 'dscan' | 'mesh';
+    ramsx: number;
+    ramsz: number;
+    ome: number;
+    ctime: number;
+    beamHeight: number;
+    beamWidth: number;
+    atten: number;
+    numPoints: number;
+
+    // Mode-specific optional parameters
+    omeStart?: number;
+    omeStop?: number;
+    layerStart?: number;
+    layerEnd?: number;
+    numLayers?: number;
+
+    stillPoints?: XrayStillPoint[];
+
+    axis1Name?: string;
+    axis1Start?: number;
+    axis1Stop?: number;
+    axis1Images?: number;
+
+    axis2Name?: string;
+    axis2Start?: number;
+    axis2Stop?: number;
+    axis2Images?: number;
 }
 
 export interface AxisSetting {

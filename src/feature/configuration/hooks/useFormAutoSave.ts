@@ -1,39 +1,35 @@
 import { useEffect } from 'react';
-import { ZodSchema } from 'zod';
 
 interface UseFormAutoSaveProps<T, M> {
     watchedValues: any;
-    schema: ZodSchema<any>;
     storeDraft: T;
     updateDraft: (data: Partial<T>) => void;
     mapValues?: (watched: any) => M; // Optional mapping before comparison/save
 }
 
 /**
- * Custom hook to synchronously validate and save Hook Form values to Zustand store draft.
+ * Syncs React Hook Form values to the Zustand store draft on every change,
+ * regardless of validation state. This allows partial/in-progress data to
+ * persist across tab switches so the user never loses their work.
  * Prevents infinite rendering loops by verifying values have actually changed.
  */
 export const useFormAutoSave = <T, M = T>({
     watchedValues,
-    schema,
     storeDraft,
     updateDraft,
     mapValues
 }: UseFormAutoSaveProps<T, M>) => {
     useEffect(() => {
-        const result = schema.safeParse(watchedValues);
-        if (result.success) {
-            // If custom mapper is provided, transform the watched form values first
-            const mappedValues = mapValues ? mapValues(watchedValues) : watchedValues;
+        // If custom mapper is provided, transform the watched form values first
+        const mappedValues = mapValues ? mapValues(watchedValues) : watchedValues;
 
-            // Prevent infinite auto-save re-render loop by checking for real content changes
-            const hasChanged = checkHasChanged(storeDraft, mappedValues);
+        // Prevent infinite auto-save re-render loop by checking for real content changes
+        const hasChanged = checkHasChanged(storeDraft, mappedValues);
 
-            if (hasChanged) {
-                updateDraft(mappedValues);
-            }
+        if (hasChanged) {
+            updateDraft(mappedValues);
         }
-    }, [watchedValues, storeDraft, updateDraft, schema, mapValues]);
+    }, [watchedValues, storeDraft, updateDraft, mapValues]);
 };
 
 /**
@@ -49,3 +45,4 @@ const checkHasChanged = (current: any, incoming: any): boolean => {
         return JSON.stringify(current[key]) !== JSON.stringify(incoming[key]);
     });
 };
+

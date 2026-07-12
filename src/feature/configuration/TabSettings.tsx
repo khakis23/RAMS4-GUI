@@ -70,10 +70,9 @@ export const TabSettings = () => {
 
     const watchedValues = watch();
 
-    // Auto-save form updates into store draft state on valid entries
+    // Sync form updates into store draft state on every change
     useFormAutoSave({
         watchedValues,
-        schema: settingsSchema,
         storeDraft: draft,
         updateDraft,
         mapValues: (watched: any) => ({

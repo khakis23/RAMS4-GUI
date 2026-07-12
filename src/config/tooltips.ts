@@ -60,5 +60,9 @@ export const tooltips = {
     settingsSignalName: "Designated name for the analog or digital channel (e.g. LoadA, Strain).",
     settingsSignalScale: "Calibration multiplier slope to convert voltage into engineering units.",
     settingsSignalOffset: "Calibration y-intercept offset value.",
-    settingsSignalChannel: "Board channel number on the controller for this signal."
+    settingsSignalChannel: "Board channel number on the controller for this signal.",
+
+    // --- NEW XRAY PROFILE TOOLTIPS ---
+    xrayProfileMode: "Selects the scanning mode for the X-ray setup.",
+    numPoints: "The number of images to expose/collect at each step."
 };

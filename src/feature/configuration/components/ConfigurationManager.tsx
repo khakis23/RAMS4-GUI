@@ -24,15 +24,14 @@ export const ConfigurationManager = () => {
     ];
     
     const [activeTab, setActiveTab] = useState<TabName>('daq');
-    const [pendingTab, setPendingTab] = useState<TabName | null>(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [isManualPath, setIsManualPath] = useState(false);
     const [dontShowWarningAgain, setDontShowWarningAgain] = useState(false);
     const [showManualWarningModal, setShowManualWarningModal] = useState(false);
-    const { errors: validationErrors, setErrors } = useValidationStore();
+    const { errors: validationErrors } = useValidationStore();
 
-    // Baseline configuration ref for dirty checking
-    const savedConfigRef = useRef<any>(null);
+    // Baseline configuration state for dirty checking
+    const [savedConfig, setSavedConfig] = useState<any>(null);
 
     // Trackers for last committed path selectors to support reversions
     const { draft, updateDraft, setLastLoadedPath } = useConfigurationStore();
@@ -54,25 +53,18 @@ export const ConfigurationManager = () => {
     const [pendingPathChange, setPendingPathChange] = useState<PendingPathChange | null>(null);
     const [showDiscardModal, setShowDiscardModal] = useState(false);
 
-    // Deep compare draft vs saved config to compute dirty state
+    // Deep compare draft vs saved config to compute global dirty state across all settings and configuration keys
     const isDirty = useMemo(() => {
-        if (!savedConfigRef.current) return false;
-        if (activeTab === 'settings') {
-            const keys = ['specHost', 'requireSpecEnable', 'systemName', 'controllerHost', 'axisCount', 'taskCount', 'axesSettings', 'signalSettings'] as const;
-            return keys.some(key => JSON.stringify(draft[key]) !== JSON.stringify(savedConfigRef.current[key]));
-        }
-        const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles'] as const;
-        return keys.some(key => JSON.stringify(draft[key]) !== JSON.stringify(savedConfigRef.current[key]));
-    }, [draft, activeTab]);
+        if (!savedConfig) return false;
+        const keys = [
+            'specHost', 'requireSpecEnable', 'systemName', 'controllerHost', 'axisCount', 'taskCount', 'axesSettings', 'signalSettings',
+            'daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles'
+        ] as const;
+        return keys.some(key => JSON.stringify(draft[key]) !== JSON.stringify(savedConfig[key]));
+    }, [draft, savedConfig]);
 
     const handleTabChange = (nextTab: string) => {
-        const activeTabErrors = validationErrors[activeTab] || [];
-        if (activeTabErrors.length > 0) {
-            setPendingTab(nextTab as TabName);
-            setShowConfirmDialog(true);
-        } else {
-            setActiveTab(nextTab as TabName);
-        }
+        setActiveTab(nextTab as TabName);
     };
 
     // Option states for the dropdown selectors
@@ -173,7 +165,7 @@ export const ConfigurationManager = () => {
         const exp = draft.experimentNumber;
 
         if (!dir || !exp) {
-            savedConfigRef.current = null;
+            setSavedConfig(null);
             return;
         }
 
@@ -216,10 +208,10 @@ export const ConfigurationManager = () => {
                         xrayProfiles: fetched.xrayProfiles || [],
                         ...settingsToApply
                     });
-                    savedConfigRef.current = {
+                    setSavedConfig({
                         ...fetched,
                         ...settingsToApply
-                    };
+                    });
                 } else {
                     // Initialize blank default setup config
                     const defaults = {
@@ -243,7 +235,7 @@ export const ConfigurationManager = () => {
                         xrayProfiles: [],
                         ...settingsToApply
                     });
-                    savedConfigRef.current = defaults;
+                    setSavedConfig(defaults);
                 }
                 setLastLoadedPath(`${dir}::${exp}`);
                 commitPathRefs();
@@ -576,12 +568,12 @@ export const ConfigurationManager = () => {
         setShowManualWarningModal(false);
     };
 
-    const isConfigValid = Object.values(validationErrors).flat().length === 0;
+
 
     const handleSave = async () => {
         const allErrors = Object.values(validationErrors).flat();
         if (allErrors.length > 0) {
-            alert("Cannot save configuration: Please resolve all validation errors first.");
+            setShowConfirmDialog(true);
             return;
         }
 
@@ -598,7 +590,7 @@ export const ConfigurationManager = () => {
             }
             
             // Sync is baseline clean
-            savedConfigRef.current = JSON.parse(JSON.stringify(draft));
+            setSavedConfig(JSON.parse(JSON.stringify(draft)));
             commitPathRefs();
         } catch (error) {
             console.error('Failed to sync configuration to backend gateway', error);
@@ -778,7 +770,7 @@ export const ConfigurationManager = () => {
                                     <Button
                                         variant="secondary"
                                         onClick={handleSave}
-                                        disabled={!isConfigValid || !isDirty}
+                                        disabled={!isDirty}
                                         className="h-7 px-3.5 shadow-sm text-xs font-semibold rounded-lg"
                                     >
                                         Save Configuration
@@ -830,30 +822,20 @@ export const ConfigurationManager = () => {
                 </div>
             </div>
 
-            {/* Tab Switch Unsaved Validation Warning */}
+            {/* Save Validation Error Modal */}
             <WarningModal
                 isOpen={showConfirmDialog}
-                title="Unsaved Validation Errors"
-                description="You have invalid fields on the current tab that cannot be saved. Leaving will discard these changes."
-                confirmText="Discard & Switch"
-                cancelText="Stay and Fix"
-                onConfirm={() => {
-                    setShowConfirmDialog(false);
-                    if (pendingTab) {
-                        setErrors(activeTab, []);
-                        setActiveTab(pendingTab);
-                    }
-                    setPendingTab(null);
-                }}
-                onCancel={() => {
-                    setShowConfirmDialog(false);
-                    setPendingTab(null);
-                }}
+                title="Cannot Save Configuration"
+                description="Please resolve all validation errors before saving."
+                confirmText="OK"
+                cancelText=""
+                onConfirm={() => setShowConfirmDialog(false)}
+                onCancel={() => setShowConfirmDialog(false)}
             >
                 <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex flex-col gap-2 max-h-48 overflow-y-auto">
                     <span className="text-xs font-bold text-red-800">Please fix the following fields:</span>
                     <ul className="list-disc list-inside text-xs text-red-700 space-y-1.5 pl-1">
-                        {(validationErrors[activeTab] || []).map((err, i) => (
+                        {Object.values(validationErrors).flat().map((err, i) => (
                             <li key={i}>{err}</li>
                         ))}
                     </ul>
@@ -938,9 +920,11 @@ const WarningModal = ({
                 </p>
                 {children}
                 <div className="flex gap-3 justify-end mt-2">
-                    <Button variant="secondary" onClick={onCancel}>
-                        {cancelText}
-                    </Button>
+                    {cancelText && (
+                        <Button variant="secondary" onClick={onCancel}>
+                            {cancelText}
+                        </Button>
+                    )}
                     <Button variant="destructive" onClick={onConfirm}>
                         {confirmText}
                     </Button>
