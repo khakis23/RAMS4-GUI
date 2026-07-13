@@ -158,16 +158,23 @@ export const TabSettings = () => {
                             </Button>
                         </div>
                         <div className="flex flex-col gap-3">
-                            {axesFields.map((field, idx) => (
-                                <SettingsAxisCard 
-                                    key={field.id}
-                                    index={idx}
-                                    register={register}
-                                    errors={errors}
-                                    remove={removeAxis}
-                                    showRemove={axesFields.length > 1}
-                                />
-                            ))}
+                            {axesFields.map((field, idx) => {
+                                const takenNames = (watchedValues.axesSettings || [])
+                                    .map((a: any) => a?.name)
+                                    .filter((name: string, i: number) => !!name && i !== idx);
+                                return (
+                                    <SettingsAxisCard
+                                        key={field.id}
+                                        index={idx}
+                                        control={control as any}
+                                        register={register}
+                                        errors={errors}
+                                        remove={removeAxis}
+                                        showRemove={axesFields.length > 1}
+                                        takenNames={takenNames}
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
 

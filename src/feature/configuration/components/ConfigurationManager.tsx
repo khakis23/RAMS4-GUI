@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
 import { TabSettings } from "../TabSettings.tsx";
-import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway, fetchSettingsFromGateway, postSettingsToGateway } from "../../../api/configApi.ts";
+import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { PencilLine } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
@@ -14,6 +14,149 @@ import { Checkbox } from "../../../components/ui/checkbox.tsx";
 import { tooltips } from "@/config/tooltips.ts";
 
 type TabName = 'daq' | 'xray' | 'settings' | 'dic';
+
+const pruneConfigForSave = (config: any) => {
+    const cleanConfig = JSON.parse(JSON.stringify(config));
+
+    // Prune handlerProfiles
+    if (cleanConfig.handlerProfiles) {
+        cleanConfig.handlerProfiles = cleanConfig.handlerProfiles.map((hp: any) => {
+            const cleanHp: any = {
+                mode: hp.mode,
+                filename: hp.filename,
+                verboseAxis: hp.verboseAxis,
+                verboseSystem: hp.verboseSystem,
+                verboseTask: hp.verboseTask,
+                verboseIO: hp.verboseIO,
+                verboseAi: hp.verboseAi,
+            };
+            if (hp.signalLoad !== null && hp.signalLoad !== undefined) cleanHp.signalLoad = hp.signalLoad;
+            if (hp.signalStrain !== null && hp.signalStrain !== undefined) cleanHp.signalStrain = hp.signalStrain;
+
+            if (hp.mode === 'time-series') {
+                if (hp.frequency !== null && hp.frequency !== undefined) cleanHp.frequency = hp.frequency;
+                if (hp.cycles && hp.cycles.length > 0) cleanHp.cycles = hp.cycles;
+            } else if (hp.mode === 'peak-valley') {
+                if (hp.signalAxis !== null && hp.signalAxis !== undefined) cleanHp.signalAxis = hp.signalAxis;
+                if (hp.signalItem !== null && hp.signalItem !== undefined) cleanHp.signalItem = hp.signalItem;
+                if (hp.signalProminence !== null && hp.signalProminence !== undefined) cleanHp.signalProminence = hp.signalProminence;
+            } else if (hp.mode === 'pso') {
+                if (hp.psoAxis !== null && hp.psoAxis !== undefined) cleanHp.psoAxis = hp.psoAxis;
+            }
+            return cleanHp;
+        });
+    }
+
+    // Prune xrayProfiles
+    if (cleanConfig.xrayProfiles) {
+        cleanConfig.xrayProfiles = cleanConfig.xrayProfiles.map((xp: any) => {
+            const cleanXp: any = {
+                id: xp.id,
+                name: xp.name,
+                mode: xp.mode,
+                ramsx: xp.ramsx,
+                ramsz: xp.ramsz,
+                ome: xp.ome,
+                ctime: xp.ctime,
+                beamHeight: xp.beamHeight,
+                beamWidth: xp.beamWidth,
+                atten: xp.atten,
+                numPoints: xp.numPoints,
+            };
+
+            if (xp.mode === 'rotation-series') {
+                if (xp.omeStart !== null && xp.omeStart !== undefined) cleanXp.omeStart = xp.omeStart;
+                if (xp.omeStop !== null && xp.omeStop !== undefined) cleanXp.omeStop = xp.omeStop;
+                if (xp.layerStart !== null && xp.layerStart !== undefined) cleanXp.layerStart = xp.layerStart;
+                if (xp.layerEnd !== null && xp.layerEnd !== undefined) cleanXp.layerEnd = xp.layerEnd;
+                if (xp.numLayers !== null && xp.numLayers !== undefined) cleanXp.numLayers = xp.numLayers;
+            } else if (xp.mode === 'stills') {
+                if (xp.stillPoints && xp.stillPoints.length > 0) {
+                    cleanXp.stillPoints = xp.stillPoints.map((sp: any) => ({
+                        ramsx: sp.ramsx,
+                        ramsz: sp.ramsz,
+                        ome: sp.ome,
+                        numPoints: sp.numPoints
+                    }));
+                }
+            } else if (xp.mode === 'dscan') {
+                if (xp.axis1Name !== null && xp.axis1Name !== undefined) cleanXp.axis1Name = xp.axis1Name;
+                if (xp.axis1Start !== null && xp.axis1Start !== undefined) cleanXp.axis1Start = xp.axis1Start;
+                if (xp.axis1Stop !== null && xp.axis1Stop !== undefined) cleanXp.axis1Stop = xp.axis1Stop;
+                if (xp.axis1Images !== null && xp.axis1Images !== undefined) cleanXp.axis1Images = xp.axis1Images;
+            } else if (xp.mode === 'mesh') {
+                if (xp.axis1Name !== null && xp.axis1Name !== undefined) cleanXp.axis1Name = xp.axis1Name;
+                if (xp.axis1Start !== null && xp.axis1Start !== undefined) cleanXp.axis1Start = xp.axis1Start;
+                if (xp.axis1Stop !== null && xp.axis1Stop !== undefined) cleanXp.axis1Stop = xp.axis1Stop;
+                if (xp.axis1Images !== null && xp.axis1Images !== undefined) cleanXp.axis1Images = xp.axis1Images;
+                if (xp.axis2Name !== null && xp.axis2Name !== undefined) cleanXp.axis2Name = xp.axis2Name;
+                if (xp.axis2Start !== null && xp.axis2Start !== undefined) cleanXp.axis2Start = xp.axis2Start;
+                if (xp.axis2Stop !== null && xp.axis2Stop !== undefined) cleanXp.axis2Stop = xp.axis2Stop;
+                if (xp.axis2Images !== null && xp.axis2Images !== undefined) cleanXp.axis2Images = xp.axis2Images;
+            }
+            return cleanXp;
+        });
+    }
+
+    return cleanConfig;
+};
+
+const normalizeConfig = (config: any) => {
+    if (!config) return null;
+    const cleanConfig = JSON.parse(JSON.stringify(config));
+
+    if (cleanConfig.handlerProfiles) {
+        cleanConfig.handlerProfiles = cleanConfig.handlerProfiles.map((hp: any) => ({
+            mode: hp.mode,
+            filename: hp.filename,
+            signalLoad: hp.signalLoad ?? null,
+            signalStrain: hp.signalStrain ?? null,
+            verboseAxis: hp.verboseAxis ?? "",
+            verboseSystem: hp.verboseSystem ?? 0,
+            verboseTask: hp.verboseTask ?? "",
+            verboseIO: hp.verboseIO ?? 0,
+            verboseAi: hp.verboseAi ?? "",
+            frequency: hp.frequency ?? null,
+            cycles: hp.cycles || [],
+            signalAxis: hp.signalAxis ?? null,
+            signalItem: hp.signalItem ?? null,
+            signalProminence: hp.signalProminence ?? null,
+            psoAxis: hp.psoAxis ?? null,
+        }));
+    }
+
+    if (cleanConfig.xrayProfiles) {
+        cleanConfig.xrayProfiles = cleanConfig.xrayProfiles.map((xp: any) => ({
+            id: xp.id,
+            name: xp.name,
+            mode: xp.mode,
+            ramsx: xp.ramsx ?? null,
+            ramsz: xp.ramsz ?? null,
+            ome: xp.ome ?? null,
+            ctime: xp.ctime ?? null,
+            beamHeight: xp.beamHeight ?? null,
+            beamWidth: xp.beamWidth ?? null,
+            atten: xp.atten ?? null,
+            numPoints: xp.numPoints ?? null,
+            omeStart: xp.omeStart ?? null,
+            omeStop: xp.omeStop ?? null,
+            layerStart: xp.layerStart ?? null,
+            layerEnd: xp.layerEnd ?? null,
+            numLayers: xp.numLayers ?? null,
+            stillPoints: xp.stillPoints || [],
+            axis1Name: xp.axis1Name ?? null,
+            axis1Start: xp.axis1Start ?? null,
+            axis1Stop: xp.axis1Stop ?? null,
+            axis1Images: xp.axis1Images ?? null,
+            axis2Name: xp.axis2Name ?? null,
+            axis2Start: xp.axis2Start ?? null,
+            axis2Stop: xp.axis2Stop ?? null,
+            axis2Images: xp.axis2Images ?? null,
+        }));
+    }
+
+    return cleanConfig;
+};
 
 export const ConfigurationManager = () => {
     const tabs: { id: TabName; label: string }[] = [
@@ -172,7 +315,6 @@ export const ConfigurationManager = () => {
         const loadConfig = async () => {
             try {
                 const fetched = await fetchConfigFromGateway(dir, exp);
-                const fetchedSettings = await fetchSettingsFromGateway(dir, exp);
 
                 // Set default settings if none loaded
                 const defaultSettings = {
@@ -196,20 +338,32 @@ export const ConfigurationManager = () => {
                     ]
                 };
 
-                const settingsToApply = fetchedSettings || defaultSettings;
+                // Merge settings from fetched config if present, otherwise use defaultSettings
+                const settingsToApply = fetched ? {
+                    specHost: fetched.specHost || defaultSettings.specHost,
+                    requireSpecEnable: fetched.requireSpecEnable ?? defaultSettings.requireSpecEnable,
+                    systemName: fetched.systemName || defaultSettings.systemName,
+                    controllerHost: fetched.controllerHost || defaultSettings.controllerHost,
+                    axisCount: fetched.axisCount ?? defaultSettings.axisCount,
+                    taskCount: fetched.taskCount ?? defaultSettings.taskCount,
+                    axesSettings: fetched.axesSettings && fetched.axesSettings.length > 0 ? fetched.axesSettings : defaultSettings.axesSettings,
+                    signalSettings: fetched.signalSettings && fetched.signalSettings.length > 0 ? fetched.signalSettings : defaultSettings.signalSettings
+                } : defaultSettings;
 
-                if (fetched) {
+                const normalizedFetched = fetched ? normalizeConfig(fetched) : null;
+
+                if (normalizedFetched) {
                     // Loaded existing JSON configuration
                     updateDraft({
-                        requiredAxes: fetched.requiredAxes || ["A", "B", "RA", "RB"],
-                        daqFrequency: fetched.daqFrequency ?? 1,
-                        samplePoints: fetched.samplePoints ?? 1000,
-                        handlerProfiles: fetched.handlerProfiles || [],
-                        xrayProfiles: fetched.xrayProfiles || [],
+                        requiredAxes: normalizedFetched.requiredAxes || ["A", "B", "RA", "RB"],
+                        daqFrequency: normalizedFetched.daqFrequency ?? 1,
+                        samplePoints: normalizedFetched.samplePoints ?? 1000,
+                        handlerProfiles: normalizedFetched.handlerProfiles || [],
+                        xrayProfiles: normalizedFetched.xrayProfiles || [],
                         ...settingsToApply
                     });
                     setSavedConfig({
-                        ...fetched,
+                        ...normalizedFetched,
                         ...settingsToApply
                     });
                 } else {
@@ -578,16 +732,11 @@ export const ConfigurationManager = () => {
         }
 
         try {
-            if (activeTab === 'settings') {
-                await postSettingsToGateway(draft.configDirectory, draft.experimentNumber, draft);
-                console.log(`Successfully saved Settings configurations to ${draft.configDirectory}`);
-                alert(`Settings successfully saved to settings${draft.experimentNumber}.json`);
-            } else {
-                await postConfigToGateway(draft);
-                const name = "rams4/" + draft.sampleName.trim() + `/config${draft.experimentNumber.trim()}.json`;
-                console.log(`Successfully saved and synced config: ${name}`);
-                alert(`Configuration successfully loaded and saved to: ${name}`);
-            }
+            const prunedPayload = pruneConfigForSave(draft);
+            await postConfigToGateway(prunedPayload);
+            const name = "rams4/" + draft.sampleName.trim() + `/config${draft.experimentNumber.trim()}.json`;
+            console.log(`Successfully saved and synced config: ${name}`);
+            alert(`Configuration successfully saved to: ${name}`);
             
             // Sync is baseline clean
             setSavedConfig(JSON.parse(JSON.stringify(draft)));

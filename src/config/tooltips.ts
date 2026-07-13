@@ -64,5 +64,18 @@ export const tooltips = {
 
     // --- NEW XRAY PROFILE TOOLTIPS ---
     xrayProfileMode: "Selects the scanning mode for the X-ray setup.",
-    numPoints: "The number of images to expose/collect at each step."
+    numPoints: "The number of images to expose/collect at each step.",
+    xrayProfileOme: "The specimen stage rotation angle (Omega) in degrees.",
+    xrayProfileLayerStart: "The starting Z position for layer-based scans in mm.",
+    xrayProfileLayerEnd: "The ending Z position for layer-based scans in mm.",
+    xrayProfileNumLayers: "The total number of Z-layers to collect.",
+    xrayProfileAxis1Name: "The physical stage axis designated for scanning (Axis 1).",
+    xrayProfileAxis2Name: "The physical stage axis designated for scanning (Axis 2).",
+    xrayProfileAxisStart: "The start limit position for the moving axis.",
+    xrayProfileAxisStop: "The stop limit position for the moving axis.",
+    xrayProfileAxisImages: "The number of images/points to expose along this axis range.",
+    xrayProfileStillPointX: "X stage coordinate (ramsx) for this still exposure point.",
+    xrayProfileStillPointZ: "Z stage coordinate (ramsz) for this still exposure point.",
+    xrayProfileStillPointOme: "Omega rotation angle (ome) for this still exposure point.",
+    xrayProfileStillPointCount: "The number of images to expose at this still coordinate."
 };

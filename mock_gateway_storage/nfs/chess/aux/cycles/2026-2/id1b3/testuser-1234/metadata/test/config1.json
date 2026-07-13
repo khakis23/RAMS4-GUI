@@ -11,70 +11,29 @@
     "RB"
   ],
   "daqFrequency": 1,
-  "samplePoints": 1006,
+  "samplePoints": 1000,
   "handlerProfiles": [],
   "xrayProfiles": [
     {
-      "id": "xrayProfile1783694985023",
+      "id": "xrayProfile1783947329332",
       "name": "test",
-      "mode": "rotation-series",
-      "ramsx": 0,
-      "ramsz": 0,
-      "ome": 0,
-      "ctime": 3,
-      "beamHeight": 3,
-      "beamWidth": 3,
-      "atten": 3,
-      "numPoints": 1,
-      "omeStart": 3,
-      "omeStop": 3,
-      "layerStart": 1,
-      "layerEnd": 1,
-      "numLayers": 1,
-      "stillPoints": [],
-      "axis1Name": "ramsx",
-      "axis1Start": null,
-      "axis1Stop": null,
-      "axis1Images": null,
-      "axis2Name": "ramsz",
-      "axis2Start": null,
-      "axis2Stop": null,
-      "axis2Images": null
-    },
-    {
-      "id": "xrayProfile1783892026515",
-      "name": "test",
-      "mode": "stills",
-      "ramsx": null,
-      "ramsz": null,
-      "ome": null,
+      "mode": "tseries",
+      "ramsx": 1,
+      "ramsz": 1,
+      "ome": 1,
       "ctime": 1,
-      "beamHeight": 3,
-      "beamWidth": 4,
-      "atten": 2,
-      "numPoints": null,
-      "omeStart": null,
-      "omeStop": null,
-      "layerStart": null,
-      "layerEnd": null,
-      "numLayers": null,
-      "stillPoints": [],
-      "axis1Name": "ramsx",
-      "axis1Start": null,
-      "axis1Stop": null,
-      "axis1Images": null,
-      "axis2Name": "ramsz",
-      "axis2Start": null,
-      "axis2Stop": null,
-      "axis2Images": null
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "numPoints": 5
     }
   ],
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
   "systemName": "RAMS4_CHESS",
-  "controllerHost": "10.0.0.2",
-  "axisCount": 4,
-  "taskCount": 4,
+  "controllerHost": "10.0.0.1",
+  "axisCount": 5,
+  "taskCount": 5,
   "axesSettings": [
     {
       "name": "A",
@@ -95,11 +54,6 @@
       "name": "RB",
       "max_velocity": 10,
       "max_acceleration": 20
-    },
-    {
-      "name": "TENS",
-      "max_velocity": 5,
-      "max_acceleration": 10
     }
   ],
   "signalSettings": [
@@ -108,12 +62,6 @@
       "slope": 1,
       "intercept": 0,
       "channel": 0
-    },
-    {
-      "name": "LoadB",
-      "slope": 1,
-      "intercept": 0,
-      "channel": 1
     },
     {
       "name": "Torque",
