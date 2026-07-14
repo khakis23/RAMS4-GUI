@@ -19,7 +19,6 @@ dist-ssr
 .DS_Store
 .agents/*
 CLAUDE.md
-Updates.md
 .claude
 *.suo
 *.ntvs*
@@ -27,3 +26,4 @@ Updates.md
 *.sln
 *.sw?
 users/
+docs/Updates.md
