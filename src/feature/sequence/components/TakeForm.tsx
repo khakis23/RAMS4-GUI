@@ -95,7 +95,7 @@ export const TakeForm = ({ index, errors, control, watch, setValue }: TakeFormPr
                         name={`cards.${index}.data.profileID`}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || ''}>
-                                <SelectTrigger className="h-9 border-mauve-200 focus:ring-mauve-300 bg-white">
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select an X-ray profile" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white">
@@ -126,7 +126,7 @@ export const TakeForm = ({ index, errors, control, watch, setValue }: TakeFormPr
                             name={`cards.${index}.data.imgMode`}
                             render={({ field }) => (
                                 <Select onValueChange={field.onChange} value={field.value || ''}>
-                                    <SelectTrigger className="h-9 border-mauve-200 focus:ring-mauve-300 bg-white">
+                                    <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Select image mode" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-white">
@@ -153,7 +153,7 @@ export const TakeForm = ({ index, errors, control, watch, setValue }: TakeFormPr
                 )}
 
                 {/* General parameters (Pause DAQ) inline on the row */}
-                <div className="flex items-center justify-between p-2.5 rounded-xl border border-mauve-150 bg-mauve-50/10 h-9 w-full md:w-48 shrink-0">
+                <div className="flex items-center justify-between px-3 py-1.5 rounded-xl border border-mauve-150 bg-mauve-50/10 h-8 w-full md:w-48 shrink-0">
                     <FieldLabel text="Pause DAQ" tooltip={tooltips.mechTestPauseDaq} />
                     <Controller
                         control={control}

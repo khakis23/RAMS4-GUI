@@ -8,7 +8,7 @@ import { TabSettings } from "../TabSettings.tsx";
 import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { useMechanicalTestStore } from "@/store/useMechanicalTestStore";
-import {PencilLine, Save} from 'lucide-react';
+import {PencilLine, Save, Sliders} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
 import { Input } from "../../../components/ui/input.tsx";
 import { Checkbox } from "../../../components/ui/checkbox.tsx";
@@ -785,175 +785,135 @@ export const ConfigurationManager = () => {
     };
 
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [showLeftBlur, setShowLeftBlur] = useState(false);
-    const [showRightBlur, setShowRightBlur] = useState(false);
-
-    const handleScroll = () => {
-        const el = scrollRef.current;
-        if (el) {
-            setShowLeftBlur(el.scrollLeft > 2);
-            setShowRightBlur(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
-        }
-    };
-
-    useEffect(() => {
-        const el = scrollRef.current;
-        if (el) {
-            setShowLeftBlur(el.scrollLeft > 2);
-            setShowRightBlur(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
-        }
-    }, [cycleOptions, stationOptions, btrOptions, sampleOptions, experimentOptions, isManualPath]);
 
     return (
-        <div className="flex flex-col gap-3 w-full max-w-5xl mx-auto min-w-[700px] h-full min-h-0 text-left">
-            {/* Compact Unified Control Bar */}
-            <div className="flex flex-row items-center justify-between gap-3 w-full bg-white border border-mauve-200 px-5 py-2 rounded-2xl shadow-sm shrink-0">
-
-                {/* Manual Path Mode Toggle Button - TODO maybe move back to the right? */}
-                <TooltipProvider delayDuration={350}>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                onClick={handleManualToggleClick}
-                                className={`h-7 w-7 p-0 mr-2 rounded-lg border border-mauve-200 transition-colors shrink-0 ${
-                                    isManualPath
-                                        ? 'bg-mauve-600 text-white hover:bg-mauve-700'
-                                        : 'bg-white text-mauve-600 hover:bg-mauve-50'
-                                }`}
-                            >
-                                <PencilLine className="h-3.5 w-3.5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="text-[10px] p-2">
-                            {isManualPath ? "Switch back to path select dropdowns" : tooltips.manualPath}
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-
-                {/* Inline Path Selectors with Scroll & Fade Mask */}
-                <div className="relative flex-1 min-w-0 overflow-hidden h-9 flex items-center">
-                    {isManualPath ? (
-                        <div className="flex items-center gap-2 max-w-3xl w-full">
-                            <span className="shrink-0 text-xs text-mauve-850 font-semibold">Directory:</span>
-                            <Input
-                                value={draft.configDirectory}
-                                onChange={(e: any) => handleManualDirectoryChange(e.target.value)}
-                                placeholder="/nfs/chess/aux/cycles/..."
-                                className="h-7 w-full bg-white border-mauve-200 rounded-lg text-xs px-2.5 shadow-sm focus-visible:ring-mauve-400"
-                            />
-                        </div>
-                    ) : (
-                        <>
-                            {/* Left blur overlay */}
-                            <div className={`absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 transition-opacity duration-200 ${showLeftBlur ? 'opacity-100' : 'opacity-0'}`} />
-
-                            <div
-                                ref={scrollRef}
-                                onScroll={handleScroll}
-                                className="flex flex-row items-center gap-3.5 overflow-x-auto no-scrollbar py-1 pr-4 font-semibold text-mauve-650 text-xs w-full"
-                            >
-                                {/* 1. Cycle Select */}
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className="text-xs text-mauve-850">Cycle</span>
-                                    <Select value={draft.cycleNumber} onValueChange={handleCycleChange}>
-                                        <SelectTrigger className="h-7 w-[95px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm">
-                                            <SelectValue placeholder="" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {cycleOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* 2. Station Select */}
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className="text-xs text-mauve-850">Station</span>
-                                    <Select value={selectedStation} onValueChange={handleStationChange} disabled={!draft.cycleNumber}>
-                                        <SelectTrigger className="h-7 w-[85px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
-                                            <SelectValue placeholder="" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {stationOptions.map(st => <SelectItem key={st} value={st}>{st}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* 3. BTR Select */}
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className="text-xs text-mauve-850">BTR</span>
-                                    <Select value={draft.userId} onValueChange={handleBtrChange} disabled={!selectedStation}>
-                                        <SelectTrigger className="h-7 w-[120px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
-                                            <SelectValue placeholder="" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {btrOptions.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* 4. Sample Select */}
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className="text-xs text-mauve-850">Sample</span>
-                                    <Select value={draft.sampleName} onValueChange={handleSampleChange} disabled={!draft.userId}>
-                                        <SelectTrigger className="h-7 w-[160px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
-                                            <SelectValue placeholder="" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {sampleOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                            <SelectItem value="new-sample-action" className="font-semibold text-mauve-800 border-t mt-1">
-                                                + New Sample...
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* 5. Experiment Select */}
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className="text-xs text-mauve-850">Exp.</span>
-                                    <Select value={draft.experimentNumber} onValueChange={handleExperimentChange} disabled={!draft.sampleName}>
-                                        <SelectTrigger className="h-7 w-[60px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
-                                            <SelectValue placeholder="" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {experimentOptions.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-                                            <SelectItem value="new-experiment-action" className="font-semibold text-mauve-800 border-t mt-1">
-                                                + New Exp...
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Right blur overlay */}
-                            <div className={`absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 transition-opacity duration-200 ${showRightBlur ? 'opacity-100' : 'opacity-0'}`} />
-                        </>
-                    )}
+        <div className="flex flex-col gap-3 w-full max-w-5xl mx-auto min-w-[800px] h-full min-h-0 text-left">
+            {/* Top Toolbar Header (Always Visible) */}
+            <div className="flex items-center justify-between pb-3 border-b border-mauve-200 shrink-0">
+                <div className="flex flex-col">
+                    <h2 className="text-xs font-bold text-mauve-850 flex items-center gap-2">
+                        <Sliders className="h-5 w-5 text-mauve-650" />
+                        Configure
+                    </h2>
                 </div>
 
-                {/* Action items outside scroll area - Save button remains isolated on the far right */}
-                <div className="flex items-center gap-2 shrink-0">
-                    {/* Save Button */}
-                    <TooltipProvider delayDuration={350}>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <span>
+                <div className="flex items-center gap-3 min-w-0">
+                    {/* Inline Path Selectors with Scroll & Fade Mask */}
+                    <div className="relative h-11 flex items-center shrink min-w-0">
+                        {isManualPath ? (
+                            <div className="mb-1 mr-4 flex items-center gap-2 min-w-lg max-w-full md:w-2xl">
+                                <span className="shrink-0 text-xs text-mauve-850 font-semibold">Directory:</span>
+                                <Input
+                                    value={draft.configDirectory}
+                                    onChange={(e: any) => handleManualDirectoryChange(e.target.value)}
+                                    placeholder="/nfs/chess/aux/cycles/..."
+                                    className="h-7 w-full bg-white border-mauve-200 rounded-lg text-xs px-2.5 shadow-sm focus-visible:ring-mauve-400"
+                                />
+                            </div>
+                        ) : (
+                            <div className="relative flex items-center">
+                                <div
+                                    ref={scrollRef}
+                                    className="flex flex-row items-center gap-3.5 overflow-x-auto sleek-scrollbar pb-2 pt-1 pr-4 font-semibold text-mauve-650 text-xs max-w-xl md:max-w-full"
+                                >
+                                    {/* 1. Cycle Select */}
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className="text-xs text-mauve-850">Cycle</span>
+                                        <Select value={draft.cycleNumber} onValueChange={handleCycleChange}>
+                                            <SelectTrigger className="h-7 w-[95px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm">
+                                                <SelectValue placeholder="" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {cycleOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* 2. Station Select */}
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className="text-xs text-mauve-850">Station</span>
+                                        <Select value={selectedStation} onValueChange={handleStationChange} disabled={!draft.cycleNumber}>
+                                            <SelectTrigger className="h-7 w-[85px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
+                                                <SelectValue placeholder="" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {stationOptions.map(st => <SelectItem key={st} value={st}>{st}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* 3. BTR Select */}
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className="text-xs text-mauve-850">BTR</span>
+                                        <Select value={draft.userId} onValueChange={handleBtrChange} disabled={!selectedStation}>
+                                            <SelectTrigger className="h-7 w-[160px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
+                                                <SelectValue placeholder="" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {btrOptions.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* 4. Sample Select */}
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className="text-xs text-mauve-850">Sample</span>
+                                        <Select value={draft.sampleName} onValueChange={handleSampleChange} disabled={!draft.userId}>
+                                            <SelectTrigger className="h-7 w-[160px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
+                                                <SelectValue placeholder="" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {sampleOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                <SelectItem value="new-sample-action" className="font-semibold text-mauve-800 border-t mt-1">
+                                                    + New Sample...
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* 5. Experiment Select */}
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <span className="text-xs text-mauve-850">Exp.</span>
+                                        <Select value={draft.experimentNumber} onValueChange={handleExperimentChange} disabled={!draft.sampleName}>
+                                            <SelectTrigger className="h-7 w-[60px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
+                                                <SelectValue placeholder="" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {experimentOptions.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                                                <SelectItem value="new-experiment-action" className="font-semibold text-mauve-800 border-t mt-1">
+                                                    + New Exp...
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Manual Path Mode Toggle Button - shifted to the right of path selector */}
+                    <div className="flex items-center pb-2 pt-1">
+                        <TooltipProvider delayDuration={350}>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
                                     <Button
-                                        variant="secondary"
-                                        onClick={handleSave}
-                                        disabled={!isDirty}
-                                        className="h-7 px-3.5 shadow-sm text-xs font-semibold rounded-lg"
+                                        variant="ghost"
+                                        onClick={handleManualToggleClick}
+                                        className={`h-7 w-7 p-0 rounded-lg border transition-colors shadow-sm shrink-0 ${
+                                            isManualPath
+                                                ? 'bg-mauve-600 text-white hover:bg-mauve-700 border-transparent'
+                                                : 'bg-white text-mauve-600 hover:bg-mauve-50 border-mauve-200'
+                                        }`}
                                     >
-                                         <Save className="h-3.5 w-3.5" />
-                                        Save Configuration
+                                        <PencilLine className="h-3.5 w-3.5" />
                                     </Button>
-                                </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="text-[10px] p-2">
-                                {tooltips.saveConfig}
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-[10px] p-2">
+                                    {isManualPath ? "Switch back to path select dropdowns" : tooltips.manualPath}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 </div>
             </div>
 
@@ -974,6 +934,27 @@ export const ConfigurationManager = () => {
                             ))}
                         </TabsList>
                     </Tabs>
+                    {/* Save Button */}
+                    <TooltipProvider delayDuration={350}>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={handleSave}
+                                        disabled={!isDirty}
+                                        className="h-7 mx-2 shadow-sm text-xs font-semibold rounded-lg"
+                                    >
+                                         <Save className="h-3.5 w-3.5" />
+                                        Save Configuration
+                                    </Button>
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-[10px] p-2">
+                                {tooltips.saveConfig}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
 
                 {/* Tab Content view */}

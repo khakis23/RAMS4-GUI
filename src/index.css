@@ -269,3 +269,22 @@ code {
     @apply bg-background text-foreground;}
   html {
     @apply font-sans;}}
+
+/* Sleek modern horizontal scrollbar styling */
+.sleek-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d8d4dc transparent;
+}
+.sleek-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+.sleek-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sleek-scrollbar::-webkit-scrollbar-thumb {
+  background: #d8d4dc;
+  border-radius: 10px;
+}
+.sleek-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #b4adb8;
+}

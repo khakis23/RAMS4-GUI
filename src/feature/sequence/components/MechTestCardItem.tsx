@@ -111,7 +111,7 @@ export const MechTestCardItem = ({
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDragEnd={onDragEnd}
-            className={`flex flex-col bg-white border rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-100 ${isDragging ? 'opacity-40 border-dashed border-mauve-400 shadow-lg' : 'border-mauve-200'}`}
+            className={`flex flex-col bg-white border rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-100 ${isDragging ? 'opacity-50 border-dashed border-mauve-400 shadow-lg' : 'border-mauve-200'}`}
         >
             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value={`item-${index}`} className="border-b-0">

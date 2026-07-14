@@ -51,7 +51,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                         name={`cards.${index}.data.axis`}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || 'A'}>
-                                <SelectTrigger className="h-9 border-mauve-200 focus:ring-mauve-300">
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select axis" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white">
@@ -74,7 +74,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                         name={`cards.${index}.data.mode`}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || 'absolute'}>
-                                <SelectTrigger className="h-9 border-mauve-200 focus:ring-mauve-300">
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select mode" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white">
@@ -94,7 +94,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                         name={`cards.${index}.data.control`}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || 'displacement'}>
-                                <SelectTrigger className="h-9 border-mauve-200 focus:ring-mauve-300">
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select control" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white">
@@ -124,51 +124,64 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                             {rampErrors?.target && <p className="text-xs text-destructive">{rampErrors.target.message}</p>}
                         </div>
 
-                        <div className="flex flex-col gap-2">
-                            <FieldLabel
-                                text={dispToggle === 'time' ? "Time (s)" : "Velocity (mm/s)"}
-                                tooltip={dispToggle === 'time' ? tooltips.mechTestTime : tooltips.mechTestVelocityDisplacement}
-                                required={true}
-                            />
-                            <div className="flex items-center gap-3">
-                                <div className="flex-grow">
-                                    {dispToggle === 'time' ? (
-                                        <Input
-                                            type="number"
-                                            step="any"
-                                            className={rampErrors?.time ? "border-destructive focus-visible:ring-destructive" : ""}
-                                            {...register(`cards.${index}.data.time`, { valueAsNumber: true })}
-                                        />
-                                    ) : (
-                                        <Input
-                                            type="number"
-                                            step="any"
-                                            className={rampErrors?.velocity ? "border-destructive focus-visible:ring-destructive" : ""}
-                                            {...register(`cards.${index}.data.velocity`, { valueAsNumber: true })}
-                                        />
-                                    )}
-                                </div>
+                        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 items-center">
 
-                                {/* Horizontally aligned Time/Velocity selector inline with input field */}
-                                <div className="flex items-center gap-1.5 border border-mauve-200 bg-mauve-100/50 p-1 rounded-xl text-xs font-semibold shrink-0 h-9">
-                                    <button
-                                        type="button"
-                                        onClick={() => setValue(`cards.${index}.data.dispToggle`, 'time')}
-                                        className={`px-3 py-1 rounded-lg text-xs transition-all cursor-pointer ${dispToggle === 'time' ? 'bg-white text-mauve-850 shadow-sm font-bold' : 'text-mauve-600 hover:text-mauve-850'}`}
-                                    >
-                                        Time
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setValue(`cards.${index}.data.dispToggle`, 'velocity')}
-                                        className={`px-3 py-1 rounded-lg text-xs transition-all cursor-pointer ${dispToggle === 'velocity' ? 'bg-white text-mauve-850 shadow-sm font-bold' : 'text-mauve-600 hover:text-mauve-850'}`}
-                                    >
-                                        Velocity
-                                    </button>
-                                </div>
+                            {/* Row 1: Label (Placed in column 2 above the input) */}
+                            <div className="col-start-2">
+                                <FieldLabel
+                                    text={dispToggle === 'time' ? "Time (s)" : "Velocity (mm/s)"}
+                                    tooltip={dispToggle === 'time' ? tooltips.mechTestTime : tooltips.mechTestVelocityDisplacement}
+                                    required={true}
+                                />
                             </div>
-                            {dispToggle === 'time' && rampErrors?.time && <p className="text-xs text-destructive">{rampErrors.time.message}</p>}
-                            {dispToggle === 'velocity' && rampErrors?.velocity && <p className="text-xs text-destructive">{rampErrors.velocity.message}</p>}
+
+                            {/* Row 2, Col 1: Inline Time/Velocity selector */}
+                            <div className="col-start-1 flex items-center gap-1.5 border border-mauve-200 bg-mauve-100/50 p-1 rounded-xl text-xs font-semibold shrink-0 h-9">
+                                <button
+                                    type="button"
+                                    onClick={() => setValue(`cards.${index}.data.dispToggle`, 'time')}
+                                    className={`px-3 py-1 rounded-lg text-xs transition-all cursor-pointer ${dispToggle === 'time' ? 'bg-white text-mauve-850 shadow-sm font-bold' : 'text-mauve-600 hover:text-mauve-850'}`}
+                                >
+                                    Time
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setValue(`cards.${index}.data.dispToggle`, 'velocity')}
+                                    className={`px-3 py-1 rounded-lg text-xs transition-all cursor-pointer ${dispToggle === 'velocity' ? 'bg-white text-mauve-850 shadow-sm font-bold' : 'text-mauve-600 hover:text-mauve-850'}`}
+                                >
+                                    Velocity
+                                </button>
+                            </div>
+
+                            {/* Row 2, Col 2: Input Field */}
+                            <div className="col-start-2">
+                                {dispToggle === 'time' ? (
+                                    <Input
+                                        type="number"
+                                        step="any"
+                                        className={rampErrors?.time ? "border-destructive focus-visible:ring-destructive" : ""}
+                                        {...register(`cards.${index}.data.time`, { valueAsNumber: true })}
+                                    />
+                                ) : (
+                                    <Input
+                                        type="number"
+                                        step="any"
+                                        className={rampErrors?.velocity ? "border-destructive focus-visible:ring-destructive" : ""}
+                                        {...register(`cards.${index}.data.velocity`, { valueAsNumber: true })}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Row 3: Error Messages (Placed in column 2 below the input) */}
+                            <div className="col-start-2">
+                                {dispToggle === 'time' && rampErrors?.time && (
+                                    <p className="text-xs text-destructive">{rampErrors.time.message}</p>
+                                )}
+                                {dispToggle === 'velocity' && rampErrors?.velocity && (
+                                    <p className="text-xs text-destructive">{rampErrors.velocity.message}</p>
+                                )}
+                            </div>
+
                         </div>
                     </>
                 )}

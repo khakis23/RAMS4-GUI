@@ -139,7 +139,7 @@ export const TabSettings = () => {
         <ConfigTabSection
             title="System & Workflow Settings"
             titleTooltip={tooltips.settingsSectionTitle}
-            description="Configure controllers, SPEC server integrations, axis limits, and analog/digital telemetry channels."
+            description="NOTE: This will be moved to the settings menu in the bottom left corner of the screen."
             profilesTitle="Axes & Calibrations"
             profilesTitleTooltip="Define controller boundaries and calibration matrices."
             profiles={

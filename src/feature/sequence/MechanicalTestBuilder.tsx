@@ -186,11 +186,11 @@ export const MechanicalTestBuilder = () => {
                 <div className="flex flex-col gap-1">
                     <h2 className="text-xs font-bold text-mauve-850 flex items-center gap-2">
                         <FileJson className="h-5 w-5 text-mauve-650" />
-                        Mechanical Test Builder
+                        Test Sequence Builder
                     </h2>
-                    <p className="text-xs text-mauve-600">
-                        Build and sequence mechanical load cycles and scanning steps.
-                    </p>
+                    {/*<p className="text-xs text-mauve-600">*/}
+                    {/*    Build and sequence mechanical load cycles and scanning steps.*/}
+                    {/*</p>*/}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -216,7 +216,7 @@ export const MechanicalTestBuilder = () => {
                         className="h-8 px-4 text-xs font-semibold rounded-lg bg-white border border-mauve-300 hover:bg-mauve-50 text-mauve-850 disabled:opacity-50 disabled:bg-mauve-50 flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                         <Save className="h-3.5 w-3.5" />
-                        Save Mechanical Test
+                        Save Test Sequence
                     </Button>
                 </div>
             </div>
