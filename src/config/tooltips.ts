@@ -77,5 +77,31 @@ export const tooltips = {
     xrayProfileStillPointX: "X stage coordinate (ramsx) for this still exposure point.",
     xrayProfileStillPointZ: "Z stage coordinate (ramsz) for this still exposure point.",
     xrayProfileStillPointOme: "Omega rotation angle (ome) for this still exposure point.",
-    xrayProfileStillPointCount: "The number of images to expose at this still coordinate."
+    xrayProfileStillPointCount: "The number of images to expose at this still coordinate.",
+
+    // --- MECHANICAL TEST BUILDER TOOLTIPS ---
+    mechTestAxis: "The target motor axis to actuate.",
+    mechTestMode: "Use an absolute target (from 0) or a relative target (from last target).",
+    mechTestControl: "Feedback control mode driving the ramp.",
+    mechTestTargetLoad: "Target load value in Newtons (N).",
+    mechTestTargetStrain: "Target axial strain value in engineering strain (mm/mm).",
+    mechTestTargetDisplacement: "Target stage position in millimeters (mm).",
+    mechTestVelocityLoad: "Rate of loading in Newtons per second (N/s).",
+    mechTestVelocityStrain: "Rate of deformation in axial strain per second (s^-1).",
+    mechTestVelocityDisplacement: "Actuator travel speed in millimeters per second (mm/s).",
+    mechTestTime: "Expected duration in seconds (s) to reach the target displacement.",
+    mechTestMaxDisplacement: "Safety displacement ceiling (mm) that aborts the test if exceeded during loading.",
+    mechTestEnableDic: "Triggers continuous optical DIC camera capture during the ramp.",
+    mechTestSkipDicPosition: "Bypasses pre-test stage alignment and camera calibration steps to start DIC capture immediately.",
+    mechTestIncrementSeg: "Increments the test segment index on completion to mark this step in the data logs.",
+    mechTestWait: "Blocks the execution of the next sequence command until the step is fully complete.",
+    mechTestImageProfile: "The configured scan profile defining target coordinates, layers, slits, or angles.",
+    mechTestPauseDaq: "Temporarily halts time-series data acquisition while executing this scan.",
+    mechTestImageModeFarFieldRotation: "Performs a rotational fly-scan targeting the far-field detector.",
+    mechTestImageModeNearFieldRotation: "Slides the near-field beamstop into position to perform a fly-scan.",
+    mechTestImageModeTomoRotation: "Retracts the beamstop and runs brightfield/darkfield calibration routines to scan.",
+    mechTestImageModeSingleLayerRotation: "Runs only the first Z-height slice of the selected rotation series using the far-field detector.",
+    mechTestImageModeDicStills: "Commands the specimen stage to a list of coordinates and triggers optical hutch cameras for surface strain mapping.",
+    mechTestImageModeFarFieldStills: "Takes stationary, high-resolution X-ray exposures at a list of coordinates using the far-field detector.",
+    mechTestImageModeNearFieldStills: "Slides the near-field beamstop in and takes stationary X-ray exposures at a list of coordinates."
 };

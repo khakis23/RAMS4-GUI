@@ -7,8 +7,8 @@ const safeNullableNumber = z.preprocess(
 ) as z.ZodType<number | undefined, any, any>;
 
 const safeRequiredNumber = z.preprocess(
-    (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? 0 : Number(val)),
-    z.number()
+    (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
+    z.number({ message: "Value is required." })
 ) as z.ZodType<number, any, any>;
 
 const stillPointSchema = z.object({
@@ -16,8 +16,8 @@ const stillPointSchema = z.object({
     ramsz: safeRequiredNumber,
     ome: safeRequiredNumber,
     numPoints: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? 1 : Number(val)),
-        z.number().int().min(1, "Must be 1 or more images.")
+        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
+        z.number({ message: "Number of Images is required." }).int().min(1, "Must be 1 or more images.")
     )
 });
 
@@ -26,20 +26,20 @@ export const xrayProfileSchema = z.object({
     name: z.string().min(1, "Profile Name is required."),
     mode: z.enum(['rotation-series', 'stills', 'tseries', 'dscan', 'mesh']),
     
-    // Shared parameters
-    ramsx: safeRequiredNumber,
-    ramsz: safeRequiredNumber,
-    ome: safeRequiredNumber,
+    // Shared parameters (made structurally nullable; required checks are performed conditionally per-mode in superRefine)
+    ramsx: safeNullableNumber,
+    ramsz: safeNullableNumber,
+    ome: safeNullableNumber,
     ctime: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? 0.1 : Number(val)),
-        z.number().min(0.0001, "Exposure Time must be greater than 0.")
+        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
+        z.number({ message: "Exposure Time is required." }).min(0.0001, "Exposure Time must be greater than 0.")
     ),
     beamHeight: safeRequiredNumber.refine(val => val >= 0, "Beam Height must be 0 or positive."),
     beamWidth: safeRequiredNumber.refine(val => val >= 0, "Beam Width must be 0 or positive."),
     atten: safeRequiredNumber.refine(val => val >= 0, "Attenuation must be 0 or positive."),
     numPoints: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? 1 : Number(val)),
-        z.number().int().min(1, "Num Points must be 1 or more.")
+        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
+        z.number({ message: "Number of Images is required." }).int().min(1, "Number of Images must be 1 or more.")
     ),
 
     // Optional fields with Zod refine checks or validation
@@ -72,6 +72,9 @@ export const xrayProfileSchema = z.object({
 }).superRefine((data, ctx) => {
     // Mode-specific validation checks
     if (data.mode === 'rotation-series') {
+        if (data.ramsx === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
+        }
         if (data.omeStart === undefined) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initial Angle is required for Rotation Series.", path: ["omeStart"] });
         }
@@ -87,7 +90,26 @@ export const xrayProfileSchema = z.object({
         if (data.numLayers === undefined) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Num Layers is required.", path: ["numLayers"] });
         }
+    } else if (data.mode === 'tseries') {
+        if (data.ramsx === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
+        }
+        if (data.ramsz === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Z is required.", path: ["ramsz"] });
+        }
+        if (data.ome === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Angle is required.", path: ["ome"] });
+        }
     } else if (data.mode === 'dscan') {
+        if (data.ramsx === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
+        }
+        if (data.ramsz === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Z is required.", path: ["ramsz"] });
+        }
+        if (data.ome === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Angle is required.", path: ["ome"] });
+        }
         if (!data.axis1Name) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Moving Axis 1 is required.", path: ["axis1Name"] });
         }
@@ -101,6 +123,15 @@ export const xrayProfileSchema = z.object({
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Num Images is required.", path: ["axis1Images"] });
         }
     } else if (data.mode === 'mesh') {
+        if (data.ramsx === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
+        }
+        if (data.ramsz === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Z is required.", path: ["ramsz"] });
+        }
+        if (data.ome === undefined) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Angle is required.", path: ["ome"] });
+        }
         if (!data.axis1Name) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Moving Axis 1 is required.", path: ["axis1Name"] });
         }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { SideBarMenu } from './menu/SideBarMenu.tsx';
 import { ConfigureView } from './view/ConfigureView.tsx';
+import { MechanicalTestBuilder } from '../feature/sequence/MechanicalTestBuilder.tsx';
 import { Views } from "../types/views.ts";
 import { SettingsMenu } from "./menu/SettingsMenu.tsx";
 import { StatusBar } from '../feature/StatusBar.tsx';
@@ -12,7 +13,7 @@ export const CoreLayout = () => {
     const renderActiveView = () => {
         switch (currentView) {
             case 'sequenceBuilder':
-                return <div>Sequence Builder Placeholder</div>;
+                return <MechanicalTestBuilder />;
             case 'runSequence':
                 return <div>Run Sequence Placeholder</div>;
             case 'manualControl':

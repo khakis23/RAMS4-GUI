@@ -7,13 +7,32 @@ import { TabXray } from "../TabXray.tsx";
 import { TabSettings } from "../TabSettings.tsx";
 import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
-import { PencilLine } from 'lucide-react';
+import { useMechanicalTestStore } from "@/store/useMechanicalTestStore";
+import {PencilLine, Save} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
 import { Input } from "../../../components/ui/input.tsx";
 import { Checkbox } from "../../../components/ui/checkbox.tsx";
 import { tooltips } from "@/config/tooltips.ts";
 
 type TabName = 'daq' | 'xray' | 'settings' | 'dic';
+
+const removeNulls = (obj: any): any => {
+    if (Array.isArray(obj)) {
+        return obj.map(removeNulls);
+    } else if (obj !== null && typeof obj === 'object') {
+        const cleanObj: any = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                const val = obj[key];
+                if (val !== null && val !== undefined) {
+                    cleanObj[key] = removeNulls(val);
+                }
+            }
+        }
+        return cleanObj;
+    }
+    return obj;
+};
 
 const pruneConfigForSave = (config: any) => {
     const cleanConfig = JSON.parse(JSON.stringify(config));
@@ -98,7 +117,7 @@ const pruneConfigForSave = (config: any) => {
         });
     }
 
-    return cleanConfig;
+    return removeNulls(cleanConfig);
 };
 
 const normalizeConfig = (config: any) => {
@@ -612,9 +631,12 @@ export const ConfigurationManager = () => {
         }
     };
 
+    const isMechTestDirty = useMechanicalTestStore(state => state.isDirty);
+    const isAnyDirty = isDirty || isMechTestDirty;
+
     // User change interceptors (gate with Discard modal if dirty)
     const handleCycleChange = (val: string) => {
-        if (isDirty) {
+        if (isAnyDirty) {
             setPendingPathChange({ type: 'cycle', val });
             setShowDiscardModal(true);
         } else {
@@ -623,7 +645,7 @@ export const ConfigurationManager = () => {
     };
 
     const handleStationChange = (val: string) => {
-        if (isDirty) {
+        if (isAnyDirty) {
             setPendingPathChange({ type: 'station', val });
             setShowDiscardModal(true);
         } else {
@@ -632,7 +654,7 @@ export const ConfigurationManager = () => {
     };
 
     const handleBtrChange = (val: string) => {
-        if (isDirty) {
+        if (isAnyDirty) {
             setPendingPathChange({ type: 'btr', val });
             setShowDiscardModal(true);
         } else {
@@ -641,7 +663,7 @@ export const ConfigurationManager = () => {
     };
 
     const handleSampleChange = (val: string) => {
-        if (isDirty) {
+        if (isAnyDirty) {
             setPendingPathChange({ type: 'sample', val });
             setShowDiscardModal(true);
         } else {
@@ -650,7 +672,7 @@ export const ConfigurationManager = () => {
     };
 
     const handleExperimentChange = (val: string) => {
-        if (isDirty) {
+        if (isAnyDirty) {
             setPendingPathChange({ type: 'experiment', val });
             setShowDiscardModal(true);
         } else {
@@ -659,7 +681,7 @@ export const ConfigurationManager = () => {
     };
 
     const handleManualDirectoryChange = (val: string) => {
-        if (isDirty) {
+        if (isAnyDirty) {
             setPendingPathChange({ type: 'manual', val });
             setShowDiscardModal(true);
         } else {
@@ -668,7 +690,7 @@ export const ConfigurationManager = () => {
     };
 
     const handleManualToggleClick = () => {
-        if (isDirty) {
+        if (isAnyDirty) {
             setPendingPathChange({ type: 'manualToggle', val: null });
             setShowDiscardModal(true);
         } else {
@@ -922,6 +944,7 @@ export const ConfigurationManager = () => {
                                         disabled={!isDirty}
                                         className="h-7 px-3.5 shadow-sm text-xs font-semibold rounded-lg"
                                     >
+                                         <Save className="h-3.5 w-3.5" />
                                         Save Configuration
                                     </Button>
                                 </span>
@@ -995,7 +1018,13 @@ export const ConfigurationManager = () => {
             <WarningModal
                 isOpen={showDiscardModal}
                 title="Discard Changes?"
-                description="You have unsaved changes in your current configuration. Changing the path will discard these changes."
+                description={
+                    isDirty && isMechTestDirty
+                        ? "You have unsaved changes in both your configuration and mechanical test. Changing the path will discard all unsaved changes."
+                        : isMechTestDirty
+                        ? "You have unsaved changes in your current mechanical test. Changing the path will discard these changes."
+                        : "You have unsaved changes in your current configuration. Changing the path will discard these changes."
+                }
                 confirmText="Discard & Proceed"
                 cancelText="Keep Changes"
                 onConfirm={handleConfirmDiscard}

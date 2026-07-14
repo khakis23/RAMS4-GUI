@@ -7,6 +7,26 @@ interface UseFormAutoSaveProps<T, M> {
     mapValues?: (watched: any) => M; // Optional mapping before comparison/save
 }
 
+const sanitizeObject = (obj: any): any => {
+    if (Array.isArray(obj)) {
+        return obj.map(sanitizeObject);
+    } else if (obj !== null && typeof obj === 'object') {
+        const cleanObj: any = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                const val = obj[key];
+                if (val === undefined || (typeof val === 'number' && isNaN(val))) {
+                    cleanObj[key] = null;
+                } else {
+                    cleanObj[key] = sanitizeObject(val);
+                }
+            }
+        }
+        return cleanObj;
+    }
+    return obj;
+};
+
 /**
  * Syncs React Hook Form values to the Zustand store draft on every change,
  * regardless of validation state. This allows partial/in-progress data to
@@ -21,7 +41,10 @@ export const useFormAutoSave = <T, M = T>({
 }: UseFormAutoSaveProps<T, M>) => {
     useEffect(() => {
         // If custom mapper is provided, transform the watched form values first
-        const mappedValues = mapValues ? mapValues(watchedValues) : watchedValues;
+        let mappedValues = mapValues ? mapValues(watchedValues) : watchedValues;
+
+        // Clean all NaN/undefined fields to standard null values before comparison and store update
+        mappedValues = sanitizeObject(mappedValues);
 
         // Prevent infinite auto-save re-render loop by checking for real content changes
         const hasChanged = checkHasChanged(storeDraft, mappedValues);
