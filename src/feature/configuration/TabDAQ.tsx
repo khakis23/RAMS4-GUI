@@ -240,7 +240,7 @@ export const TabDAQ = () => {
                         })}
                         className="w-full mt-4"
                     >
-                        Add Handler Profile
+                        + Add Handler Profile
                     </Button>
                 </div>
             }

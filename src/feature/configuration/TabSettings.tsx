@@ -155,7 +155,7 @@ export const TabSettings = () => {
 
             <ConfigTabSection
             title="System Settings"
-            titleTooltip={tooltips.settingsSectionTitle}
+            // titleTooltip={tooltips.settingsSectionTitle}
             profilesTitle="Axes & Calibrations"
             profilesTitleTooltip="Define controller boundaries and calibration matrices."
             profiles={
