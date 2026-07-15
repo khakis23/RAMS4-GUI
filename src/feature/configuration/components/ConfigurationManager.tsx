@@ -4,8 +4,7 @@ import { Button } from "../../../components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
-import { TabSettings } from "../TabSettings.tsx";
-import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway } from "../../../api/configApi.ts";
+import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway, fetchSettingsFromGateway } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { useMechanicalTestStore } from "@/store/useMechanicalTestStore";
 import {PencilLine, Save, Sliders} from 'lucide-react';
@@ -14,7 +13,7 @@ import { Input } from "../../../components/ui/input.tsx";
 import { Checkbox } from "../../../components/ui/checkbox.tsx";
 import { tooltips } from "@/config/tooltips.ts";
 
-type TabName = 'daq' | 'xray' | 'settings' | 'dic';
+type TabName = 'daq' | 'xray' | 'dic';
 
 const removeNulls = (obj: any): any => {
     if (Array.isArray(obj)) {
@@ -182,7 +181,6 @@ export const ConfigurationManager = () => {
         { id: 'daq', label: 'DAQ' },
         { id: 'xray', label: 'X-ray' },
         { id: 'dic', label: 'DIC' },
-        { id: 'settings', label: 'Settings' },
     ];
     
     const [activeTab, setActiveTab] = useState<TabName>('daq');
@@ -192,11 +190,8 @@ export const ConfigurationManager = () => {
     const [showManualWarningModal, setShowManualWarningModal] = useState(false);
     const { errors: validationErrors } = useValidationStore();
 
-    // Baseline configuration state for dirty checking
-    const [savedConfig, setSavedConfig] = useState<any>(null);
-
-    // Trackers for last committed path selectors to support reversions
-    const { draft, updateDraft, setLastLoadedPath } = useConfigurationStore();
+    // Baseline configuration state is read from global useConfigurationStore
+    const { draft, updateDraft, setLastLoadedPath, savedConfig, setSavedConfig } = useConfigurationStore();
     const [selectedStation, setSelectedStation] = useState<string>("");
 
     const lastCycle = useRef(draft.cycleNumber);
@@ -337,6 +332,7 @@ export const ConfigurationManager = () => {
 
                 // Set default settings if none loaded
                 const defaultSettings = {
+                    settingsVersion: 0,
                     specHost: draft.specHost || "id1a3.classe.cornell.edu:spec",
                     requireSpecEnable: draft.requireSpecEnable ?? true,
                     systemName: draft.systemName || "RAMS4_CHESS",
@@ -351,40 +347,86 @@ export const ConfigurationManager = () => {
                         { name: "TENS", max_velocity: 5, max_acceleration: 10 }
                     ],
                     signalSettings: draft.signalSettings && draft.signalSettings.length > 0 ? draft.signalSettings : [
-                        { name: "LoadA", slope: 1.0, intercept: 0.0, channel: 0 },
-                        { name: "LoadB", slope: 1.0, intercept: 0.0, channel: 1 },
+                        { name: "Load A", slope: 1.0, intercept: 0.0, channel: 0 },
+                        { name: "Load B", slope: 1.0, intercept: 0.0, channel: 1 },
                         { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
                     ]
                 };
 
-                // Merge settings from fetched config if present, otherwise use defaultSettings
-                const settingsToApply = fetched ? {
-                    specHost: fetched.specHost || defaultSettings.specHost,
-                    requireSpecEnable: fetched.requireSpecEnable ?? defaultSettings.requireSpecEnable,
-                    systemName: fetched.systemName || defaultSettings.systemName,
-                    controllerHost: fetched.controllerHost || defaultSettings.controllerHost,
-                    axisCount: fetched.axisCount ?? defaultSettings.axisCount,
-                    taskCount: fetched.taskCount ?? defaultSettings.taskCount,
-                    axesSettings: fetched.axesSettings && fetched.axesSettings.length > 0 ? fetched.axesSettings : defaultSettings.axesSettings,
-                    signalSettings: fetched.signalSettings && fetched.signalSettings.length > 0 ? fetched.signalSettings : defaultSettings.signalSettings
-                } : defaultSettings;
+                // Fetch settings for the specific version attached to this experiment configuration
+                const settingsRes = await fetchSettingsFromGateway(dir, fetched?.settingsVersion);
+
+                let settingsToApply;
+                if (settingsRes) {
+                    settingsToApply = {
+                        settingsVersion: settingsRes.version,
+                        specHost: settingsRes.data.specHost || defaultSettings.specHost,
+                        requireSpecEnable: settingsRes.data.requireSpecEnable ?? defaultSettings.requireSpecEnable,
+                        systemName: settingsRes.data.systemName || defaultSettings.systemName,
+                        controllerHost: settingsRes.data.controllerHost || defaultSettings.controllerHost,
+                        axisCount: settingsRes.data.axisCount ?? defaultSettings.axisCount,
+                        taskCount: settingsRes.data.taskCount ?? defaultSettings.taskCount,
+                        axesSettings: settingsRes.data.axesSettings || defaultSettings.axesSettings,
+                        signalSettings: settingsRes.data.signalSettings || defaultSettings.signalSettings
+                    };
+
+                    // Check if a fallback happened due to a missing version file
+                    if (fetched && fetched.settingsVersion !== undefined && fetched.settingsVersion !== null && fetched.settingsVersion !== settingsRes.version) {
+                        useConfigurationStore.getState().setSettingsFallbackActive({
+                            expected: fetched.settingsVersion,
+                            loaded: settingsRes.version
+                        });
+                    } else {
+                        useConfigurationStore.getState().setSettingsFallbackActive(null);
+                    }
+                } else if (fetched && (fetched.specHost || fetched.axesSettings)) {
+                    // Backwards compatibility for legacy configurations containing inline settings
+                    settingsToApply = {
+                        settingsVersion: 0,
+                        specHost: fetched.specHost || defaultSettings.specHost,
+                        requireSpecEnable: fetched.requireSpecEnable ?? defaultSettings.requireSpecEnable,
+                        systemName: fetched.systemName || defaultSettings.systemName,
+                        controllerHost: fetched.controllerHost || defaultSettings.controllerHost,
+                        axisCount: fetched.axisCount ?? defaultSettings.axisCount,
+                        taskCount: fetched.taskCount ?? defaultSettings.taskCount,
+                        axesSettings: fetched.axesSettings || defaultSettings.axesSettings,
+                        signalSettings: fetched.signalSettings || defaultSettings.signalSettings
+                    };
+                    useConfigurationStore.getState().setSettingsFallbackActive(null);
+                } else {
+                    settingsToApply = defaultSettings;
+                    if (fetched && fetched.settingsVersion !== undefined && fetched.settingsVersion !== null) {
+                        useConfigurationStore.getState().setSettingsFallbackActive({
+                            expected: fetched.settingsVersion,
+                            loaded: 'default'
+                        });
+                    }
+                }
 
                 const normalizedFetched = fetched ? normalizeConfig(fetched) : null;
 
                 if (normalizedFetched) {
                     // Loaded existing JSON configuration
-                    updateDraft({
+                    const mergedSaved = {
+                        ...normalizedFetched,
                         requiredAxes: normalizedFetched.requiredAxes || ["A", "B", "RA", "RB"],
                         daqFrequency: normalizedFetched.daqFrequency ?? 1,
                         samplePoints: normalizedFetched.samplePoints ?? 1000,
                         handlerProfiles: normalizedFetched.handlerProfiles || [],
                         xrayProfiles: normalizedFetched.xrayProfiles || [],
-                        ...settingsToApply
+                        ...settingsToApply,
+                        settingsVersion: normalizedFetched.settingsVersion ?? settingsToApply.settingsVersion
+                    };
+                    updateDraft({
+                        requiredAxes: mergedSaved.requiredAxes,
+                        daqFrequency: mergedSaved.daqFrequency,
+                        samplePoints: mergedSaved.samplePoints,
+                        handlerProfiles: mergedSaved.handlerProfiles,
+                        xrayProfiles: mergedSaved.xrayProfiles,
+                        ...settingsToApply,
+                        settingsVersion: mergedSaved.settingsVersion
                     });
-                    setSavedConfig({
-                        ...normalizedFetched,
-                        ...settingsToApply
-                    });
+                    setSavedConfig(mergedSaved);
                 } else {
                     // Initialize blank default setup config
                     const defaults = {
@@ -775,8 +817,6 @@ export const ConfigurationManager = () => {
                 return <TabDAQ />;
             case 'xray':
                 return <TabXray />;
-            case 'settings':
-                return <TabSettings />;
             case 'dic':
                 return <p className='text-lg font-medium text-mauve-800'>DIC Configuration Not Currently Supported</p>;
             default:

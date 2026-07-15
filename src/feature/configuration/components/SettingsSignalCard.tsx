@@ -1,35 +1,60 @@
-import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { Control, Controller, UseFormRegister, FieldErrors } from 'react-hook-form';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { FieldLabel } from '../../../components/ui/FieldLabel';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { tooltips } from "@/config/tooltips.ts";
 import { X } from 'lucide-react';
 
+const SIGNAL_OPTIONS = ['Load A', 'Load B', 'Torque'] as const;
+
 interface SettingsSignalCardProps {
     index: number;
+    control: Control<any>;
     register: UseFormRegister<any>;
     errors: FieldErrors<any>;
     remove: (index: number) => void;
     showRemove: boolean;
+    takenNames: string[];
 }
 
 export const SettingsSignalCard = ({
     index,
+    control,
     register,
     errors,
     remove,
-    showRemove
+    showRemove,
+    takenNames
 }: SettingsSignalCardProps) => {
     const signalErrors = (errors.signalSettings as any)?.[index] as any;
 
     return (
         <div className="flex items-end gap-4 w-full bg-white p-4 border border-mauve-150 rounded-2xl shadow-sm">
-            <div className="flex-1 min-w-[120px]">
+            <div className="w-36">
                 <FieldLabel text="Input Signal Name" tooltip={tooltips.settingsSignalName} required={true} />
-                <Input 
-                    placeholder="e.g. LoadA"
-                    className={`h-9 mt-1.5 ${signalErrors?.name ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                    {...register(`signalSettings.${index}.name`)}
+                <Controller
+                    control={control}
+                    name={`signalSettings.${index}.name`}
+                    render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <SelectTrigger className={`h-9 mt-1.5 ${signalErrors?.name ? "border-destructive focus-visible:ring-destructive" : ""}`}>
+                                <SelectValue placeholder="Select signal" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                                {SIGNAL_OPTIONS.map(sig => (
+                                    <SelectItem
+                                        key={sig}
+                                        value={sig}
+                                        disabled={takenNames.includes(sig)}
+                                        className="cursor-pointer"
+                                    >
+                                        {sig}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
                 />
                 {signalErrors?.name && (
                     <p className="text-[10px] text-destructive mt-1">{signalErrors.name.message}</p>

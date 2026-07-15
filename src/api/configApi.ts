@@ -170,58 +170,101 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
 };
 
 
+export const getSettingsDir = (configDirectory: string): string => {
+    const match = configDirectory.match(/(?:nfs\/chess\/aux\/)?cycles\/([^\/]+)\/([^\/]+)/);
+    if (match) {
+        return `/nfs/chess/aux/cycles/${match[1]}/${match[2]}/RAMS-settings/`;
+    }
+    return '/nfs/chess/aux/cycles/current/RAMS-settings/';
+};
+
 /**
- * Simulates reading the settings configuration file (settings<experiment>.json)
- * from the gateway server at the specified directory path.
- * Includes a temporary fallback for static host environments.
+ * Reads a versioned settings configuration file (settings<version>.json)
+ * from the gateway server. If version is not found, it falls back to the latest.
+ * 
+ * TEMPORARY FRONTEND GATEWAY CONNECTOR
  */
-export const fetchSettingsFromGateway = async (directory: string, experiment: string): Promise<any | null> => {
+export const fetchSettingsFromGateway = async (directory: string, version: number | null | undefined): Promise<{ data: any; version: number } | null> => {
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 150));
 
-    const filePath = directory + `settings${experiment}.json`;
+    const settingsDir = getSettingsDir(directory);
+    
+    // Helper to scan settings folder and find highest version
+    const getLatestVersion = async (): Promise<number | null> => {
+        try {
+            const listUrl = `/mock-gateway-api?action=list&path=${encodeURIComponent(settingsDir)}&type=settings`;
+            const response = await fetch(listUrl);
+            if (response.ok) {
+                const versions: number[] = await response.json();
+                if (versions.length > 0) {
+                    return Math.max(...versions);
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to list settings files from mock gateway", e);
+        }
+        return null;
+    };
+
+    let targetVersion: number | null = version !== undefined && version !== null ? version : null;
+
+    if (targetVersion === null) {
+        const latest = await getLatestVersion();
+        if (latest !== null) {
+            targetVersion = latest;
+        } else {
+            return null; // Let caller apply template defaults
+        }
+    }
+
+    const filePath = `${settingsDir}settings${targetVersion}.json`;
     console.log(`Checking settings file: ${filePath}`);
 
     try {
         const response = await fetch(`/mock-gateway-api?path=${encodeURIComponent(filePath)}`);
         if (response.ok) {
             const data = await response.json();
-            return {
-                specHost: data.specHost,
-                requireSpecEnable: data.requireSpecEnable,
-                systemName: data.systemName,
-                controllerHost: data.controllerHost,
-                axisCount: data.axisCount,
-                taskCount: data.taskCount,
-                axesSettings: data.axesSettings,
-                signalSettings: data.signalSettings
-            };
+            return { data, version: targetVersion };
+        } else if (response.status === 404 && version !== undefined && version !== null) {
+            // Target settings version goes missing. Attempt fallback to latest settings version.
+            const latest = await getLatestVersion();
+            if (latest !== null) {
+                const fallbackResponse = await fetch(`/mock-gateway-api?path=${encodeURIComponent(`${settingsDir}settings${latest}.json`)}`);
+                if (fallbackResponse.ok) {
+                    const data = await fallbackResponse.json();
+                    return { data, version: latest }; // caller will notice the mismatch
+                }
+            }
         }
     } catch (err) {
         console.warn("Backend mock server unavailable or settings file not found. Resolving in-memory mock configuration presets.", err);
     }
 
     // Temporary static fallback configuration to ensure titanium_specimen_02 runs with realistic inputs in demo builds
-    if (directory.includes("titanium_specimen_02") && experiment === "1") {
+    if (directory.includes("titanium_specimen_02")) {
         return {
-            specHost: "id1a3.classe.cornell.edu:spec",
-            requireSpecEnable: true,
-            systemName: "RAMS4_CHESS",
-            controllerHost: "10.0.0.1",
-            axisCount: 5,
-            taskCount: 5,
-            axesSettings: [
-                { name: "A", max_velocity: 50, max_acceleration: 100 },
-                { name: "B", max_velocity: 50, max_acceleration: 100 },
-                { name: "RA", max_velocity: 10, max_acceleration: 20 },
-                { name: "RB", max_velocity: 10, max_acceleration: 20 },
-                { name: "TENS", max_velocity: 5, max_acceleration: 10 }
-            ],
-            signalSettings: [
-                { name: "LoadA", slope: 1.0, intercept: 0.0, channel: 0 },
-                { name: "LoadB", slope: 1.0, intercept: 0.0, channel: 1 },
-                { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
-            ]
+            version: 0,
+            data: {
+                specHost: "id1a3.classe.cornell.edu:spec",
+                requireSpecEnable: true,
+                systemName: "RAMS4_CHESS",
+                controllerHost: "10.0.0.1",
+                axisCount: 5,
+                taskCount: 5,
+                axesSettings: [
+                    { name: "A", max_velocity: 50, max_acceleration: 100 },
+                    { name: "B", max_velocity: 50, max_acceleration: 100 },
+                    { name: "RA", max_velocity: 10, max_acceleration: 20 },
+                    { name: "RB", max_velocity: 10, max_acceleration: 20 },
+                    { name: "TENS", max_velocity: 5, max_acceleration: 10 }
+                ],
+                signalSettings: [
+                    { name: "Load A", slope: 1.0, intercept: 0.0, channel: 0 },
+                    { name: "Load B", slope: 1.0, intercept: 0.0, channel: 1 },
+                    { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
+                ]
+            }
         };
     }
 
@@ -229,14 +272,16 @@ export const fetchSettingsFromGateway = async (directory: string, experiment: st
 };
 
 /**
- * Saves settings properties to gateway server as a single settings<experiment>.json file.
- * Includes a temporary fallback for static host environments.
+ * Saves settings properties to gateway server using auto-incrementing file naming: settings{N}.json.
+ * 
+ * TEMPORARY FRONTEND GATEWAY CONNECTOR
  */
-export const postSettingsToGateway = async (directory: string, experiment: string, settings: any): Promise<void> => {
+export const postSettingsToGateway = async (directory: string, settings: any): Promise<{ success: boolean; version: number }> => {
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 150));
 
-    const filePath = directory + `settings${experiment}.json`;
+    const settingsDir = getSettingsDir(directory);
+    const targetFile = `${settingsDir}settings_auto_increment`;
     const payload = {
         specHost: settings.specHost,
         requireSpecEnable: settings.requireSpecEnable,
@@ -252,12 +297,15 @@ export const postSettingsToGateway = async (directory: string, experiment: strin
         const response = await fetch('/mock-gateway-api', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customFilePath: filePath, data: payload })
+            body: JSON.stringify({ customFilePath: targetFile, data: payload })
         });
-        if (!response.ok) {
-            throw new Error('Failed to save settings configuration');
+        if (response.ok) {
+            const resData = await response.json();
+            return { success: true, version: resData.version };
         }
+        throw new Error('Failed to save settings configuration');
     } catch (err) {
         console.warn("Failed to save settings config to gateway. Simulating in-memory success.", err);
+        return { success: true, version: 1 };
     }
 };

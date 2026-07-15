@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from "../../components/ui/button.tsx";
 import { Input } from "../../components/ui/input.tsx";
-import { Checkbox } from "../../components/ui/checkbox.tsx";
+import { Switch } from "../../components/ui/switch.tsx";
 import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
 import { FieldLabel } from "../../components/ui/FieldLabel.tsx";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
@@ -14,10 +14,10 @@ import { SettingsAxisCard } from "./components/SettingsAxisCard.tsx";
 import { SettingsSignalCard } from "./components/SettingsSignalCard.tsx";
 import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
 import { tooltips } from "@/config/tooltips.ts";
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 export const TabSettings = () => {
-    const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
+    const { draft, updateDraft, lastLoadedPath, settingsFallbackActive, setSettingsFallbackActive } = useConfigurationStore();
     const loadedPathRef = useRef<string>("");
 
     const {
@@ -136,10 +136,26 @@ export const TabSettings = () => {
     }, [lastLoadedPath, reset, draft]);
 
     return (
-        <ConfigTabSection
-            title="System & Workflow Settings"
+        <div className="flex flex-col gap-6 w-full text-left">
+            {settingsFallbackActive && (
+                <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-2xl text-yellow-800 text-xs font-semibold shrink-0">
+                    <div>
+                        Warning: Expected settings version {settingsFallbackActive.expected} was missing. Loaded version {settingsFallbackActive.loaded} instead. Please save to relink.
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setSettingsFallbackActive(null)}
+                        className="p-1 rounded-full hover:bg-yellow-100 text-yellow-900 transition-colors ml-4 cursor-pointer"
+                        aria-label="Dismiss warning"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+            )}
+
+            <ConfigTabSection
+            title="System Settings"
             titleTooltip={tooltips.settingsSectionTitle}
-            description="NOTE: This will be moved to the settings menu in the bottom left corner of the screen."
             profilesTitle="Axes & Calibrations"
             profilesTitleTooltip="Define controller boundaries and calibration matrices."
             profiles={
@@ -192,16 +208,23 @@ export const TabSettings = () => {
                             </Button>
                         </div>
                         <div className="flex flex-col gap-3">
-                            {signalsFields.map((field, idx) => (
-                                <SettingsSignalCard 
-                                    key={field.id}
-                                    index={idx}
-                                    register={register}
-                                    errors={errors}
-                                    remove={removeSignal}
-                                    showRemove={signalsFields.length > 1}
-                                />
-                            ))}
+                            {signalsFields.map((field, idx) => {
+                                const takenSignalNames = (watchedValues.signalSettings || [])
+                                    .map((s: any) => s?.name)
+                                    .filter((name: string, i: number) => !!name && i !== idx);
+                                return (
+                                    <SettingsSignalCard 
+                                        key={field.id}
+                                        index={idx}
+                                        control={control as any}
+                                        register={register}
+                                        errors={errors}
+                                        remove={removeSignal}
+                                        showRemove={signalsFields.length > 1}
+                                        takenNames={takenSignalNames}
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
@@ -221,23 +244,20 @@ export const TabSettings = () => {
                     )}
                 </div>
 
-                <div className="flex flex-row items-center justify-between border border-mauve-150 p-4 bg-mauve-50/20 rounded-2xl">
-                    <div className="flex flex-col gap-1 pr-4">
-                        <FieldLabel text="Require SPEC Connection" tooltip={tooltips.settingsRequireSpecEnable} />
-                        <span className="text-[10px] text-muted-foreground">Force connection to proceed with experimental scans</span>
-                    </div>
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-mauve-150 bg-mauve-50/10 h-9 w-full mt-2">
+                    <FieldLabel text="Require SPEC Connection" tooltip={tooltips.settingsRequireSpecEnable} />
                     <Controller
                         control={control}
                         name="requireSpecEnable"
                         render={({ field }) => (
-                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
                         )}
                     />
                 </div>
             </div>
 
             {/* Aerotech Controller parameters card */}
-            <div className="flex flex-col gap-6 w-full border-t border-mauve-150 pt-6 mt-6">
+            <div className="flex flex-col gap-6 w-full">
                 <div className="flex flex-col gap-2">
                     <FieldLabel text="System Name" tooltip={tooltips.settingsSystemName} required={true} />
                     <Input 
@@ -291,5 +311,6 @@ export const TabSettings = () => {
                 </div>
             </div>
         </ConfigTabSection>
+        </div>
     );
 };

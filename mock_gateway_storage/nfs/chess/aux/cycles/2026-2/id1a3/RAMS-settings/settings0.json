@@ -1,37 +1,8 @@
 {
-  "cycleNumber": "2026-2",
-  "sampleName": "test",
-  "userId": "testuser-1234",
-  "experimentNumber": "1",
-  "configDirectory": "/nfs/chess/aux/cycles/2026-2/id1b3/testuser-1234/metadata/test/",
-  "requiredAxes": [
-    "A",
-    "B",
-    "RA",
-    "RB"
-  ],
-  "daqFrequency": 1,
-  "samplePoints": 1000,
-  "handlerProfiles": [],
-  "xrayProfiles": [
-    {
-      "id": "xrayProfile1783947329332",
-      "name": "test",
-      "mode": "tseries",
-      "ramsx": 1,
-      "ramsz": 1,
-      "ome": 1,
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "numPoints": 5
-    }
-  ],
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "RAMS4_CHESS",
-  "controllerHost": "10.0.0.1",
+  "systemName": "RAMS4_CHESS_01",
+  "controllerHost": "10.1.16.21",
   "axisCount": 5,
   "taskCount": 5,
   "axesSettings": [
@@ -54,6 +25,11 @@
       "name": "RB",
       "max_velocity": 10,
       "max_acceleration": 20
+    },
+    {
+      "name": "TENS",
+      "max_velocity": 5,
+      "max_acceleration": 10
     }
   ],
   "signalSettings": [
@@ -62,6 +38,12 @@
       "slope": 1,
       "intercept": 0,
       "channel": 0
+    },
+    {
+      "name": "LoadB",
+      "slope": 1,
+      "intercept": 0,
+      "channel": 1
     },
     {
       "name": "Torque",

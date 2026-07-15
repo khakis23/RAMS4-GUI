@@ -1,40 +1,8 @@
 {
-  "cycleNumber": "2026-2",
-  "sampleName": "TEST",
-  "userId": "jsmith-228",
-  "experimentNumber": "1",
-  "configDirectory": "/nfs/chess/aux/cycles/2026-2/id1b3/jsmith-228/metadata/TEST/",
-  "requiredAxes": [
-    "A",
-    "B",
-    "RA",
-    "RB"
-  ],
-  "daqFrequency": 10,
-  "samplePoints": 1000,
-  "handlerProfiles": [],
-  "xrayProfiles": [
-    {
-      "id": "xrayProfile1784038614081",
-      "name": "1",
-      "mode": "rotation-series",
-      "ramsx": 1,
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "numPoints": 1,
-      "omeStart": 1,
-      "omeStop": 1,
-      "layerStart": 1,
-      "layerEnd": 1,
-      "numLayers": 1
-    }
-  ],
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "RAMS4_CHESS",
-  "controllerHost": "10.0.0.1",
+  "systemName": "R",
+  "controllerHost": "10.1.16.21",
   "axisCount": 5,
   "taskCount": 5,
   "axesSettings": [

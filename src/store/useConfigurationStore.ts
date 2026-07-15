@@ -56,9 +56,13 @@ export interface SignalSetting {
 
 export interface ConfigurationState {
     draft: GlobalConfig;
+    savedConfig: GlobalConfig | null;
     lastLoadedPath: string;
+    settingsFallbackActive: { expected: number; loaded: number | 'default' } | null;
     updateDraft: (fieldsToUpdate: Partial<GlobalConfig>) => void;
+    setSavedConfig: (config: GlobalConfig | null) => void;
     setLastLoadedPath: (path: string) => void;
+    setSettingsFallbackActive: (fallback: { expected: number; loaded: number | 'default' } | null) => void;
 }
 
 // All configuration settings (metadata, DAQ, and X-ray) live here
@@ -80,6 +84,7 @@ export interface GlobalConfig {
     xrayProfiles: XrayProfile[];
 
     // Settings
+    settingsVersion?: number;
     specHost: string;
     requireSpecEnable: boolean;
     systemName: string;
@@ -134,6 +139,7 @@ const defaultDraftConfig = (): GlobalConfig => ({
     samplePoints: 1000,
     handlerProfiles: [],
     xrayProfiles: [],
+    settingsVersion: 0,
     specHost: "id1a3.classe.cornell.edu:spec",
     requireSpecEnable: true,
     systemName: "RAMS4_CHESS",
@@ -158,14 +164,18 @@ export const useConfigurationStore = create<ConfigurationState>()(
     persist(
         (set) => ({
             draft: defaultDraftConfig(),
+            savedConfig: null,
             lastLoadedPath: "",
+            settingsFallbackActive: null,
             updateDraft: (fieldsToUpdate) => set((state) => ({
                 draft: {
                     ...state.draft,
                     ...fieldsToUpdate,
                 },
             })),
+            setSavedConfig: (config) => set({ savedConfig: config }),
             setLastLoadedPath: (path) => set({ lastLoadedPath: path }),
+            setSettingsFallbackActive: (fallback) => set({ settingsFallbackActive: fallback }),
         }),
         {
             name: 'configuration-store',

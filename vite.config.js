@@ -120,6 +120,16 @@ const mockGatewayPlugin = () => {
                                             return match ? match[1] : dirent.name;
                                         });
                                     items.sort((a, b) => Number(a) - Number(b));
+                                } else if (queryType === 'settings') {
+                                    // TEMPORARY MOCK GATEWAY FILE LISTING (TO BE IMPLEMENTED IN PYTHON BACKEND)
+                                    items = dirents
+                                        .filter(dirent => dirent.isFile() && /^settings\d+\.json$/.test(dirent.name))
+                                        .map(dirent => {
+                                            const match = dirent.name.match(/^settings(\d+)\.json$/);
+                                            return match ? parseInt(match[1], 10) : -1;
+                                        })
+                                        .filter(n => n >= 0);
+                                    items.sort((a, b) => a - b);
                                 } else {
                                     items = dirents
                                         .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('.') && dirent.name !== 'metadata')
@@ -170,6 +180,31 @@ const mockGatewayPlugin = () => {
                                     const payload = JSON.parse(body);
                                     let targetFile;
                                     let dataToWrite;
+
+                                    if (payload.customFilePath && payload.customFilePath.endsWith('settings_auto_increment')) {
+                                        // TEMPORARY MOCK GATEWAY AUTO-INCREMENTING FILE SAVE (TO BE IMPLEMENTED IN PYTHON BACKEND)
+                                        const cleanDirPath = payload.customFilePath.replace('settings_auto_increment', '').replace(/^\//, '');
+                                        const settingsDir = path.join(mockStorageRoot, cleanDirPath);
+                                        fs.mkdirSync(settingsDir, { recursive: true });
+
+                                        const files = fs.readdirSync(settingsDir);
+                                        const numbers = files
+                                            .map(f => {
+                                                const m = f.match(/^settings(\d+)\.json$/);
+                                                return m ? parseInt(m[1], 10) : -1;
+                                            })
+                                            .filter(n => n >= 0);
+                                        const nextVer = numbers.length > 0 ? Math.max(...numbers) + 1 : 0;
+
+                                        targetFile = path.join(settingsDir, `settings${nextVer}.json`);
+                                        dataToWrite = payload.data;
+
+                                        fs.writeFileSync(targetFile, JSON.stringify(dataToWrite, null, 2), 'utf8');
+
+                                        res.setHeader('Content-Type', 'application/json');
+                                        res.end(JSON.stringify({ success: true, version: nextVer, savedPath: targetFile }));
+                                        return;
+                                    }
 
                                     if (payload.customFilePath && payload.data) {
                                         const cleanPath = payload.customFilePath.replace(/^\//, '');

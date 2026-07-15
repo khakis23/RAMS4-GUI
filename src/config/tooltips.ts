@@ -74,9 +74,9 @@ export const tooltips = {
     xrayProfileAxisStart: "The start limit position for the moving axis.",
     xrayProfileAxisStop: "The stop limit position for the moving axis.",
     xrayProfileAxisImages: "The number of images/points to expose along this axis range.",
-    xrayProfileStillPointX: "X stage coordinate (ramsx) for this still exposure point.",
-    xrayProfileStillPointZ: "Z stage coordinate (ramsz) for this still exposure point.",
-    xrayProfileStillPointOme: "Omega rotation angle (ome) for this still exposure point.",
+    xrayProfileStillPointX: "X stage coordinate for this still exposure point.",
+    xrayProfileStillPointZ: "Z stage coordinate for this still exposure point.",
+    xrayProfileStillPointOme: "Omega rotation angle for this still exposure point.",
     xrayProfileStillPointCount: "The number of images to expose at this still coordinate.",
 
     // --- MECHANICAL TEST BUILDER TOOLTIPS ---

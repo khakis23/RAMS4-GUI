@@ -2,6 +2,7 @@ import React from 'react';
 import { Settings, Sliders, PlayCircle, Cpu, FileJson, BarChart3 } from 'lucide-react';
 import { Views } from "../../types/views.ts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip.tsx";
+import { useConfigurationStore } from "@/store/useConfigurationStore.ts";
 
 interface SideBarMenuProps {
     currentView: Views;
@@ -24,6 +25,8 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export const SideBarMenu = ({ currentView, setView, setSettingsActive }: SideBarMenuProps) => {
+    const { settingsFallbackActive } = useConfigurationStore();
+
     return (
         <TooltipProvider delayDuration={350}>
             <aside className="w-16 h-full bg-mauve-400 flex flex-col items-center py-6 justify-between shrink-0 z-50">
@@ -60,10 +63,13 @@ export const SideBarMenu = ({ currentView, setView, setSettingsActive }: SideBar
                     <TooltipTrigger asChild>
                         <button
                             onClick={() => setSettingsActive(true)}
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-mauve-100 hover:bg-white/10 hover:text-white transition-all duration-200 cursor-pointer"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-mauve-100 hover:bg-white/10 hover:text-white transition-all duration-200 cursor-pointer relative"
                             aria-label="Settings"
                         >
                             <Settings className="w-5 h-5 shrink-0" />
+                            {settingsFallbackActive && (
+                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-yellow-400 rounded-full border border-mauve-400" />
+                            )}
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="right" className="text-xs p-2">

@@ -68,20 +68,21 @@ export const MechanicalTestBuilder = () => {
     const loadedPathRef = useRef<string>("");
     const currentPathKey = `${configDirectory}-${experimentNumber}`;
 
-    // Reset RHF only when path changes or a gateway load completes
+    // Sync form values into store draft state on every change
+    const watchedValues = watch();
+
+    // Reset RHF only when path changes, a gateway load completes, or store updates while not dirty (e.g. initial hydration)
     useEffect(() => {
         const loadingFinished = lastLoading.current && !isLoading;
         const pathChanged = currentPathKey !== loadedPathRef.current;
+        const storeUpdatedNotDirty = !isDirty && JSON.stringify(cards) !== JSON.stringify(watchedValues?.cards);
 
-        if (loadingFinished || pathChanged) {
+        if (loadingFinished || pathChanged || storeUpdatedNotDirty) {
             loadedPathRef.current = currentPathKey;
             reset({ cards });
         }
         lastLoading.current = isLoading;
-    }, [cards, isLoading, currentPathKey, reset]);
-
-    // Sync form values into store draft state on every change
-    const watchedValues = watch();
+    }, [cards, isLoading, currentPathKey, reset, isDirty, watchedValues?.cards]);
     useFormAutoSave({
         watchedValues,
         storeDraft: { cards },
