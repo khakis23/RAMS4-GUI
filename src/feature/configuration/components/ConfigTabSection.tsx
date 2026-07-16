@@ -10,6 +10,7 @@ interface ConfigTabSectionProps {
     profiles?: React.ReactNode;
     profilesTitle?: string;
     profilesTitleTooltip?: string;
+    headerAction?: React.ReactNode;
 }
 
 const hasChildren = (children: React.ReactNode): boolean => {
@@ -30,28 +31,36 @@ export const ConfigTabSection = ({
     children,
     profiles,
     profilesTitle,
-    profilesTitleTooltip
+    profilesTitleTooltip,
+    headerAction
 }: ConfigTabSectionProps) => {
     return (
         <div className="flex flex-col gap-8 w-full">
             {/* Header section with title and description */}
-            <div className="flex flex-col text-left">
-                <div className="flex items-center gap-1.5">
-                    <h2 className="text-xl font-bold text-mauve-850">{title}</h2>
-                    {titleTooltip && (
-                        <TooltipProvider>
-                            <Tooltip delayDuration={200}>
-                                <TooltipTrigger asChild>
-                                    <Info className="h-4 w-4 text-mauve-600 hover:text-mauve-800 cursor-pointer transition-colors" />
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs text-xs p-2">
-                                    {titleTooltip}
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
+            <div className="flex justify-between items-start text-left w-full">
+                <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5">
+                        <h2 className="text-xl font-bold text-mauve-850">{title}</h2>
+                        {titleTooltip && (
+                            <TooltipProvider>
+                                <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                        <Info className="h-4 w-4 text-mauve-600 hover:text-mauve-800 cursor-pointer transition-colors" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs text-xs p-2">
+                                        {titleTooltip}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </div>
+                    {description && <p className="text-sm text-mauve-600 font-medium mt-1">{description}</p>}
                 </div>
-                {description && <p className="text-sm text-mauve-600 font-medium mt-1">{description}</p>}
+                {headerAction && (
+                    <div className="shrink-0 pt-1">
+                        {headerAction}
+                    </div>
+                )}
             </div>
 
             {/* Children components */}

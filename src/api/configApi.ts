@@ -184,7 +184,7 @@ export const getSettingsDir = (configDirectory: string): string => {
  * 
  * TEMPORARY FRONTEND GATEWAY CONNECTOR
  */
-export const fetchSettingsFromGateway = async (directory: string, version: number | null | undefined): Promise<{ data: any; version: number } | null> => {
+export const fetchSettingsFromGateway = async (directory: string, version: number | null | undefined): Promise<{ data: any; version: number; isFallback: boolean } | null> => {
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 150));
 
@@ -225,7 +225,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
         const response = await fetch(`/mock-gateway-api?path=${encodeURIComponent(filePath)}`);
         if (response.ok) {
             const data = await response.json();
-            return { data, version: targetVersion };
+            return { data, version: targetVersion, isFallback: false };
         } else if (response.status === 404 && version !== undefined && version !== null) {
             // Target settings version goes missing. Attempt fallback to latest settings version.
             const latest = await getLatestVersion();
@@ -233,7 +233,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
                 const fallbackResponse = await fetch(`/mock-gateway-api?path=${encodeURIComponent(`${settingsDir}settings${latest}.json`)}`);
                 if (fallbackResponse.ok) {
                     const data = await fallbackResponse.json();
-                    return { data, version: latest }; // caller will notice the mismatch
+                    return { data, version: latest, isFallback: true }; // caller will notice the mismatch
                 }
             }
         }
@@ -245,6 +245,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
     if (directory.includes("titanium_specimen_02")) {
         return {
             version: 0,
+            isFallback: false,
             data: {
                 specHost: "id1a3.classe.cornell.edu:spec",
                 requireSpecEnable: true,

@@ -1,7 +1,7 @@
 {
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "RAMS4_CHESS_03",
+  "systemName": "RAMS4_CHESS",
   "controllerHost": "10.1.16.21",
   "axisCount": 5,
   "taskCount": 5,
@@ -33,18 +33,6 @@
     }
   ],
   "signalSettings": [
-    {
-      "name": "LoadA",
-      "slope": 1,
-      "intercept": 0,
-      "channel": 0
-    },
-    {
-      "name": "LoadB",
-      "slope": 1,
-      "intercept": 0,
-      "channel": 1
-    },
     {
       "name": "Torque",
       "slope": 1,

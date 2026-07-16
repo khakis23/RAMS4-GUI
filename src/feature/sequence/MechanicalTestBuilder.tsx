@@ -4,7 +4,7 @@ import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { useMechanicalTestStore } from '@/store/useMechanicalTestStore';
 import { useValidationStore } from '@/store/useConfigurationStore';
 import { Button } from '@/components/ui/button';
-import { Sliders, Plus, Save, FileJson } from 'lucide-react';
+import { Sliders, Plus, Save, FileJson, Check } from 'lucide-react';
 import { useFormAutoSave } from '../configuration/hooks/useFormAutoSave';
 import { MechTestCardItem } from './components/MechTestCardItem';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,7 +30,7 @@ const compileMechTestErrors = (error: z.ZodError) => {
     return errorList;
 };
 
-export const MechanicalTestBuilder = () => {
+const MechanicalTestInner = () => {
     const { draft } = useConfigurationStore();
     const {
         cards,
@@ -71,18 +71,17 @@ export const MechanicalTestBuilder = () => {
     // Sync form values into store draft state on every change
     const watchedValues = watch();
 
-    // Reset RHF only when path changes, a gateway load completes, or store updates while not dirty (e.g. initial hydration)
+    // Reset RHF only when path changes or a gateway load completes
     useEffect(() => {
         const loadingFinished = lastLoading.current && !isLoading;
         const pathChanged = currentPathKey !== loadedPathRef.current;
-        const storeUpdatedNotDirty = !isDirty && JSON.stringify(cards) !== JSON.stringify(watchedValues?.cards);
 
-        if (loadingFinished || pathChanged || storeUpdatedNotDirty) {
+        if (loadingFinished || pathChanged) {
             loadedPathRef.current = currentPathKey;
             reset({ cards });
         }
         lastLoading.current = isLoading;
-    }, [cards, isLoading, currentPathKey, reset, isDirty, watchedValues?.cards]);
+    }, [cards, isLoading, currentPathKey, reset]);
     useFormAutoSave({
         watchedValues,
         storeDraft: { cards },
@@ -216,7 +215,11 @@ export const MechanicalTestBuilder = () => {
                         disabled={!isDirty}
                         className="h-8 px-4 text-xs font-semibold rounded-lg bg-white border border-mauve-300 hover:bg-mauve-50 text-mauve-850 disabled:opacity-50 disabled:bg-mauve-50 flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
-                        <Save className="h-3.5 w-3.5" />
+                        {isDirty ? (
+                            <Save className="h-3.5 w-3.5" />
+                        ) : (
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                        )}
                         Save Test Sequence
                     </Button>
                 </div>
@@ -285,6 +288,20 @@ export const MechanicalTestBuilder = () => {
             </WarningModal>
         </form>
     );
+};
+
+export const MechanicalTestBuilder = () => {
+    const _hasHydrated = useMechanicalTestStore(state => state._hasHydrated);
+
+    if (!_hasHydrated) {
+        return (
+            <div className="flex-1 flex flex-col p-6 min-h-[400px] justify-center items-center">
+                <p className="text-gray-500 font-semibold">Loading test sequence...</p>
+            </div>
+        );
+    }
+
+    return <MechanicalTestInner />;
 };
 
 interface WarningModalProps {

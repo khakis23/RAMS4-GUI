@@ -37,10 +37,7 @@ export const xrayProfileSchema = z.object({
     beamHeight: safeRequiredNumber.refine(val => val >= 0, "Beam Height must be 0 or positive."),
     beamWidth: safeRequiredNumber.refine(val => val >= 0, "Beam Width must be 0 or positive."),
     atten: safeRequiredNumber.refine(val => val >= 0, "Attenuation must be 0 or positive."),
-    numPoints: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Number of Images is required." }).int().min(1, "Number of Images must be 1 or more.")
-    ),
+    numPoints: safeNullableNumber,
 
     // Optional fields with Zod refine checks or validation
     omeStart: safeNullableNumber,
@@ -90,6 +87,11 @@ export const xrayProfileSchema = z.object({
         if (data.numLayers === undefined) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Num Layers is required.", path: ["numLayers"] });
         }
+        if (data.numPoints === undefined || data.numPoints === null) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Number of Images is required.", path: ["numPoints"] });
+        } else if (!Number.isInteger(data.numPoints) || data.numPoints < 1) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Number of Images must be 1 or more.", path: ["numPoints"] });
+        }
     } else if (data.mode === 'tseries') {
         if (data.ramsx === undefined) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
@@ -99,6 +101,11 @@ export const xrayProfileSchema = z.object({
         }
         if (data.ome === undefined) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Angle is required.", path: ["ome"] });
+        }
+        if (data.numPoints === undefined || data.numPoints === null) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Number of Images is required.", path: ["numPoints"] });
+        } else if (!Number.isInteger(data.numPoints) || data.numPoints < 1) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Number of Images must be 1 or more.", path: ["numPoints"] });
         }
     } else if (data.mode === 'dscan') {
         if (data.ramsx === undefined) {

@@ -59,10 +59,12 @@ export interface ConfigurationState {
     savedConfig: GlobalConfig | null;
     lastLoadedPath: string;
     settingsFallbackActive: { expected: number; loaded: number | 'default' } | null;
+    _hasHydrated: boolean;
     updateDraft: (fieldsToUpdate: Partial<GlobalConfig>) => void;
     setSavedConfig: (config: GlobalConfig | null) => void;
     setLastLoadedPath: (path: string) => void;
     setSettingsFallbackActive: (fallback: { expected: number; loaded: number | 'default' } | null) => void;
+    setHasHydrated: (val: boolean) => void;
 }
 
 // All configuration settings (metadata, DAQ, and X-ray) live here
@@ -167,6 +169,7 @@ export const useConfigurationStore = create<ConfigurationState>()(
             savedConfig: null,
             lastLoadedPath: "",
             settingsFallbackActive: null,
+            _hasHydrated: false,
             updateDraft: (fieldsToUpdate) => set((state) => ({
                 draft: {
                     ...state.draft,
@@ -176,9 +179,16 @@ export const useConfigurationStore = create<ConfigurationState>()(
             setSavedConfig: (config) => set({ savedConfig: config }),
             setLastLoadedPath: (path) => set({ lastLoadedPath: path }),
             setSettingsFallbackActive: (fallback) => set({ settingsFallbackActive: fallback }),
+            setHasHydrated: (val) => set({ _hasHydrated: val }),
         }),
         {
             name: 'configuration-store',
+            partialize: (state) => ({
+                draft: state.draft
+            }),
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            }
         }
     )
 );

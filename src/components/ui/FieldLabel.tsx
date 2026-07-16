@@ -8,11 +8,11 @@ interface FieldLabelProps {
 }
 
 export const FieldLabel = ({ text, tooltip, required }: FieldLabelProps) => {
+    if (required) {}
     return (
         <div className="flex items-center gap-1.5 text-sm font-medium text-left">
             <span>
                 {text}
-                {required && <span className="text-red-500 ml-0.5">*</span>}
             </span>
             {tooltip && (
                 <TooltipProvider>

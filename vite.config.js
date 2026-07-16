@@ -132,7 +132,7 @@ const mockGatewayPlugin = () => {
                                     items.sort((a, b) => a - b);
                                 } else {
                                     items = dirents
-                                        .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('.') && dirent.name !== 'metadata')
+                                        .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('.') && dirent.name !== 'metadata' && dirent.name !== 'RAMS-settings')
                                         .map(dirent => dirent.name);
                                     items.sort();
                                 }

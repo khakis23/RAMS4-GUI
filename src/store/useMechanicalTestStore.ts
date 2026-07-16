@@ -15,6 +15,7 @@ interface MechanicalTestState {
     isLoading: boolean;
     error: string | null;
     lastLoadedPath: string | null;
+    _hasHydrated: boolean;
 
     setCards: (cards: MechTestCard[]) => void;
     addCard: (type?: 'ramp' | 'take') => void;
@@ -25,6 +26,7 @@ interface MechanicalTestState {
     loadMechTest: (directory: string, experiment: string) => Promise<void>;
     saveMechTest: (directory: string, experiment: string) => Promise<void>;
     resetStore: () => void;
+    setHasHydrated: (val: boolean) => void;
 }
 
 const checkIsDirty = (current: MechTestCard[], saved: MechTestCard[]) => {
@@ -40,6 +42,7 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
             isLoading: false,
             error: null,
             lastLoadedPath: null,
+            _hasHydrated: false,
 
             setCards: (cards) => {
                 set((state) => {
@@ -160,10 +163,15 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
 
             resetStore: () => {
                 set({ cards: [], savedCards: [], isDirty: false, error: null, isLoading: false, lastLoadedPath: null });
-            }
+            },
+
+            setHasHydrated: (val) => set({ _hasHydrated: val })
         }),
         {
-            name: 'mechanical-test-store'
+            name: 'mechanical-test-store',
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            }
         }
     )
 );

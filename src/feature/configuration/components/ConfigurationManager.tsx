@@ -7,7 +7,7 @@ import { TabXray } from "../TabXray.tsx";
 import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway, fetchSettingsFromGateway } from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { useMechanicalTestStore } from "@/store/useMechanicalTestStore";
-import {PencilLine, Save, Sliders} from 'lucide-react';
+import {PencilLine, Save, Sliders, Check} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
 import { Input } from "../../../components/ui/input.tsx";
 import { Checkbox } from "../../../components/ui/checkbox.tsx";
@@ -176,6 +176,21 @@ const normalizeConfig = (config: any) => {
     return cleanConfig;
 };
 
+const deepEqual = (a: any, b: any): boolean => {
+    if (a === b) return true;
+    if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) {
+        return false;
+    }
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    for (const key of keysA) {
+        if (!keysB.includes(key)) return false;
+        if (!deepEqual(a[key], b[key])) return false;
+    }
+    return true;
+};
+
 export const ConfigurationManager = () => {
     const tabs: { id: TabName; label: string }[] = [
         { id: 'daq', label: 'DAQ' },
@@ -188,6 +203,7 @@ export const ConfigurationManager = () => {
     const [isManualPath, setIsManualPath] = useState(false);
     const [dontShowWarningAgain, setDontShowWarningAgain] = useState(false);
     const [showManualWarningModal, setShowManualWarningModal] = useState(false);
+    const [showFallbackWarningModal, setShowFallbackWarningModal] = useState(false);
     const { errors: validationErrors } = useValidationStore();
 
     // Baseline configuration state is read from global useConfigurationStore
@@ -214,10 +230,9 @@ export const ConfigurationManager = () => {
     const isDirty = useMemo(() => {
         if (!savedConfig) return false;
         const keys = [
-            'specHost', 'requireSpecEnable', 'systemName', 'controllerHost', 'axisCount', 'taskCount', 'axesSettings', 'signalSettings',
-            'daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles'
+            'daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'settingsVersion'
         ] as const;
-        return keys.some(key => JSON.stringify(draft[key]) !== JSON.stringify(savedConfig[key]));
+        return keys.some(key => !deepEqual(draft[key], savedConfig[key]));
     }, [draft, savedConfig]);
 
     const handleTabChange = (nextTab: string) => {
@@ -788,13 +803,7 @@ export const ConfigurationManager = () => {
 
 
 
-    const handleSave = async () => {
-        const allErrors = Object.values(validationErrors).flat();
-        if (allErrors.length > 0) {
-            setShowConfirmDialog(true);
-            return;
-        }
-
+    const proceedSave = async () => {
         try {
             const prunedPayload = pruneConfigForSave(draft);
             await postConfigToGateway(prunedPayload);
@@ -809,6 +818,22 @@ export const ConfigurationManager = () => {
             console.error('Failed to sync configuration to backend gateway', error);
             alert('Failed to sync to the backend gateway.');
         }
+    };
+
+    const handleSave = async () => {
+        const allErrors = Object.values(validationErrors).flat();
+        if (allErrors.length > 0) {
+            setShowConfirmDialog(true);
+            return;
+        }
+
+        const fallback = useConfigurationStore.getState().settingsFallbackActive;
+        if (fallback) {
+            setShowFallbackWarningModal(true);
+            return;
+        }
+
+        await proceedSave();
     };
 
     const renderTabContent = () => {
@@ -985,7 +1010,11 @@ export const ConfigurationManager = () => {
                                         disabled={!isDirty}
                                         className="h-7 mx-2 shadow-sm text-xs font-semibold rounded-lg"
                                     >
-                                         <Save className="h-3.5 w-3.5" />
+                                        {isDirty ? (
+                                            <Save className="h-3.5 w-3.5" />
+                                        ) : (
+                                            <Check className="h-3.5 w-3.5 text-green-600" />
+                                        )}
                                         Save Configuration
                                     </Button>
                                 </span>
@@ -1079,6 +1108,29 @@ export const ConfigurationManager = () => {
                     </label>
                 </div>
             </WarningModal>
+
+            {/* Settings Fallback Warning Dialog */}
+            <WarningModal
+                isOpen={showFallbackWarningModal}
+                title="Settings Fallback Active"
+                titleColorClass="text-amber-600"
+                description={
+                    <>
+                        This configuration references settings version <strong>{useConfigurationStore.getState().settingsFallbackActive?.expected}</strong>, which was missing on the server.
+                        The station loaded version <strong>{useConfigurationStore.getState().settingsFallbackActive?.loaded}</strong> as a fallback.
+                        Saving now will link this configuration to version <strong>{useConfigurationStore.getState().settingsFallbackActive?.loaded}</strong>.
+                    </>
+                }
+                confirmText="Acknowledge & Save"
+                cancelText="Cancel"
+                onConfirm={async () => {
+                    setShowFallbackWarningModal(false);
+                    await proceedSave();
+                }}
+                onCancel={() => {
+                    setShowFallbackWarningModal(false);
+                }}
+            />
         </div>
     );
 };

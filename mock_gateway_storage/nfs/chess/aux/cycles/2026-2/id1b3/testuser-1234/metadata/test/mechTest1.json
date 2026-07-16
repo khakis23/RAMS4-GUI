@@ -1,0 +1,31 @@
+[
+  {
+    "ramp": {
+      "target": 1,
+      "time": 1,
+      "max_displacement": 1,
+      "axis": "A",
+      "mode": "absolute",
+      "control": "displacement",
+      "dispToggle": "time",
+      "enable_dic": false,
+      "skipDICpos": false,
+      "incrementSeg": false,
+      "wait": true
+    }
+  },
+  {
+    "take": {
+      "profileID": "xrayProfile1784202576192",
+      "pauseTsDaq": false,
+      "imgMode": "ff"
+    }
+  },
+  {
+    "take": {
+      "profileID": "xrayProfile1784202623156",
+      "pauseTsDaq": false,
+      "imgMode": null
+    }
+  }
+]

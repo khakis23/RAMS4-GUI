@@ -140,6 +140,28 @@ export const TabXray = () => {
             title="X-ray Scan Profiles"
             titleTooltip={tooltips.xraySectionTitle}
             description="Configure parameters for X-ray scan sweeps, layers, and grids."
+            headerAction={
+                <Button 
+                    type="button" 
+                    onClick={() => append({ 
+                        id: `xrayProfile${Date.now()}`,
+                        name: "",
+                        mode: "rotation-series",
+                        ramsx: null,
+                        ramsz: null,
+                        ome: null,
+                        ctime: null,
+                        beamHeight: null,
+                        beamWidth: null,
+                        atten: null,
+                        numPoints: null,
+                        stillPoints: []
+                    })}
+                    className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
+                >
+                    <Plus className="h-3.5 w-3.5" /> Add X-ray Profile
+                </Button>
+            }
             profiles={
                 <div className="w-full space-y-6">
                     {/* Render active scan profiles list */}
@@ -153,28 +175,6 @@ export const TabXray = () => {
                             removeProfile={remove}
                         />
                     ))}
-
-                    {/* Add Profile button at bottom */}
-                    <Button 
-                        type="button" 
-                        onClick={() => append({ 
-                            id: `xrayProfile${Date.now()}`,
-                            name: "",
-                            mode: "rotation-series",
-                            ramsx: null,
-                            ramsz: null,
-                            ome: null,
-                            ctime: null,
-                            beamHeight: null,
-                            beamWidth: null,
-                            atten: null,
-                            numPoints: null,
-                            stillPoints: []
-                        })}
-                        className="w-full mt-4 flex items-center justify-center gap-2"
-                    >
-                        <Plus className="h-4 w-4" /> Add X-ray Profile
-                    </Button>
                 </div>
             }
         />

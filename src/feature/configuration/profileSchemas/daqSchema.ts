@@ -26,15 +26,15 @@ export const handlerProfileSchema = z.object({
     verboseAi: z.string(),
     aiLoadA: z.boolean().optional(),
     aiStrain: z.boolean().optional(),
-    aiCustom: z.string().optional(),
+    aiCustom: z.string().nullish(),
     frequency: safeNullableNumber,
     cycles: z.array(cycleRangeSchema).optional(),
-    signalAxis: z.string().optional(),
-    signalItem: z.string().optional(),
+    signalAxis: z.string().nullish(),
+    signalItem: z.string().nullish(),
     signalProminence: safeNullableNumber,
-    psoAxis: z.string().optional(),
-    signalLoad: z.string().optional(),
-    signalStrain: z.string().optional(),
+    psoAxis: z.string().nullish(),
+    signalLoad: z.string().nullish(),
+    signalStrain: z.string().nullish(),
 }).superRefine((data, ctx) => {
     // Mode-specific conditional validation rules
     if (data.mode === "time-series") {
