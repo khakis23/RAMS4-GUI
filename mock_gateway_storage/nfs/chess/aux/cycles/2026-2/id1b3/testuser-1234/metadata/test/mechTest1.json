@@ -5,13 +5,9 @@
       "time": 1,
       "max_displacement": 1,
       "axis": "A",
-      "mode": "absolute",
-      "control": "displacement",
-      "dispToggle": "time",
-      "enable_dic": false,
-      "skipDICpos": false,
-      "incrementSeg": false,
-      "wait": true
+      "mode": "relative",
+      "control": "load",
+      "velocity": 1
     }
   },
   {

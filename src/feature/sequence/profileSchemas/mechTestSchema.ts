@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const rampSchema = z.object({
     axis: z.enum(['A', 'B', 'RA', 'RB', 'TENS'], { message: "Axis is required" }),
-    mode: z.enum(['incremental', 'absolute'], { message: "Mode is required" }),
+    mode: z.enum(['relative', 'absolute'], { message: "Mode is required" }),
     control: z.enum(['displacement', 'load', 'strain'], { message: "Control is required" }),
     target: z.preprocess(
         (val) => (val === '' || val === undefined || val === null || Number.isNaN(Number(val))) ? undefined : Number(val),

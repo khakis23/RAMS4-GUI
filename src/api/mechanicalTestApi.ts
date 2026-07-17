@@ -61,7 +61,7 @@ export const fetchMechTestFromGateway = async (
                 type: "ramp",
                 data: {
                     axis: "A",
-                    mode: "incremental",
+                    mode: "relative",
                     control: "displacement",
                     target: 5.0,
                     dispToggle: "time",

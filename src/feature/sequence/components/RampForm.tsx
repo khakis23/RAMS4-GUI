@@ -78,7 +78,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                     <SelectValue placeholder="Select mode" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white">
-                                    <SelectItem value="incremental" className="cursor-pointer">Incremental</SelectItem>
+                                    <SelectItem value="relative" className="cursor-pointer">Relative</SelectItem>
                                     <SelectItem value="absolute" className="cursor-pointer">Absolute</SelectItem>
                                 </SelectContent>
                             </Select>

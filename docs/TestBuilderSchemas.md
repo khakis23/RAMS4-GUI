@@ -18,7 +18,7 @@
     │   ├── RB*
     │   └── TENS*
     ├── mode (dropdown)/
-    │   ├── incremental*
+    │   ├── relative*
     │   └── absolute*
     ├── control (dropdown)/
     │   ├── load*/
