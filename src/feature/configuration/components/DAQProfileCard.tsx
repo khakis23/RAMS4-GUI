@@ -80,7 +80,7 @@ const CyclesFieldArray = ({ control, register, profileIndex }: CyclesFieldArrayP
                             <Button 
                                 type="button" 
                                 variant="secondary" 
-                                className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-800 p-0 rounded-xl"
+                                className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300 p-0 rounded-xl"
                                 onClick={() => remove(cycleIndex)}
                             >
                                 <X className="h-4 w-4" />
@@ -122,7 +122,7 @@ export const DAQProfileCard = ({
     const profileErrors = (errors.handlersProfile as any)?.[index] as any;
 
     return (
-        <div className="border rounded-xl p-6 bg-mauve-50/50 flex flex-col gap-4 text-left">
+        <div className="border rounded-md p-6 bg-mauve-50/50 flex flex-col gap-4 text-left">
             
             {/* Card Header */}
             <div className="flex justify-between items-center border-b pb-2">
@@ -173,7 +173,7 @@ export const DAQProfileCard = ({
 
             {/* Conditionally show Time Series fields */}
             {currentMode === "time-series" && (
-                <div className="flex flex-col gap-4 p-4 bg-white border rounded-xl shadow-inner">
+                <div className="flex flex-col gap-4 p-4 bg-white border border-mauve-150 rounded-sm">
                     <div className="flex flex-col gap-2 max-w-xs">
                         <FieldLabel text="Frequency (Hz)" tooltip={tooltips.daqProfileFrequency} required={true} />
                         <Input 
@@ -195,7 +195,7 @@ export const DAQProfileCard = ({
 
             {/* Conditionally show Peak Valley fields */}
             {currentMode === "peak-valley" && (
-                <div className="grid grid-cols-3 gap-6 bg-white p-4 border rounded-xl shadow-inner">
+                <div className="grid grid-cols-3 gap-6 bg-white p-4 border border-mauve-150 rounded-sm">
                     <div className="flex flex-col gap-2">
                         <FieldLabel text="Signal Axis" tooltip={tooltips.daqProfileSignalAxis} required={true} />
                         <Input 
@@ -244,7 +244,7 @@ export const DAQProfileCard = ({
 
             {/* Conditionally show PSO fields */}
             {currentMode === "pso" && (
-                <div className="flex flex-col gap-2 bg-white p-4 border rounded-xl shadow-inner">
+                <div className="flex flex-col gap-2 bg-white p-4 border border-mauve-150 rounded-sm">
                     <FieldLabel text="PSO Axis" tooltip={tooltips.daqProfilePsoAxis} required={true} />
                     <Input 
                         className={profileErrors?.psoAxis ? "border-destructive focus-visible:ring-destructive" : ""}

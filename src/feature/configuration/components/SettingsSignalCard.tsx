@@ -106,7 +106,7 @@ export const SettingsSignalCard = ({
                 <Button 
                     type="button" 
                     variant="secondary" 
-                    className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-800 p-0 rounded-xl shrink-0"
+                    className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300 p-0 rounded-xl shrink-0"
                     onClick={() => remove(index)}
                 >
                     <X className="h-4 w-4" />

@@ -983,16 +983,16 @@ export const ConfigurationManager = () => {
             </div>
 
             {/* Attached Tab Card Container */}
-            <div className="flex flex-col flex-1 min-h-0 bg-white rounded-3xl border border-mauve-200 shadow-sm overflow-hidden">
+            <div className="flex flex-col flex-1 min-h-0 bg-white rounded-md border border-mauve-200 overflow-hidden">
                 {/* Tab Header Bar (Safari-style tabs tray) */}
                 <div className="flex items-center border-b border-mauve-150 px-4 py-2 bg-mauve-50/40 shrink-0">
                     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                        <TabsList className="bg-mauve-100/50 p-1 gap-1.5 rounded-xl border border-mauve-200 flex w-fit">
+                        <TabsList className="bg-mauve-100/50 p-1 gap-1.5 rounded-md border border-mauve-200 flex w-fit">
                             {tabs.map(tab => (
                                 <TabsTrigger
                                     key={tab.id}
                                     value={tab.id}
-                                    className="py-1 px-3.5 rounded-lg text-xs transition-all cursor-pointer font-semibold text-mauve-650 hover:bg-white/40 data-[state=active]:bg-white data-[state=active]:text-mauve-850 data-[state=active]:shadow-sm border border-transparent data-[state=active]:border-mauve-200"
+                                    className="py-1 px-3.5 rounded-sm text-xs transition-all cursor-pointer font-semibold text-mauve-650 hover:bg-white/40 data-[state=active]:bg-white data-[state=active]:text-mauve-850 dark:data-[state=active]:text-primary dark:data-[state=active]:bg-primary/15 data-[state=active]:shadow-sm border border-transparent"
                                 >
                                     {tab.label}
                                 </TabsTrigger>
@@ -1031,7 +1031,7 @@ export const ConfigurationManager = () => {
                     {draft.configDirectory && draft.experimentNumber ? (
                         activeTab && renderTabContent()
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-full min-h-[300px] border-2 border-dashed border-mauve-200 rounded-2xl p-8 text-center bg-mauve-50/10">
+                        <div className="flex flex-col items-center justify-center h-full min-h-[300px] border-2 border-dashed border-mauve-200 rounded-sm p-8 text-center bg-mauve-50/10">
                             <div className="h-10 w-10 rounded-full bg-mauve-100 flex items-center justify-center mb-3">
                                 <PencilLine className="h-5 w-5 text-mauve-650" />
                             </div>
@@ -1054,7 +1054,7 @@ export const ConfigurationManager = () => {
                 onConfirm={() => setShowConfirmDialog(false)}
                 onCancel={() => setShowConfirmDialog(false)}
             >
-                <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex flex-col gap-2 max-h-48 overflow-y-auto">
+                <div className="bg-red-50/50 border border-red-100 rounded-sm p-4 flex flex-col gap-2 max-h-48 overflow-y-auto">
                     <span className="text-xs font-bold text-red-800">Please fix the following fields:</span>
                     <ul className="list-disc list-inside text-xs text-red-700 space-y-1.5 pl-1">
                         {Object.values(validationErrors).flat().map((err, i) => (
@@ -1162,7 +1162,7 @@ const WarningModal = ({
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-md p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200">
                 <div className={`flex items-center gap-2.5 font-bold text-lg ${titleColorClass}`}>
                     <span>{title}</span>
                 </div>

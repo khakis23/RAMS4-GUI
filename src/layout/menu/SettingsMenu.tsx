@@ -98,7 +98,7 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
             }}
         >
             <div
-                className="w-full max-w-4xl h-[85vh] bg-white rounded-3xl p-8 flex flex-col shadow-2xl relative border border-mauve-200 overflow-hidden text-left"
+                className="w-full max-w-4xl h-[85vh] bg-white rounded-md p-8 flex flex-col shadow-2xl relative border border-mauve-200 overflow-hidden text-left"
             >
                 {/* Close Button */}
                 <button
@@ -160,7 +160,7 @@ const WarningModal = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onCancel}>
             <div 
-                className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200"
+                className="bg-white rounded-md p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className={`flex items-center gap-2.5 font-bold text-lg ${titleColorClass}`}>

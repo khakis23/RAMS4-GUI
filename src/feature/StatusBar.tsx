@@ -19,27 +19,27 @@ export const StatusBar = ({ currentView }: StatusBarProps) => {
             {/* TODO PLACEHOLDERS: Left Hardware Reading Panel */}
             <div className="px-2 flex items-center gap-1.5 sm:gap-3 md:gap-4 lg:gap-6 min-w-0 overflow-hidden">
 
-                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-xl text-left shadow-sm min-w-0 shrink">
+                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-sm text-left min-w-0 shrink">
                     <span className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-mauve-500 truncate">Tension</span>
                     <span className="text-xs sm:text-sm font-semibold text-mauve-850 truncate">0.000 mm</span>
                 </div>
 
-                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-xl text-left shadow-sm min-w-0 shrink">
+                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-sm text-left min-w-0 shrink">
                     <span className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-mauve-500 truncate">Fatigue A</span>
                     <span className="text-xs sm:text-sm font-semibold text-mauve-850 truncate">0.000 mm</span>
                 </div>
 
-                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-xl text-left shadow-sm min-w-0 shrink">
+                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-sm text-left min-w-0 shrink">
                     <span className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-mauve-500 truncate">Fatigue B</span>
                     <span className="text-xs sm:text-sm font-semibold text-mauve-850 truncate">0.000 mm</span>
                 </div>
 
-                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-xl text-left shadow-sm min-w-0 shrink">
+                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-sm text-left min-w-0 shrink">
                     <span className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-mauve-500 truncate">Rotation A</span>
                     <span className="text-xs sm:text-sm font-semibold text-mauve-850 truncate">0.000 mm</span>
                 </div>
 
-                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-xl text-left shadow-sm min-w-0 shrink">
+                <div className="flex flex-col justify-center h-14 px-2 sm:px-3 md:px-4 bg-mauve-50 border border-mauve-200 rounded-sm text-left min-w-0 shrink">
                     <span className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-mauve-500 truncate">Rotation B</span>
                     <span className="text-xs sm:text-sm font-semibold text-mauve-850 truncate">0.000 mm</span>
                 </div>

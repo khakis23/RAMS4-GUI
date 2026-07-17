@@ -81,7 +81,7 @@
 
   --chart-5: oklch(0.269 0 0);
 
-  --radius: 0.625rem;
+  --radius: 0.25rem;
 
   --sidebar: oklch(0.985 0 0);
 
@@ -222,42 +222,72 @@ code {
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Xray shading registration */
+  --color-xray-shading: var(--xray-shading);
+}
+
+:root {
+  --xray-shading: color-mix(in srgb, var(--color-mauve-100) 35%, transparent);
 }
 
 /*---break---*/
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.18 0.01 40);       /* Soft warm dark background */
+  --foreground: oklch(0.96 0.01 40);       /* Clean soft white text */
+  --card: oklch(0.23 0.01 40);             /* Soft dark card background */
+  --card-foreground: oklch(0.96 0.01 40);
+  --popover: oklch(0.23 0.01 40);
+  --popover-foreground: oklch(0.96 0.01 40);
+  --primary: oklch(0.72 0.16 54);          /* Soft orange accent */
+  --primary-foreground: oklch(0.15 0.01 40); /* Dark text on orange */
+  --secondary: oklch(0.26 0.01 40);        /* Secondary button/containers */
+  --secondary-foreground: oklch(0.96 0.01 40);
+  --muted: oklch(0.26 0.01 40);
+  --muted-foreground: oklch(0.70 0.01 40);
+  --accent: oklch(0.72 0.16 54);           /* Accent is soft orange */
+  --accent-foreground: oklch(0.15 0.01 40);
+  --destructive: oklch(0.65 0.20 25);
+  --border: oklch(0.28 0.01 40);
+  --input: oklch(0.56 0.01 40);
+  --ring: oklch(0.72 0.16 54);
+
+  --sidebar: oklch(0.16 0.01 40);          /* Darkest sidebar background */
+  --sidebar-foreground: oklch(0.70 0.01 40); /* Soft light grey inactive icons */
+  --sidebar-primary: oklch(0.72 0.16 54);  /* Soft orange */
+  --sidebar-primary-foreground: oklch(0.15 0.01 40);
+  --sidebar-accent: oklch(0.28 0.01 40);   /* Active tab background */
+  --sidebar-accent-foreground: oklch(0.98 0.01 40); /* White active icon */
+  --sidebar-border: oklch(0.22 0.01 40);
+  --sidebar-ring: oklch(0.72 0.16 54);
+
+  /* Radix Mauve Inversion for Dark Mode */
+  --color-mauve-50: oklch(0.26 0.01 40);   /* Readouts / inactive cards background */
+  --color-mauve-100: oklch(0.20 0.01 40);  /* Layout / tables background */
+  --color-mauve-150: oklch(0.28 0.01 40);  /* Separators / borders */
+  --color-mauve-200: oklch(0.32 0.01 40);  /* Darker borders */
+  --color-mauve-250: oklch(0.35 0.01 40);
+  --color-mauve-300: oklch(0.40 0.01 40);
+  --color-mauve-400: oklch(0.16 0.01 40);  /* Sidebar background */
+  --color-mauve-500: oklch(0.70 0.01 40);  /* Muted grey labels */
+  --color-mauve-600: oklch(0.72 0.16 54);  /* Active highlight (Soft Orange) */
+  --color-mauve-650: oklch(0.88 0.06 54);  /* Active text / peach orange */
+  --color-mauve-700: oklch(0.76 0.17 54);  /* Active hover orange */
+  --color-mauve-800: oklch(0.90 0.01 40);  /* Base text */
+  --color-mauve-850: oklch(0.96 0.01 40);  /* Headings text */
+
+  /* Override custom document variables */
+  --text: oklch(0.90 0.01 40);             /* Invert inherited body text */
+  --text-h: oklch(0.96 0.01 40);           /* Invert h1/h2 color */
+  --bg: oklch(0.18 0.01 40);               /* Invert background */
+  --border: oklch(0.28 0.01 40);           /* Invert separator line */
+
+  /* Semantic white override */
+  --color-white: oklch(0.23 0.01 40);      /* Cards adopt card dark background */
+
+  /* Custom X-ray shading - slightly darker than main background and cards */
+  --xray-shading: oklch(0.15 0.01 40);
 }
 
 /*---break---*/

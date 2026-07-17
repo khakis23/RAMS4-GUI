@@ -167,7 +167,7 @@ const MechanicalTestInner = () => {
 
     if (!configDirectory || !experimentNumber) {
         return (
-            <div className="flex flex-col items-center justify-center h-full min-h-[400px] border-2 border-dashed border-mauve-200 rounded-3xl p-8 text-center bg-mauve-50/10 max-w-4xl mx-auto my-12">
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] border-2 border-dashed border-mauve-200 rounded-sm p-8 text-center bg-mauve-50/10 max-w-4xl mx-auto my-12">
                 <div className="h-12 w-12 rounded-full bg-mauve-100 flex items-center justify-center mb-4">
                     <Sliders className="h-6 w-6 text-mauve-650" />
                 </div>
@@ -228,7 +228,7 @@ const MechanicalTestInner = () => {
             {/* Scrollable Cards Container */}
             <div className="flex-grow overflow-y-auto py-6 min-h-0">
                 {fields.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center min-h-[300px] border border-mauve-200 rounded-3xl p-8 text-center bg-white shadow-sm">
+                    <div className="flex flex-col items-center justify-center min-h-[300px] border border-mauve-200 rounded-sm p-8 text-center bg-white">
                         <p className="text-sm text-mauve-500">
                             No steps added to this test yet.
                         </p>
@@ -277,7 +277,7 @@ const MechanicalTestInner = () => {
                 onConfirm={() => setShowErrorModal(false)}
                 onCancel={() => setShowErrorModal(false)}
             >
-                <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex flex-col gap-2 max-h-48 overflow-y-auto">
+                <div className="bg-red-50/50 border border-red-100 rounded-sm p-4 flex flex-col gap-2 max-h-48 overflow-y-auto">
                     <span className="text-xs font-bold text-red-800">Please fix the following fields:</span>
                     <ul className="list-disc list-inside text-xs text-red-700 space-y-1.5 pl-1">
                         {modalErrors.map((err, i) => (
@@ -330,7 +330,7 @@ const WarningModal = ({
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-md p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200">
                 <div className={`flex items-center gap-2.5 font-bold text-lg ${titleColorClass}`}>
                     <span>{title}</span>
                 </div>

@@ -111,7 +111,7 @@ export const MechTestCardItem = ({
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDragEnd={onDragEnd}
-            className={`flex flex-col bg-white border rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-100 ${isDragging ? 'opacity-50 border-dashed border-mauve-400 shadow-lg' : 'border-mauve-200'}`}
+            className={`flex flex-col bg-white border rounded-md transition-all duration-100 ${isDragging ? 'opacity-50 border-dashed border-mauve-400 shadow-lg' : 'border-mauve-200 hover:shadow-sm'}`}
         >
             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value={`item-${index}`} className="border-b-0">
@@ -163,7 +163,7 @@ export const MechTestCardItem = ({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => removeCard(index)}
-                                className="h-8 w-8 text-mauve-400 hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
+                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>

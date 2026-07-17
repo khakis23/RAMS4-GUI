@@ -61,7 +61,7 @@ export const XrayProfileCard = ({
     }, [profileValues]);
 
     return (
-        <div className="flex flex-col bg-mauve-100/30 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-100 border-0 border-transparent">
+        <div className="flex flex-col bg-mauve-100/30 rounded-md border border-mauve-250 transition-all duration-100 hover:shadow-sm">
             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value={`item-${index}`} className="border-b-0 border-transparent">
                     <div className="flex items-center justify-between p-4 gap-3">
@@ -105,7 +105,7 @@ export const XrayProfileCard = ({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => removeProfile(index)}
-                                className="h-8 w-8 text-mauve-400 hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
+                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
@@ -192,7 +192,7 @@ export const XrayProfileCard = ({
                             </div>
                         </div>
 
-                        <div className="bg-mauve-100/35 py-5 px-5 flex flex-col gap-5">
+                        <div className="bg-xray-shading py-5 px-5 flex flex-col gap-5">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="flex flex-col gap-2">
                                     <FieldLabel text="Initial Angle (º)" tooltip={tooltips.xrayProfileOmeStart} required={true} />
@@ -284,7 +284,7 @@ export const XrayProfileCard = ({
                                 </p>
                             </div>
                         ) : (
-                            <div className="flex flex-col bg-mauve-100/35 pb-5">
+                            <div className="flex flex-col bg-xray-shading pb-5">
                                 {pointFields.map((field, ptIdx) => {
                                     const pointErrors = profileErrors?.stillPoints?.[ptIdx] as any;
                                     return (
@@ -329,7 +329,7 @@ export const XrayProfileCard = ({
                                             <Button 
                                                 type="button" 
                                                 variant="secondary" 
-                                                className="h-8 w-8 p-0 text-red-650 hover:bg-red-50 hover:text-red-800 rounded-lg shrink-0 bg-white border border-mauve-200"
+                                                className="h-8 w-8 p-0 text-red-650 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300 rounded-lg shrink-0 bg-white border border-mauve-200"
                                                 onClick={() => removePoint(ptIdx)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -344,7 +344,7 @@ export const XrayProfileCard = ({
 
                 {/* Mapscan: Time Series (tseries) */}
                 {mode === 'tseries' && (
-                    <div className="bg-mauve-100/35 py-5 px-5">
+                    <div className="bg-xray-shading py-5 px-5">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="flex flex-col gap-2">
                                 <FieldLabel text="Reference X (mm)" tooltip={tooltips.xrayProfileX} required={true} />
@@ -444,7 +444,7 @@ export const XrayProfileCard = ({
                         </div>
 
                         {/* Moving Axis control */}
-                        <div className="bg-mauve-100/35 py-5 px-5">
+                        <div className="bg-xray-shading py-5 px-5">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="flex flex-col gap-2">
                                     <FieldLabel text="Moving Axis" tooltip={tooltips.xrayProfileAxis1Name} required={true} />
@@ -555,7 +555,7 @@ export const XrayProfileCard = ({
                         </div>
 
                         {/* Contiguous Shaded region for Axis Sweeps */}
-                        <div className="bg-mauve-100/35 py-5 px-5 flex flex-col gap-5">
+                        <div className="bg-xray-shading py-5 px-5 flex flex-col gap-5">
                             {/* Axis 1 Sweep */}
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="flex flex-col gap-2">

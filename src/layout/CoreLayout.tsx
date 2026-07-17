@@ -9,6 +9,25 @@ import { StatusBar } from '../feature/StatusBar.tsx';
 export const CoreLayout = () => {
     const [currentView, setCurrentView] = React.useState<Views>('configure');
     const [settingsActive, setSettingsActive] = React.useState<boolean>(false);
+    const [theme, setTheme] = React.useState<'light' | 'dark'>(() => {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark' || saved === 'light') return saved;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    });
+
+    React.useEffect(() => {
+        const root = document.documentElement;
+        if (theme === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    };
 
     const renderActiveView = () => {
         switch (currentView) {
@@ -28,12 +47,14 @@ export const CoreLayout = () => {
     };
 
     return (
-        <div className="flex h-screen w-full bg-mauve-100 text-mauve-800 overflow-hidden">
+        <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
             {/* Left Fixed Sidebar */}
             <SideBarMenu 
                 currentView={currentView} 
                 setView={setCurrentView} 
                 setSettingsActive={setSettingsActive}
+                theme={theme}
+                toggleTheme={toggleTheme}
             />
 
             {/* Right Content Area */}
