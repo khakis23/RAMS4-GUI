@@ -109,7 +109,24 @@ export const fetchConfigFromGateway = async (
                     frequency: 10
                 }
             ],
-            xrayProfiles: []
+            xrayProfiles: [
+                {
+                    id: "rotation-1",
+                    name: "Rotation Series Profile",
+                    mode: "rotation-series",
+                    ramsx: 10.5,
+                    ctime: 0.5,
+                    beamHeight: 1.0,
+                    beamWidth: 2.0,
+                    atten: 0,
+                    omeStart: 0,
+                    omeStop: 180,
+                    layerStart: 0,
+                    layerEnd: 5,
+                    numLayers: 3,
+                    numPoints: 180
+                }
+            ]
         };
     }
     

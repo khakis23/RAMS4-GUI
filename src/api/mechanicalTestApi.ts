@@ -50,7 +50,40 @@ export const fetchMechTestFromGateway = async (
             return await response.json();
         }
     } catch (err) {
-        console.warn("Backend mock server unavailable. Simulating file not found for static demo pages.", err);
+        console.warn("Backend mock server unavailable. Simulating fallback settings for static demo pages.", err);
+    }
+
+    // Temporary static fallback configuration to ensure titanium_specimen_02 runs with realistic inputs in demo builds
+    if (directory.includes("titanium_specimen_02") && experiment === "1") {
+        return [
+            {
+                id: "step-1",
+                type: "ramp",
+                data: {
+                    axis: "A",
+                    mode: "incremental",
+                    control: "displacement",
+                    target: 5.0,
+                    dispToggle: "time",
+                    time: 60.0,
+                    velocity: null,
+                    max_displacement: 10.0,
+                    enable_dic: true,
+                    skipDICpos: false,
+                    incrementSeg: false,
+                    wait: true
+                }
+            },
+            {
+                id: "step-2",
+                type: "take",
+                data: {
+                    profileID: "rotation-1",
+                    imgMode: "rotation-series",
+                    pauseTsDaq: false
+                }
+            }
+        ];
     }
 
     return null;
