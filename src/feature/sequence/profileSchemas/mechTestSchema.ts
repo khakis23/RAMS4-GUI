@@ -58,34 +58,77 @@ export const takeSchema = z.object({
     pauseTsDaq: z.boolean().default(false)
 });
 
-export const mechTestCardSchema = z.object({
-    id: z.string(),
-    type: z.enum(['ramp', 'take']),
-    data: z.any()
-}).superRefine((card, ctx) => {
-    if (card.type === 'ramp') {
-        const res = rampSchema.safeParse(card.data);
-        if (!res.success) {
-            res.error.issues.forEach(issue => {
-                ctx.addIssue({
-                    ...issue,
-                    path: ['data', ...issue.path]
+export interface MechTestCardData {
+    id: string;
+    type: 'ramp' | 'take' | 'group';
+    data: any;
+}
+
+export const mechTestCardSchema: z.ZodType<MechTestCardData> = z.lazy(() =>
+    z.object({
+        id: z.string(),
+        type: z.enum(['ramp', 'take', 'group']),
+        data: z.any()
+    }).superRefine((card, ctx) => {
+        if (card.type === 'ramp') {
+            const res = rampSchema.safeParse(card.data);
+            if (!res.success) {
+                res.error.issues.forEach(issue => {
+                    ctx.addIssue({
+                        ...issue,
+                        path: ['data', ...issue.path]
+                    });
                 });
-            });
-        }
-    } else if (card.type === 'take') {
-        const res = takeSchema.safeParse(card.data);
-        if (!res.success) {
-            res.error.issues.forEach(issue => {
-                ctx.addIssue({
-                    ...issue,
-                    path: ['data', ...issue.path]
+            }
+        } else if (card.type === 'take') {
+            const res = takeSchema.safeParse(card.data);
+            if (!res.success) {
+                res.error.issues.forEach(issue => {
+                    ctx.addIssue({
+                        ...issue,
+                        path: ['data', ...issue.path]
+                    });
                 });
+            }
+        } else if (card.type === 'group') {
+            const groupDataSchema = z.object({
+                cards: z.array(mechTestCardSchema)
             });
+            const res = groupDataSchema.safeParse(card.data);
+            if (!res.success) {
+                res.error.issues.forEach(issue => {
+                    ctx.addIssue({
+                        ...issue,
+                        path: ['data', ...issue.path]
+                    });
+                });
+            }
         }
-    }
-});
+    })
+);
+
+const getMaxDepth = (cards: any[], currentDepth = 0): number => {
+    let max = currentDepth;
+    cards.forEach(card => {
+        if (card.type === 'group' && card.data?.cards) {
+            const depth = getMaxDepth(card.data.cards, currentDepth + 1);
+            if (depth > max) {
+                max = depth;
+            }
+        }
+    });
+    return max;
+};
 
 export const mechTestFormSchema = z.object({
     cards: z.array(mechTestCardSchema)
+}).superRefine((form, ctx) => {
+    const maxDepth = getMaxDepth(form.cards);
+    if (maxDepth > 2) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['cards'],
+            message: `Nesting depth of groups exceeds the maximum limit of 2 (current depth: ${maxDepth})`
+        });
+    }
 });

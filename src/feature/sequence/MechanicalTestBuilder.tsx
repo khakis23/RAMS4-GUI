@@ -7,25 +7,45 @@ import { Button } from '@/components/ui/button';
 import { Sliders, Plus, Save, FileJson, Check } from 'lucide-react';
 import { useFormAutoSave } from '../configuration/hooks/useFormAutoSave';
 import { MechTestCardItem } from './components/MechTestCardItem';
+import { MechTestGroupItem } from './components/MechTestGroupItem';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { mechTestFormSchema } from './profileSchemas/mechTestSchema';
 import { z } from 'zod';
 
+const getReadableFieldName = (fieldName: string) => {
+    if (fieldName === 'profileID') return 'Image Profile';
+    if (fieldName === 'imgMode') return 'Image Mode';
+    if (fieldName === 'dispToggle') return 'Time/Velocity Toggle';
+    if (!fieldName) return 'Value';
+    return fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace('_', ' ');
+};
+
 const compileMechTestErrors = (error: z.ZodError) => {
     const errorList: string[] = [];
     error.issues.forEach(issue => {
-        const cardIndex = issue.path[1];
-        const fieldName = issue.path[3] as string;
+        const path = issue.path;
+        if (path[0] !== 'cards') return;
         
-        let readableField = fieldName || 'Value';
-        if (fieldName === 'profileID') readableField = 'Image Profile';
-        else if (fieldName === 'imgMode') readableField = 'Image Mode';
-        else if (fieldName === 'dispToggle') readableField = 'Time/Velocity Toggle';
-        else if (fieldName) {
-            readableField = fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace('_', ' ');
+        let errorMsg = '';
+        const rootIndex = path[1] as number;
+        
+        if (path.length === 4) {
+            const field = getReadableFieldName(path[3] as string);
+            errorMsg = `Step #${rootIndex + 1} > ${field}: ${issue.message}`;
+        } else if (path.length === 7) {
+            const childIndex = path[4] as number;
+            const field = getReadableFieldName(path[6] as string);
+            errorMsg = `Group #${rootIndex + 1} > Step #${childIndex + 1} > ${field}: ${issue.message}`;
+        } else if (path.length === 10) {
+            const childIndex = path[4] as number;
+            const subChildIndex = path[7] as number;
+            const field = getReadableFieldName(path[9] as string);
+            errorMsg = `Group #${rootIndex + 1} > Sub-Group #${childIndex + 1} > Step #${subChildIndex + 1} > ${field}: ${issue.message}`;
+        } else {
+            errorMsg = `Sequence Error: ${issue.message}`;
         }
         
-        errorList.push(`Step #${Number(cardIndex) + 1} > ${readableField}: ${issue.message}`);
+        errorList.push(errorMsg);
     });
     return errorList;
 };
@@ -82,6 +102,7 @@ const MechanicalTestInner = () => {
         }
         lastLoading.current = isLoading;
     }, [cards, isLoading, currentPathKey, reset]);
+
     useFormAutoSave({
         watchedValues,
         storeDraft: { cards },
@@ -188,9 +209,6 @@ const MechanicalTestInner = () => {
                         <FileJson className="h-5 w-5 text-mauve-650" />
                         Test Sequence Builder
                     </h2>
-                    {/*<p className="text-xs text-mauve-600">*/}
-                    {/*    Build and sequence mechanical load cycles and scanning steps.*/}
-                    {/*</p>*/}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -202,10 +220,24 @@ const MechanicalTestInner = () => {
                             type: 'ramp',
                             data: {}
                         })}
-                        className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
+                        className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in animate-duration-200"
                     >
                         <Plus className="h-3.5 w-3.5" />
                         Add Step
+                    </Button>
+
+                    {/* Add Group Button */}
+                    <Button
+                        type="button"
+                        onClick={() => append({
+                            id: `card-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            type: 'group',
+                            data: { cards: [] }
+                        })}
+                        className="h-8 px-4 text-xs font-semibold rounded-lg bg-white border border-mauve-300 hover:bg-mauve-50 text-mauve-850 flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in animate-duration-200"
+                    >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Group
                     </Button>
 
                     {/* Save Button */}
@@ -240,29 +272,56 @@ const MechanicalTestInner = () => {
                                 type: 'ramp',
                                 data: {}
                             })}
-                            className="mt-2 text-xs font-semibold text-mauve-650 hover:text-mauve-850 cursor-pointer"
+                            className="mt-2 text-xs font-semibold text-mauve-650 hover:text-mauve-850 cursor-pointer text-decoration-none"
                         >
-                            Click here to add your first step
+                            Click here to add a new step.
                         </Button>
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4">
-                        {fields.map((field, index) => (
-                            <MechTestCardItem
-                                key={field.id}
-                                index={index}
-                                register={register}
-                                errors={errors}
-                                control={control}
-                                watch={watch}
-                                setValue={setValue}
-                                removeCard={remove}
-                                onDragStart={(e) => handleDragStart(index, e)}
-                                onDragOver={(e) => handleDragOver(index, e)}
-                                onDragEnd={handleDragEnd}
-                                isDragging={draggedIndex === index}
-                            />
-                        ))}
+                        {fields.map((field, index) => {
+                            const namePrefix = `cards.${index}`;
+                            const cardField = field as any;
+                            const cardId = watch(`${namePrefix}.id` as any) as string;
+                            if (cardField.type === 'group') {
+                                return (
+                                    <MechTestGroupItem
+                                        key={field.id}
+                                        index={index}
+                                        namePrefix={namePrefix}
+                                        depth={1}
+                                        register={register}
+                                        errors={errors}
+                                        control={control}
+                                        watch={watch}
+                                        setValue={setValue}
+                                        removeCard={remove}
+                                        onDragStart={(e) => handleDragStart(index, e)}
+                                        onDragOver={(e) => handleDragOver(index, e)}
+                                        onDragEnd={handleDragEnd}
+                                        isDragging={draggedIndex === index}
+                                    />
+                                );
+                            } else {
+                                return (
+                                    <MechTestCardItem
+                                        key={field.id}
+                                        index={index}
+                                        namePrefix={namePrefix}
+                                        register={register}
+                                        errors={errors}
+                                        control={control}
+                                        watch={watch}
+                                        setValue={setValue}
+                                        removeCard={remove}
+                                        onDragStart={(e) => handleDragStart(index, e)}
+                                        onDragOver={(e) => handleDragOver(index, e)}
+                                        onDragEnd={handleDragEnd}
+                                        isDragging={draggedIndex === index}
+                                    />
+                                );
+                            }
+                        })}
                     </div>
                 )}
             </div>
@@ -289,7 +348,6 @@ const MechanicalTestInner = () => {
         </form>
     );
 };
-
 export const MechanicalTestBuilder = () => {
     const _hasHydrated = useMechanicalTestStore(state => state._hasHydrated);
 

@@ -5,9 +5,11 @@ import { RampForm } from './RampForm';
 import { TakeForm } from './TakeForm';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { rampSchema, takeSchema } from '../profileSchemas/mechTestSchema';
 
 interface MechTestCardItemProps {
     index: number;
+    namePrefix: string;
     register: any;
     errors: any;
     control: any;
@@ -22,6 +24,7 @@ interface MechTestCardItemProps {
 
 export const MechTestCardItem = ({
     index,
+    namePrefix,
     register,
     errors,
     control,
@@ -36,17 +39,22 @@ export const MechTestCardItem = ({
     const { draft } = useConfigurationStore();
 
     // Watch values to render a dynamic header summary
-    const type = watch(`cards.${index}.type`) || 'ramp';
-    const axis = watch(`cards.${index}.data.axis`);
-    const mode = watch(`cards.${index}.data.mode`);
-    const controlMode = watch(`cards.${index}.data.control`);
-    const target = watch(`cards.${index}.data.target`);
-    const time = watch(`cards.${index}.data.time`);
-    const velocity = watch(`cards.${index}.data.velocity`);
-    const dispToggle = watch(`cards.${index}.data.dispToggle`);
+    const type = watch(`${namePrefix}.type`) || 'ramp';
+    const axis = watch(`${namePrefix}.data.axis`);
+    const mode = watch(`${namePrefix}.data.mode`);
+    const controlMode = watch(`${namePrefix}.data.control`);
+    const target = watch(`${namePrefix}.data.target`);
+    const time = watch(`${namePrefix}.data.time`);
+    const velocity = watch(`${namePrefix}.data.velocity`);
+    const dispToggle = watch(`${namePrefix}.data.dispToggle`);
 
-    const profileID = watch(`cards.${index}.data.profileID`);
-    const imgMode = watch(`cards.${index}.data.imgMode`);
+    const profileID = watch(`${namePrefix}.data.profileID`);
+    const imgMode = watch(`${namePrefix}.data.imgMode`);
+
+    const cardData = watch(`${namePrefix}.data`) || {};
+    const isComplete = type === 'ramp' 
+        ? rampSchema.safeParse(cardData).success 
+        : takeSchema.safeParse(cardData).success;
 
     const getCardHeaderSummary = () => {
         if (type === 'ramp') {
@@ -134,8 +142,8 @@ export const MechTestCardItem = ({
                                 <Select
                                     value={type}
                                     onValueChange={(val: 'ramp' | 'take') => {
-                                        setValue(`cards.${index}.type`, val);
-                                        setValue(`cards.${index}.data`, {});
+                                        setValue(`${namePrefix}.type`, val);
+                                        setValue(`${namePrefix}.data`, {});
                                     }}
                                 >
                                     <SelectTrigger className="h-7 text-xs font-semibold rounded-lg border-mauve-200 focus:ring-mauve-300 bg-white shadow-sm">
@@ -151,8 +159,13 @@ export const MechTestCardItem = ({
 
                         {/* Center Clickable Accordion Header */}
                         <AccordionTrigger className="flex-grow py-1.5 px-4 text-xs font-bold text-mauve-850 hover:no-underline [&>svg]:text-mauve-500 shrink min-w-0">
-                            <span className="truncate pr-4 select-none">
-                                {getCardHeaderSummary()}
+                            <span className="flex items-center gap-2 select-none truncate pr-4">
+                                <span className="truncate">{getCardHeaderSummary()}</span>
+                                {!isComplete && (
+                                    <span className="text-[11px] font-semibold text-destructive dark:text-red-400 bg-red-500/10 dark:bg-red-500/20 px-1.5 py-0.5 rounded-sm shrink-0 select-none">
+                                        (incomplete)
+                                    </span>
+                                )}
                             </span>
                         </AccordionTrigger>
 
@@ -174,7 +187,7 @@ export const MechTestCardItem = ({
                     <AccordionContent className="p-5 bg-white border-t border-mauve-150 pb-5">
                         {type === 'ramp' ? (
                             <RampForm
-                                index={index}
+                                namePrefix={namePrefix}
                                 register={register}
                                 errors={errors}
                                 control={control}
@@ -183,7 +196,7 @@ export const MechTestCardItem = ({
                             />
                         ) : (
                             <TakeForm
-                                index={index}
+                                namePrefix={namePrefix}
                                 register={register}
                                 errors={errors}
                                 control={control}

@@ -8,7 +8,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { tooltips } from '@/config/tooltips';
 
 interface RampFormProps {
-    index: number;
+    namePrefix: string;
     register: any;
     errors: any;
     control: any;
@@ -16,28 +16,32 @@ interface RampFormProps {
     setValue: any;
 }
 
-export const RampForm = ({ index, register, errors, control, watch, setValue }: RampFormProps) => {
+const getNestedError = (errors: any, path: string) => {
+    return path.split('.').reduce((acc, part) => acc && acc[part], errors);
+};
+
+export const RampForm = ({ namePrefix, register, errors, control, watch, setValue }: RampFormProps) => {
     // Watch the values needed for conditional rendering
-    const controlMode = watch(`cards.${index}.data.control`) || 'displacement';
-    const dispToggle = watch(`cards.${index}.data.dispToggle`) || 'time';
+    const controlMode = watch(`${namePrefix}.data.control`) || 'displacement';
+    const dispToggle = watch(`${namePrefix}.data.dispToggle`) || 'time';
 
     // Set default keys if they are not defined
     useEffect(() => {
-        const currentControl = watch(`cards.${index}.data.control`);
+        const currentControl = watch(`${namePrefix}.data.control`);
         if (!currentControl) {
-            setValue(`cards.${index}.data.control`, 'displacement');
-            setValue(`cards.${index}.data.dispToggle`, 'time');
-            setValue(`cards.${index}.data.axis`, 'A');
-            setValue(`cards.${index}.data.mode`, 'absolute');
-            setValue(`cards.${index}.data.max_displacement`, 1.0);
-            setValue(`cards.${index}.data.enable_dic`, false);
-            setValue(`cards.${index}.data.skipDICpos`, false);
-            setValue(`cards.${index}.data.incrementSeg`, false);
-            setValue(`cards.${index}.data.wait`, true);
+            setValue(`${namePrefix}.data.control`, 'displacement');
+            setValue(`${namePrefix}.data.dispToggle`, 'time');
+            setValue(`${namePrefix}.data.axis`, 'A');
+            setValue(`${namePrefix}.data.mode`, 'absolute');
+            setValue(`${namePrefix}.data.max_displacement`, 1.0);
+            setValue(`${namePrefix}.data.enable_dic`, false);
+            setValue(`${namePrefix}.data.skipDICpos`, false);
+            setValue(`${namePrefix}.data.incrementSeg`, false);
+            setValue(`${namePrefix}.data.wait`, true);
         }
-    }, [index, setValue, watch]);
+    }, [namePrefix, setValue, watch]);
 
-    const rampErrors = errors?.cards?.[index]?.data;
+    const rampErrors = getNestedError(errors, namePrefix)?.data;
 
     return (
         <div className="flex flex-col gap-6 pt-4 border-t border-mauve-150">
@@ -48,7 +52,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                     <FieldLabel text="Axis" tooltip={tooltips.mechTestAxis} required={true} />
                     <Controller
                         control={control}
-                        name={`cards.${index}.data.axis`}
+                        name={`${namePrefix}.data.axis`}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || 'A'}>
                                 <SelectTrigger className="w-full">
@@ -71,7 +75,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                     <FieldLabel text="Mode" tooltip={tooltips.mechTestMode} required={true} />
                     <Controller
                         control={control}
-                        name={`cards.${index}.data.mode`}
+                        name={`${namePrefix}.data.mode`}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || 'absolute'}>
                                 <SelectTrigger className="w-full">
@@ -91,7 +95,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                     <FieldLabel text="Control" tooltip={tooltips.mechTestControl} required={true} />
                     <Controller
                         control={control}
-                        name={`cards.${index}.data.control`}
+                        name={`${namePrefix}.data.control`}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || 'displacement'}>
                                 <SelectTrigger className="w-full">
@@ -119,7 +123,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 type="number"
                                 step="any"
                                 className={rampErrors?.target ? "border-destructive focus-visible:ring-destructive" : ""}
-                                {...register(`cards.${index}.data.target`, { valueAsNumber: true })}
+                                {...register(`${namePrefix}.data.target`, { valueAsNumber: true })}
                             />
                             {rampErrors?.target && <p className="text-xs text-destructive">{rampErrors.target.message}</p>}
                         </div>
@@ -139,14 +143,14 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                             <div className="col-start-1 flex items-center gap-1.5 border border-mauve-200 bg-mauve-100/50 p-1 rounded-xl text-xs font-semibold shrink-0 h-9">
                                 <button
                                     type="button"
-                                    onClick={() => setValue(`cards.${index}.data.dispToggle`, 'time')}
+                                    onClick={() => setValue(`${namePrefix}.data.dispToggle`, 'time')}
                                     className={`px-3 py-1 rounded-lg text-xs transition-all cursor-pointer ${dispToggle === 'time' ? 'bg-white text-mauve-850 shadow-sm font-bold' : 'text-mauve-600 hover:text-mauve-850'}`}
                                 >
                                     Time
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setValue(`cards.${index}.data.dispToggle`, 'velocity')}
+                                    onClick={() => setValue(`${namePrefix}.data.dispToggle`, 'velocity')}
                                     className={`px-3 py-1 rounded-lg text-xs transition-all cursor-pointer ${dispToggle === 'velocity' ? 'bg-white text-mauve-850 shadow-sm font-bold' : 'text-mauve-600 hover:text-mauve-850'}`}
                                 >
                                     Velocity
@@ -160,14 +164,14 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                         type="number"
                                         step="any"
                                         className={rampErrors?.time ? "border-destructive focus-visible:ring-destructive" : ""}
-                                        {...register(`cards.${index}.data.time`, { valueAsNumber: true })}
+                                        {...register(`${namePrefix}.data.time`, { valueAsNumber: true })}
                                     />
                                 ) : (
                                     <Input
                                         type="number"
                                         step="any"
                                         className={rampErrors?.velocity ? "border-destructive focus-visible:ring-destructive" : ""}
-                                        {...register(`cards.${index}.data.velocity`, { valueAsNumber: true })}
+                                        {...register(`${namePrefix}.data.velocity`, { valueAsNumber: true })}
                                     />
                                 )}
                             </div>
@@ -195,7 +199,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 type="number"
                                 step="any"
                                 className={rampErrors?.target ? "border-destructive focus-visible:ring-destructive" : ""}
-                                {...register(`cards.${index}.data.target`, { valueAsNumber: true })}
+                                {...register(`${namePrefix}.data.target`, { valueAsNumber: true })}
                             />
                             {rampErrors?.target && <p className="text-xs text-destructive">{rampErrors.target.message}</p>}
                         </div>
@@ -205,7 +209,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 type="number"
                                 step="any"
                                 className={rampErrors?.velocity ? "border-destructive focus-visible:ring-destructive" : ""}
-                                {...register(`cards.${index}.data.velocity`, { valueAsNumber: true })}
+                                {...register(`${namePrefix}.data.velocity`, { valueAsNumber: true })}
                             />
                             {rampErrors?.velocity && <p className="text-xs text-destructive">{rampErrors.velocity.message}</p>}
                         </div>
@@ -221,7 +225,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 type="number"
                                 step="any"
                                 className={rampErrors?.target ? "border-destructive focus-visible:ring-destructive" : ""}
-                                {...register(`cards.${index}.data.target`, { valueAsNumber: true })}
+                                {...register(`${namePrefix}.data.target`, { valueAsNumber: true })}
                             />
                             {rampErrors?.target && <p className="text-xs text-destructive">{rampErrors.target.message}</p>}
                         </div>
@@ -231,7 +235,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 type="number"
                                 step="any"
                                 className={rampErrors?.velocity ? "border-destructive focus-visible:ring-destructive" : ""}
-                                {...register(`cards.${index}.data.velocity`, { valueAsNumber: true })}
+                                {...register(`${namePrefix}.data.velocity`, { valueAsNumber: true })}
                             />
                             {rampErrors?.velocity && <p className="text-xs text-destructive">{rampErrors.velocity.message}</p>}
                         </div>
@@ -253,7 +257,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 type="number"
                                 step="any"
                                 className={rampErrors?.max_displacement ? "border-destructive focus-visible:ring-destructive" : ""}
-                                {...register(`cards.${index}.data.max_displacement`, { valueAsNumber: true })}
+                                {...register(`${namePrefix}.data.max_displacement`, { valueAsNumber: true })}
                             />
                             {rampErrors?.max_displacement && <p className="text-xs text-destructive">{rampErrors.max_displacement.message}</p>}
                         </div>
@@ -265,7 +269,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 <FieldLabel text="Enable DIC" tooltip={tooltips.mechTestEnableDic} />
                                 <Controller
                                     control={control}
-                                    name={`cards.${index}.data.enable_dic`}
+                                    name={`${namePrefix}.data.enable_dic`}
                                     render={({ field }) => (
                                         <Switch
                                             checked={!!field.value}
@@ -280,7 +284,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 <FieldLabel text="Skip DIC Position" tooltip={tooltips.mechTestSkipDicPosition} />
                                 <Controller
                                     control={control}
-                                    name={`cards.${index}.data.skipDICpos`}
+                                    name={`${namePrefix}.data.skipDICpos`}
                                     render={({ field }) => (
                                         <Switch
                                             checked={!!field.value}
@@ -295,7 +299,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 <FieldLabel text="Increment Segment" tooltip={tooltips.mechTestIncrementSeg} />
                                 <Controller
                                     control={control}
-                                    name={`cards.${index}.data.incrementSeg`}
+                                    name={`${namePrefix}.data.incrementSeg`}
                                     render={({ field }) => (
                                         <Switch
                                             checked={!!field.value}
@@ -310,7 +314,7 @@ export const RampForm = ({ index, register, errors, control, watch, setValue }: 
                                 <FieldLabel text="Wait" tooltip={tooltips.mechTestWait} />
                                 <Controller
                                     control={control}
-                                    name={`cards.${index}.data.wait`}
+                                    name={`${namePrefix}.data.wait`}
                                     render={({ field }) => (
                                         <Switch
                                             checked={!!field.value}

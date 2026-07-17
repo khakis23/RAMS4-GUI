@@ -5,23 +5,28 @@
       "time": 1,
       "max_displacement": 1,
       "axis": "A",
-      "mode": "relative",
-      "control": "load",
-      "velocity": 1
+      "mode": "absolute",
+      "control": "displacement",
+      "dispToggle": "time",
+      "enable_dic": false,
+      "skipDICpos": false,
+      "incrementSeg": false,
+      "wait": true
     }
   },
   {
-    "take": {
-      "profileID": "xrayProfile1784202576192",
-      "pauseTsDaq": false,
-      "imgMode": "ff"
-    }
-  },
-  {
-    "take": {
-      "profileID": "xrayProfile1784202604700",
-      "pauseTsDaq": false,
-      "imgMode": null
-    }
+    "group": [
+      {
+        "group": [
+          {
+            "take": {
+              "profileID": "xrayProfile1784302394141",
+              "pauseTsDaq": false,
+              "imgMode": "nf"
+            }
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -92,7 +92,7 @@ export const XrayProfileCard = ({
                             <span className="flex items-center gap-2 select-none truncate">
                                 <span className="truncate">{profileName || 'Unnamed Profile'}</span>
                                 {!isComplete && (
-                                    <span className="text-[10px] text-mauve-400 font-normal shrink-0 italic">
+                                    <span className="text-[11px] font-semibold text-destructive dark:text-red-400 bg-red-500/10 dark:bg-red-500/20 px-1.5 py-0.5 rounded-sm shrink-0 select-none">
                                         (incomplete)
                                     </span>
                                 )}

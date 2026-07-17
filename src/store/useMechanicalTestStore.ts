@@ -4,7 +4,7 @@ import { fetchMechTestFromGateway, postMechTestToGateway } from '../api/mechanic
 
 export interface MechTestCard {
     id: string;
-    type: 'ramp' | 'take';
+    type: 'ramp' | 'take' | 'group';
     data: any;
 }
 
@@ -18,11 +18,12 @@ interface MechanicalTestState {
     _hasHydrated: boolean;
 
     setCards: (cards: MechTestCard[]) => void;
-    addCard: (type?: 'ramp' | 'take') => void;
+    addCard: (type?: 'ramp' | 'take' | 'group', parentId?: string) => void;
     removeCard: (id: string) => void;
     updateCardData: (id: string, data: any) => void;
-    updateCardType: (id: string, type: 'ramp' | 'take') => void;
-    reorderCards: (startIndex: number, endIndex: number) => void;
+    updateCardType: (id: string, type: 'ramp' | 'take' | 'group') => void;
+    reorderCards: (startIndex: number, endIndex: number, parentId?: string) => void;
+    ungroupCard: (id: string) => void;
     loadMechTest: (directory: string, experiment: string) => Promise<void>;
     saveMechTest: (directory: string, experiment: string) => Promise<void>;
     resetStore: () => void;
@@ -31,6 +32,175 @@ interface MechanicalTestState {
 
 const checkIsDirty = (current: MechTestCard[], saved: MechTestCard[]) => {
     return JSON.stringify(current) !== JSON.stringify(saved);
+};
+
+// Recursive Helper Functions
+const addCardRecursive = (cards: MechTestCard[], parentId: string, newCard: MechTestCard): boolean => {
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        if (card.id === parentId) {
+            if (!card.data) card.data = {};
+            if (!card.data.cards) card.data.cards = [];
+            card.data.cards.push(newCard);
+            return true;
+        }
+        if (card.type === 'group' && card.data?.cards) {
+            if (addCardRecursive(card.data.cards, parentId, newCard)) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
+const removeCardRecursive = (cards: MechTestCard[], id: string): MechTestCard[] => {
+    return cards
+        .filter(card => card.id !== id)
+        .map(card => {
+            if (card.type === 'group' && card.data?.cards) {
+                return {
+                    ...card,
+                    data: {
+                        ...card.data,
+                        cards: removeCardRecursive(card.data.cards, id)
+                    }
+                };
+            }
+            return card;
+        });
+};
+
+const updateCardDataRecursive = (cards: MechTestCard[], id: string, data: any): MechTestCard[] => {
+    return cards.map(card => {
+        if (card.id === id) {
+            return { ...card, data: { ...card.data, ...data } };
+        }
+        if (card.type === 'group' && card.data?.cards) {
+            return {
+                ...card,
+                data: {
+                    ...card.data,
+                    cards: updateCardDataRecursive(card.data.cards, id, data)
+                }
+            };
+        }
+        return card;
+    });
+};
+
+const updateCardTypeRecursive = (cards: MechTestCard[], id: string, type: 'ramp' | 'take' | 'group'): MechTestCard[] => {
+    return cards.map(card => {
+        if (card.id === id) {
+            return { ...card, type, data: type === 'group' ? { cards: [] } : {} };
+        }
+        if (card.type === 'group' && card.data?.cards) {
+            return {
+                ...card,
+                data: {
+                    ...card.data,
+                    cards: updateCardTypeRecursive(card.data.cards, id, type)
+                }
+            };
+        }
+        return card;
+    });
+};
+
+const reorderCardsRecursive = (
+    cards: MechTestCard[],
+    parentId: string | undefined,
+    startIndex: number,
+    endIndex: number
+): MechTestCard[] => {
+    if (!parentId) {
+        const result = Array.from(cards);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+        return result;
+    }
+    return cards.map(card => {
+        if (card.id === parentId) {
+            const innerCards = card.data?.cards ? Array.from(card.data.cards as MechTestCard[]) : [];
+            const [removed] = innerCards.splice(startIndex, 1);
+            innerCards.splice(endIndex, 0, removed);
+            return {
+                ...card,
+                data: {
+                    ...card.data,
+                    cards: innerCards
+                }
+            };
+        }
+        if (card.type === 'group' && card.data?.cards) {
+            return {
+                ...card,
+                data: {
+                    ...card.data,
+                    cards: reorderCardsRecursive(card.data.cards, parentId, startIndex, endIndex)
+                }
+            };
+        }
+        return card;
+    });
+};
+
+const ungroupCardRecursive = (cards: MechTestCard[], id: string): MechTestCard[] => {
+    const result: MechTestCard[] = [];
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        if (card.id === id) {
+            if (card.type === 'group' && card.data?.cards) {
+                result.push(...card.data.cards);
+            }
+        } else {
+            if (card.type === 'group' && card.data?.cards) {
+                result.push({
+                    ...card,
+                    data: {
+                        ...card.data,
+                        cards: ungroupCardRecursive(card.data.cards, id)
+                    }
+                });
+            } else {
+                result.push(card);
+            }
+        }
+    }
+    return result;
+};
+
+// Serialization Helpers
+const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
+    return cards.map(card => {
+        if (card.type === 'group') {
+            return {
+                group: formatCardsForBackend(card.data?.cards || [])
+            };
+        }
+        return {
+            [card.type]: card.data
+        };
+    });
+};
+
+const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
+    return items.map((item, idx) => {
+        const type = Object.keys(item)[0] as 'ramp' | 'take' | 'group';
+        if (type === 'group') {
+            return {
+                id: `card-loaded-group-${depth}-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                type: 'group',
+                data: {
+                    cards: parseCardsFromBackend(item.group || [], depth + 1)
+                }
+            };
+        }
+        return {
+            id: `card-loaded-step-${depth}-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            type,
+            data: item[type] || {}
+        };
+    });
 };
 
 export const useMechanicalTestStore = create<MechanicalTestState>()(
@@ -51,14 +221,21 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
                 });
             },
 
-            addCard: (type = 'ramp') => {
+            addCard: (type = 'ramp', parentId) => {
                 set((state) => {
                     const newCard: MechTestCard = {
                         id: `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                         type,
-                        data: {}
+                        data: type === 'group' ? { cards: [] } : {}
                     };
-                    const updatedCards = [...state.cards, newCard];
+                    let updatedCards: MechTestCard[];
+                    if (parentId) {
+                        const cardsClone = JSON.parse(JSON.stringify(state.cards));
+                        addCardRecursive(cardsClone, parentId, newCard);
+                        updatedCards = cardsClone;
+                    } else {
+                        updatedCards = [...state.cards, newCard];
+                    }
                     const isDirty = checkIsDirty(updatedCards, state.savedCards);
                     return { cards: updatedCards, isDirty };
                 });
@@ -66,7 +243,7 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
 
             removeCard: (id) => {
                 set((state) => {
-                    const updatedCards = state.cards.filter((card) => card.id !== id);
+                    const updatedCards = removeCardRecursive(state.cards, id);
                     const isDirty = checkIsDirty(updatedCards, state.savedCards);
                     return { cards: updatedCards, isDirty };
                 });
@@ -74,9 +251,7 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
 
             updateCardData: (id, data) => {
                 set((state) => {
-                    const updatedCards = state.cards.map((card) =>
-                        card.id === id ? { ...card, data } : card
-                    );
+                    const updatedCards = updateCardDataRecursive(state.cards, id, data);
                     const isDirty = checkIsDirty(updatedCards, state.savedCards);
                     return { cards: updatedCards, isDirty };
                 });
@@ -84,21 +259,25 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
 
             updateCardType: (id, type) => {
                 set((state) => {
-                    const updatedCards = state.cards.map((card) =>
-                        card.id === id ? { ...card, type, data: {} } : card
-                    );
+                    const updatedCards = updateCardTypeRecursive(state.cards, id, type);
                     const isDirty = checkIsDirty(updatedCards, state.savedCards);
                     return { cards: updatedCards, isDirty };
                 });
             },
 
-            reorderCards: (startIndex, endIndex) => {
+            reorderCards: (startIndex, endIndex, parentId) => {
                 set((state) => {
-                    const result = Array.from(state.cards);
-                    const [removed] = result.splice(startIndex, 1);
-                    result.splice(endIndex, 0, removed);
-                    const isDirty = checkIsDirty(result, state.savedCards);
-                    return { cards: result, isDirty };
+                    const updatedCards = reorderCardsRecursive(state.cards, parentId, startIndex, endIndex);
+                    const isDirty = checkIsDirty(updatedCards, state.savedCards);
+                    return { cards: updatedCards, isDirty };
+                });
+            },
+
+            ungroupCard: (id) => {
+                set((state) => {
+                    const updatedCards = ungroupCardRecursive(state.cards, id);
+                    const isDirty = checkIsDirty(updatedCards, state.savedCards);
+                    return { cards: updatedCards, isDirty };
                 });
             },
 
@@ -108,15 +287,7 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
                 try {
                     const fetched = await fetchMechTestFromGateway(directory, experiment);
                     if (fetched && Array.isArray(fetched)) {
-                        // Ensure every loaded item has a unique client-side ID
-                        const normalized = fetched.map((item, idx) => {
-                            const type = Object.keys(item)[0] as 'ramp' | 'take';
-                            return {
-                                id: `card-loaded-${idx}-${Date.now()}`,
-                                type,
-                                data: item[type] || {}
-                            };
-                        });
+                        const normalized = parseCardsFromBackend(fetched);
                         set({
                             cards: normalized,
                             savedCards: JSON.parse(JSON.stringify(normalized)),
@@ -142,10 +313,7 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
                 if (!directory || !experiment) return;
                 set({ isLoading: true, error: null });
                 try {
-                    // Format cards back to mock backend structure: [{ [type]: data }]
-                    const formatted = get().cards.map((card) => ({
-                        [card.type]: card.data
-                    }));
+                    const formatted = formatCardsForBackend(get().cards);
                     await postMechTestToGateway(directory, experiment, formatted);
                     const cardsClone = JSON.parse(JSON.stringify(get().cards));
                     set({

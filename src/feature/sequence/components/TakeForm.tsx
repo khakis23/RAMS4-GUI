@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { tooltips } from '@/config/tooltips';
 
 interface TakeFormProps {
-    index: number;
+    namePrefix: string;
     register: any;
     errors: any;
     control: any;
@@ -26,45 +26,49 @@ const getProfileModeName = (mode: string) => {
     }
 };
 
-export const TakeForm = ({ index, errors, control, watch, setValue }: TakeFormProps) => {
+const getNestedError = (errors: any, path: string) => {
+    return path.split('.').reduce((acc, part) => acc && acc[part], errors);
+};
+
+export const TakeForm = ({ namePrefix, errors, control, watch, setValue }: TakeFormProps) => {
     const { draft } = useConfigurationStore();
     const xrayProfiles = draft?.xrayProfiles || [];
 
-    const selectedProfileID = watch(`cards.${index}.data.profileID`);
-    const imageMode = watch(`cards.${index}.data.imgMode`);
+    const selectedProfileID = watch(`${namePrefix}.data.profileID`);
+    const imageMode = watch(`${namePrefix}.data.imgMode`);
 
     const selectedProfile = xrayProfiles.find((p: any) => p.id === selectedProfileID);
     const selectedProfileMode = selectedProfile?.mode;
 
     // Default configuration mappings
     useEffect(() => {
-        const currentProfileID = watch(`cards.${index}.data.profileID`);
+        const currentProfileID = watch(`${namePrefix}.data.profileID`);
         if (!currentProfileID && xrayProfiles.length > 0) {
-            setValue(`cards.${index}.data.profileID`, xrayProfiles[0].id);
-            setValue(`cards.${index}.data.pauseTsDaq`, false);
+            setValue(`${namePrefix}.data.profileID`, xrayProfiles[0].id);
+            setValue(`${namePrefix}.data.pauseTsDaq`, false);
         }
-    }, [index, setValue, watch, xrayProfiles]);
+    }, [namePrefix, setValue, watch, xrayProfiles]);
 
     // Handle profile selection changes to set appropriate default image modes
     useEffect(() => {
-        const currentImgMode = watch(`cards.${index}.data.imgMode`);
+        const currentImgMode = watch(`${namePrefix}.data.imgMode`);
         
         if (selectedProfileMode === 'rotation-series') {
             const isValidRotMode = ['ff', 'nf', 'tomo', 'single-layer'].includes(currentImgMode);
             if (!isValidRotMode) {
-                setValue(`cards.${index}.data.imgMode`, 'ff');
+                setValue(`${namePrefix}.data.imgMode`, 'ff');
             }
         } else if (selectedProfileMode === 'stills') {
             const isValidStillsMode = ['dic', 'ff', 'nf'].includes(currentImgMode);
             if (!isValidStillsMode) {
-                setValue(`cards.${index}.data.imgMode`, 'dic');
+                setValue(`${namePrefix}.data.imgMode`, 'dic');
             }
         } else {
-            setValue(`cards.${index}.data.imgMode`, undefined);
+            setValue(`${namePrefix}.data.imgMode`, undefined);
         }
-    }, [selectedProfileMode, index, setValue, watch]);
+    }, [selectedProfileMode, namePrefix, setValue, watch]);
 
-    const takeErrors = errors?.cards?.[index]?.data;
+    const takeErrors = getNestedError(errors, namePrefix)?.data;
 
     const getModeTooltip = () => {
         if (selectedProfileMode === 'rotation-series') {
@@ -92,7 +96,7 @@ export const TakeForm = ({ index, errors, control, watch, setValue }: TakeFormPr
                     <FieldLabel text="Image Profile" tooltip={tooltips.mechTestImageProfile} required={true} />
                     <Controller
                         control={control}
-                        name={`cards.${index}.data.profileID`}
+                        name={`${namePrefix}.data.profileID`}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || ''}>
                                 <SelectTrigger className="w-full">
@@ -123,7 +127,7 @@ export const TakeForm = ({ index, errors, control, watch, setValue }: TakeFormPr
                         <FieldLabel text="Image Mode" required={true} tooltip={modeTooltip} />
                         <Controller
                             control={control}
-                            name={`cards.${index}.data.imgMode`}
+                            name={`${namePrefix}.data.imgMode`}
                             render={({ field }) => (
                                 <Select onValueChange={field.onChange} value={field.value || ''}>
                                     <SelectTrigger className="w-full">
@@ -157,7 +161,7 @@ export const TakeForm = ({ index, errors, control, watch, setValue }: TakeFormPr
                     <FieldLabel text="Pause DAQ" tooltip={tooltips.mechTestPauseDaq} />
                     <Controller
                         control={control}
-                        name={`cards.${index}.data.pauseTsDaq`}
+                        name={`${namePrefix}.data.pauseTsDaq`}
                         render={({ field }) => (
                             <Switch
                                 checked={!!field.value}

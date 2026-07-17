@@ -55,12 +55,12 @@
   ],
   "xrayProfiles": [
     {
-      "id": "xrayProfile1784202564665",
-      "name": "rotation_test",
+      "id": "xrayProfile1784302394141",
+      "name": "test",
       "mode": "rotation-series",
       "ramsx": 1,
       "ctime": 1,
-      "beamHeight": 11,
+      "beamHeight": 1,
       "beamWidth": 1,
       "atten": 1,
       "numPoints": 1,
@@ -69,74 +69,6 @@
       "layerStart": 1,
       "layerEnd": 1,
       "numLayers": 1
-    },
-    {
-      "id": "xrayProfile1784202576192",
-      "name": "stills1",
-      "mode": "stills",
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "stillPoints": [
-        {
-          "ramsx": 1,
-          "ramsz": 1,
-          "ome": 1,
-          "numPoints": 1
-        }
-      ]
-    },
-    {
-      "id": "xrayProfile1784202588322",
-      "name": "series_test",
-      "mode": "tseries",
-      "ramsx": 1,
-      "ramsz": 1,
-      "ome": 1,
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 11,
-      "numPoints": 1
-    },
-    {
-      "id": "xrayProfile1784202604700",
-      "name": "linescan_test",
-      "mode": "dscan",
-      "ramsx": 1,
-      "ramsz": 1,
-      "ome": 1,
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "numPoints": 1,
-      "axis1Name": "ramsz",
-      "axis1Start": 1,
-      "axis1Stop": 1,
-      "axis1Images": 1
-    },
-    {
-      "id": "xrayProfile1784202623156",
-      "name": "grid_scan_test",
-      "mode": "mesh",
-      "ramsx": 1,
-      "ramsz": 1,
-      "ome": 1,
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "numPoints": 1,
-      "axis1Name": "ramsz",
-      "axis1Start": 1,
-      "axis1Stop": 1,
-      "axis1Images": 1,
-      "axis2Name": "ome",
-      "axis2Start": 1,
-      "axis2Stop": 1,
-      "axis2Images": 1
     }
   ],
   "settingsVersion": 0,
