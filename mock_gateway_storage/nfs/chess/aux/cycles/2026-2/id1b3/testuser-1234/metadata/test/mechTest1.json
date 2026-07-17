@@ -1,32 +1,18 @@
 [
   {
     "ramp": {
-      "target": 1,
-      "time": 1,
-      "max_displacement": 1,
-      "axis": "A",
+      "target": 5,
+      "time": null,
+      "max_displacement": 19,
+      "axis": "TENS",
       "mode": "absolute",
-      "control": "displacement",
+      "control": "strain",
       "dispToggle": "time",
-      "enable_dic": false,
-      "skipDICpos": false,
-      "incrementSeg": false,
-      "wait": true
+      "enable_dic": true,
+      "skipDICpos": true,
+      "incrementSeg": true,
+      "wait": false,
+      "velocity": 3
     }
-  },
-  {
-    "group": [
-      {
-        "group": [
-          {
-            "take": {
-              "profileID": "xrayProfile1784302394141",
-              "pauseTsDaq": false,
-              "imgMode": "nf"
-            }
-          }
-        ]
-      }
-    ]
   }
 ]

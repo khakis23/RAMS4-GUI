@@ -151,6 +151,8 @@ export const MechTestGroupItem = ({
         ? 'bg-mauve-100 dark:bg-black/15 border-l-2 border-l-mauve-400'
         : 'bg-mauve-200 dark:bg-black/30 border-l-2 border-l-primary/60';
 
+    const cardId = watch(`${namePrefix}.id` as any) as string || `group-${index}`;
+
     return (
         <div 
             draggable={true}
@@ -162,7 +164,7 @@ export const MechTestGroupItem = ({
             } ${isDragging ? 'opacity-50 border-dashed border-mauve-400 shadow-lg' : 'border-mauve-200 hover:shadow-sm'}`}
         >
             <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value={`item-${index}`} className="border-b-0">
+                <AccordionItem value={cardId} className="border-b-0">
                     {/* Header bar */}
                     <div className={`flex items-center justify-between p-4 ${shadingBg} gap-3`}>
                         <div className="flex items-center gap-3 shrink-0">
@@ -238,7 +240,6 @@ export const MechTestGroupItem = ({
                                                 key={card.id}
                                                 index={idx}
                                                 namePrefix={childPrefix}
-                                                id={card.id}
                                                 depth={2}
                                                 register={register}
                                                 errors={errors}

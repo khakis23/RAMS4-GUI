@@ -113,6 +113,8 @@ export const MechTestCardItem = ({
         }
     };
 
+    const cardId = watch(`${namePrefix}.id` as any) as string || `card-${index}`;
+
     return (
         <div 
             draggable={true}
@@ -122,7 +124,7 @@ export const MechTestCardItem = ({
             className={`flex flex-col bg-white border rounded-md transition-all duration-100 ${isDragging ? 'opacity-50 border-dashed border-mauve-400 shadow-lg' : 'border-mauve-200 hover:shadow-sm'}`}
         >
             <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value={`item-${index}`} className="border-b-0">
+                <AccordionItem value={cardId} className="border-b-0">
                     {/* Header section (Non-scrolling details) */}
                     <div className="flex items-center justify-between p-4 bg-mauve-50/20 gap-3">
                         {/* Left Drag & Type Selectors */}
