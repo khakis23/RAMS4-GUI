@@ -27,11 +27,6 @@
           "start": 1,
           "stop": 10,
           "step": 2
-        },
-        {
-          "start": 11,
-          "stop": 20,
-          "step": 1
         }
       ]
     },

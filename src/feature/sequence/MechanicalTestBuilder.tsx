@@ -4,7 +4,7 @@ import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { useMechanicalTestStore } from '@/store/useMechanicalTestStore';
 import { useValidationStore } from '@/store/useConfigurationStore';
 import { Button } from '@/components/ui/button';
-import { Sliders, Plus, Save, FileJson, Check } from 'lucide-react';
+import { Sliders, Plus, Save, FileJson, Check, Group } from 'lucide-react';
 import { useFormAutoSave } from '../configuration/hooks/useFormAutoSave';
 import { MechTestCardItem } from './components/MechTestCardItem';
 import { MechTestGroupItem } from './components/MechTestGroupItem';
@@ -16,6 +16,13 @@ const getReadableFieldName = (fieldName: string) => {
     if (fieldName === 'profileID') return 'Image Profile';
     if (fieldName === 'imgMode') return 'Image Mode';
     if (fieldName === 'dispToggle') return 'Time/Velocity Toggle';
+    if (fieldName === 'countMode') return 'Count Mode';
+    if (fieldName === 'cycleEnd') return 'Cycle Count';
+    if (fieldName === 'ampScale') return 'Amplitude Scale';
+    if (fieldName === 'discoverEndpoints') return 'Discover Endpoints';
+    if (fieldName === 'recallEndpoints') return 'Recall Endpoints';
+    if (fieldName === 'manualDispUpper') return 'Manual Displacement Upper';
+    if (fieldName === 'manualDispLower') return 'Manual Displacement Lower';
     if (!fieldName) return 'Value';
     return fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace('_', ' ');
 };
@@ -32,6 +39,13 @@ const compileMechTestErrors = (error: z.ZodError) => {
         if (path.length === 4) {
             const field = getReadableFieldName(path[3] as string);
             errorMsg = `Step #${rootIndex + 1} > ${field}: ${issue.message}`;
+        } else if (path.length === 5 && path[2] === 'data' && (path[3] === 'take' || path[3] === 'step')) {
+            const parentKey = path[3] as string;
+            const field = getReadableFieldName(path[4] as string);
+            errorMsg = `Step #${rootIndex + 1} > ${parentKey.toUpperCase()} > ${field}: ${issue.message}`;
+        } else if (path.length === 6 && path[2] === 'data' && path[3] === 'step' && path[4] === 'data') {
+            const field = getReadableFieldName(path[5] as string);
+            errorMsg = `Step #${rootIndex + 1} > STEP > ${field}: ${issue.message}`;
         } else if (path.length === 7) {
             const childIndex = path[4] as number;
             const field = getReadableFieldName(path[6] as string);
@@ -201,7 +215,7 @@ const MechanicalTestInner = () => {
     }
 
     return (
-        <form className="flex flex-col h-full max-w-5xl mx-auto flex-1 min-h-0">
+        <form className="flex flex-col h-full flex-1 max-w-5xl mx-auto min-h-0">
             {/* Top Toolbar Header (Always Visible) */}
             <div className="flex items-center justify-between pb-3 border-b border-mauve-200 shrink-0">
                 <div className="flex flex-col gap-1">
@@ -237,6 +251,7 @@ const MechanicalTestInner = () => {
                         className="h-8 px-4 text-xs font-semibold rounded-lg bg-white border border-mauve-300 hover:bg-mauve-50 text-mauve-850 flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in animate-duration-200"
                     >
                         <Plus className="h-3.5 w-3.5" />
+                        <Group className="h-3.5 w-3.5 ml-0.5" />
                         Add Group
                     </Button>
 
@@ -282,7 +297,7 @@ const MechanicalTestInner = () => {
                         {fields.map((field, index) => {
                             const namePrefix = `cards.${index}`;
                             const cardField = field as any;
-                            const cardId = watch(`${namePrefix}.id` as any) as string;
+                            // const cardId = watch(`${namePrefix}.id` as any) as string;
                             if (cardField.type === 'group') {
                                 return (
                                     <MechTestGroupItem

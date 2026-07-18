@@ -1,18 +1,95 @@
 [
   {
-    "ramp": {
-      "target": 5,
-      "time": null,
-      "max_displacement": 19,
-      "axis": "TENS",
-      "mode": "absolute",
-      "control": "strain",
-      "dispToggle": "time",
-      "enable_dic": true,
-      "skipDICpos": true,
-      "incrementSeg": true,
-      "wait": false,
-      "velocity": 3
+    "takeWhile": {
+      "take": {
+        "data": {
+          "profileID": "xrayProfile1784302394141",
+          "imgMode": "nf",
+          "pauseTsDaq": false
+        }
+      },
+      "step": {
+        "type": "ramp",
+        "data": {
+          "target": 1,
+          "time": 1,
+          "max_displacement": 1,
+          "axis": "A",
+          "mode": "absolute",
+          "control": "displacement",
+          "dispToggle": "time",
+          "enable_dic": false,
+          "skipDICpos": false,
+          "incrementSeg": false,
+          "wait": true
+        }
+      }
     }
+  },
+  {
+    "ramp": {
+      "target": 1,
+      "time": 1,
+      "max_displacement": 1,
+      "axis": "A",
+      "mode": "absolute",
+      "control": "displacement",
+      "dispToggle": "time",
+      "enable_dic": false,
+      "skipDICpos": false,
+      "incrementSeg": false,
+      "wait": true
+    }
+  },
+  {
+    "dwell": {
+      "target": 1,
+      "velocity": 1,
+      "time": 1,
+      "axis": "A",
+      "control": "load",
+      "wait": true
+    }
+  },
+  {
+    "take": {
+      "profileID": "xrayProfile1784302394141",
+      "pauseTsDaq": false,
+      "imgMode": "nf"
+    }
+  },
+  {
+    "takeWhile": {
+      "take": {
+        "data": {
+          "profileID": "xrayProfile1784302394141",
+          "imgMode": "tomo",
+          "pauseTsDaq": false
+        }
+      },
+      "step": {
+        "type": "cycle",
+        "data": {
+          "upper": 1,
+          "lower": 1,
+          "frequency": 1,
+          "cycleEnd": 1,
+          "ampScale": 0.95,
+          "manualDispUpper": null,
+          "manualDispLower": null,
+          "axis": "A",
+          "mode": "relative",
+          "control": "displacement",
+          "countMode": "relative",
+          "discoverEndpoints": false,
+          "recallEndpoints": false,
+          "enable DIC": false,
+          "wait": true
+        }
+      }
+    }
+  },
+  {
+    "group": []
   }
 ]

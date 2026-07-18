@@ -4,7 +4,7 @@ import { fetchMechTestFromGateway, postMechTestToGateway } from '../api/mechanic
 
 export interface MechTestCard {
     id: string;
-    type: 'ramp' | 'take' | 'group';
+    type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile';
     data: any;
 }
 
@@ -18,10 +18,10 @@ interface MechanicalTestState {
     _hasHydrated: boolean;
 
     setCards: (cards: MechTestCard[]) => void;
-    addCard: (type?: 'ramp' | 'take' | 'group', parentId?: string) => void;
+    addCard: (type?: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile', parentId?: string) => void;
     removeCard: (id: string) => void;
     updateCardData: (id: string, data: any) => void;
-    updateCardType: (id: string, type: 'ramp' | 'take' | 'group') => void;
+    updateCardType: (id: string, type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile') => void;
     reorderCards: (startIndex: number, endIndex: number, parentId?: string) => void;
     ungroupCard: (id: string) => void;
     loadMechTest: (directory: string, experiment: string) => Promise<void>;
@@ -88,7 +88,7 @@ const updateCardDataRecursive = (cards: MechTestCard[], id: string, data: any): 
     });
 };
 
-const updateCardTypeRecursive = (cards: MechTestCard[], id: string, type: 'ramp' | 'take' | 'group'): MechTestCard[] => {
+const updateCardTypeRecursive = (cards: MechTestCard[], id: string, type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile'): MechTestCard[] => {
     return cards.map(card => {
         if (card.id === id) {
             return { ...card, type, data: type === 'group' ? { cards: [] } : {} };
@@ -185,7 +185,7 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
 
 const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
     return items.map((item, idx) => {
-        const type = Object.keys(item)[0] as 'ramp' | 'take' | 'group';
+        const type = Object.keys(item)[0] as 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile';
         if (type === 'group') {
             return {
                 id: `card-loaded-group-${depth}-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,

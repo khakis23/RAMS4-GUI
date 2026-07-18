@@ -92,7 +92,7 @@ export const XrayProfileCard = ({
                             <span className="flex items-center gap-2 select-none truncate">
                                 <span className="truncate">{profileName || 'Unnamed Profile'}</span>
                                 {!isComplete && (
-                                    <span className="text-[11px] font-semibold text-destructive dark:text-red-400 bg-red-500/10 dark:bg-red-500/20 px-1.5 py-0.5 rounded-sm shrink-0 select-none">
+                                    <span className="text-[11px] font-semibold text-destructive dark:text-red-400 dark:bg-red-500/20 bg-red-500/10  px-1.5 py-0.5 rounded-sm shrink-0 select-none">
                                         (incomplete)
                                     </span>
                                 )}
@@ -105,7 +105,7 @@ export const XrayProfileCard = ({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => removeProfile(index)}
-                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
+                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg cursor-pointer transition-colors"
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
@@ -329,7 +329,7 @@ export const XrayProfileCard = ({
                                             <Button 
                                                 type="button" 
                                                 variant="secondary" 
-                                                className="h-8 w-8 p-0 text-red-650 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300 rounded-lg shrink-0 bg-white border border-mauve-200"
+                                                className="h-8 w-8 p-0 text-red-650  hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 bg-white border border-mauve-200"
                                                 onClick={() => removePoint(ptIdx)}
                                             >
                                                 <Trash2 className="h-4 w-4" />

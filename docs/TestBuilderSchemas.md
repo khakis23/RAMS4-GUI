@@ -8,7 +8,7 @@
 ### Ramp
 
 #### Schema
-```text
+```txt
 .
 └── ramp/
     ├── axis (dropdown)/
@@ -41,7 +41,7 @@
 ```
 
 #### Tooltip descriptions
-```text
+```txt
 Axis: The target motor axis to actuate.
 Mode: Use an absolute target (from 0) or a relative target (from last target).
 Control: Feedback control mode driving the ramp.
@@ -92,4 +92,114 @@ DIC (Stills): Commands the specimen stage to a list of coordinates and triggers 
 Far-Field (Stills): Takes stationary, high-resolution X-ray exposures at a list of coordinates using the far-field detector.
 Near-Field (Stills): Slides the near-field beamstop in and takes stationary X-ray exposures at a list of coordinates.
 Pause DAQ: Temporarily halts time-series data acquisition while executing this scan.
+```
+
+### Dwell
+
+#### Schema
+
+```txt
+.
+└── Dwell/
+    ├── axis (dropdown)/
+    │   ├── A*
+    │   ├── B*
+    │   ├── RA*
+    │   ├── RB*
+    │   └── TENS*
+    ├── control (dropdown)/
+    │   ├── load*
+    │   └── strain*
+    ├── target (number)
+    ├── velocity (number)
+    └── time (number)
+```
+
+#### Tooltip Descriptions
+
+```txt
+Axis: The target motor axis to actuate.
+Target (Load): Target load value in Newtons (N).
+Target (Strain): Target axial strain value in engineering strain (mm/mm).
+Control: Feedback control mode driving the hold.
+Velocity: Stage approach speed to reach the target load or strain.
+Time: Duration in seconds (s) to hold at the target value.
+Wait: Blocks the execution of the next sequence command until the hold duration is complete.
+```
+
+### Cycle
+
+#### Schema
+
+```txt
+.
+└── Cycle/
+    ├── axis (dropdown)/
+    │   ├── A*
+    │   ├── B*
+    │   ├── RA*
+    │   ├── RB*
+    │   └── TENS*
+    ├── control (dropdown)/
+    │   ├── load*
+    │   ├── strain* 
+    │   └── displacement*
+    ├── mode (dropdown)/  
+    │   ├── absolute*
+    │   └── relative*
+    ├── upper (number)
+    ├── lower (number)
+    ├── frequency (number) Hz
+    ├── count mode (toggle switch — dfault either)/
+    │   ├── absolute*
+    │   ├── relative*
+    │   └── cycle end (number - different descritpion depending on count mode) cycles
+    └── advanced (accordion)/
+        ├── amp scale (number — default 0.95)
+        ├── Discover Endpoints (toggle — default off)
+        ├── Recall Endpoint (toggle — default off)
+        ├── enable DIC (toggle — default off)
+        ├── wait (toggle — default on)
+        ├── Manual Displacement Upper (number — empty and optional) mm
+        └── Manual Displacement Lower (number — empty and optional) mm
+```
+
+#### Tooltip Descriptions!
+
+```txt
+Axis: The target motor axis to actuate.
+Control: Feedback control mode driving the cycle.
+Mode: Use absolute limits or limits relative to the current position.
+Upper: The upper control limit of the cycle wave (peak).
+Lower: The lower control limit of the cycle wave (valley).
+Frequency: Cycle frequency in Hz.
+Local Count: Number of cycles to run from the current position.
+Global Count: Stop when the controller's total cycle count reaches this value.
+Amp Scale: Amplitude scaling factor applied to the cycle wave about its mean.
+Discover Endpoints: Performs a calibration ramp to measure motor displacement limits before cycling.
+Recall Endpoints: Reuses displacement limits measured from a prior discovery run.
+Manual Displacement Upper: Motor displacement limit at the upper cycle bound.
+Manual Displacement Lower: Motor displacement limit at the lower cycle bound.
+Enable DIC: Triggers continuous optical DIC camera capture during the cycle.
+Wait: Blocks the execution of the next sequence command until the step is fully complete.
+```
+
+
+### ~~Set~~
+
+#### ~~Schema~~
+
+```txt
+Set
+  incremental/absolute mode (toggle — deafult either)
+    segment (number) (+/- indications if incremental)
+  break load (number — deafult: -5000) N
+```
+
+#### ~~Tooltip Descriptions~~
+
+```txt
+Segment (incremental): Add or remove from the data logging segment count.
+Segment (absolute): Offset the data logging segment count by this value.
+Break Load: Safety load threshold in N that aborts the test if exceeded.
 ```

@@ -103,5 +103,26 @@ export const tooltips = {
     mechTestImageModeSingleLayerRotation: "Runs only the first Z-height slice of the selected rotation series using the far-field detector.",
     mechTestImageModeDicStills: "Commands the specimen stage to a list of coordinates and triggers optical hutch cameras for surface strain mapping.",
     mechTestImageModeFarFieldStills: "Takes stationary, high-resolution X-ray exposures at a list of coordinates using the far-field detector.",
-    mechTestImageModeNearFieldStills: "Slides the near-field beamstop in and takes stationary X-ray exposures at a list of coordinates."
+    mechTestImageModeNearFieldStills: "Slides the near-field beamstop in and takes stationary X-ray exposures at a list of coordinates.",
+
+    // --- NEW DWELL & CYCLE TOOLTIPS ---
+    mechTestDwellControl: "Feedback control mode driving the hold.",
+    mechTestDwellVelocity: "Stage approach speed to reach the target load or strain.",
+    mechTestDwellTime: "Duration in seconds (s) to hold at the target value.",
+    mechTestDwellWait: "Blocks the execution of the next sequence command until the hold duration is complete.",
+    
+    mechTestCycleControl: "Feedback control mode driving the cycle.",
+    mechTestCycleMode: "Use absolute limits or limits relative to the current position.",
+    mechTestCycleUpper: "The upper control limit of the cycle wave (peak).",
+    mechTestCycleLower: "The lower control limit of the cycle wave (valley).",
+    mechTestCycleFrequency: "Cycle frequency in Hz.",
+    mechTestCycleLocalCount: "Number of cycles to run from the current position.",
+    mechTestCycleGlobalCount: "Stop when the controller's total cycle count reaches this value.",
+    mechTestCycleAmpScale: "Amplitude scaling factor applied to the cycle wave about its mean.",
+    mechTestCycleDiscoverEndpoints: "Performs a calibration ramp to measure motor displacement limits before cycling.",
+    mechTestCycleRecallEndpoints: "Reuses displacement limits measured from a prior discovery run.",
+    mechTestCycleManualDispUpper: "Motor displacement limit at the upper cycle bound.",
+    mechTestCycleManualDispLower: "Motor displacement limit at the lower cycle bound.",
+    mechTestCycleEnableDic: "Triggers continuous optical DIC camera capture during the cycle.",
+    mechTestCycleWait: "Blocks the execution of the next sequence command until the step is fully complete."
 };

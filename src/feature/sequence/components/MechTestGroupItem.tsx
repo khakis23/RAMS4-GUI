@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Trash2, Plus, Ungroup } from 'lucide-react';
+import { GripVertical, Trash2, Plus, Ungroup, TriangleRight, ScanEye, AudioWaveform, Gauge, Group } from 'lucide-react';
 import { MechTestCardItem } from './MechTestCardItem';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { rampSchema, takeSchema } from '../profileSchemas/mechTestSchema';
+import { rampSchema, takeSchema, dwellSchema, cycleSchema, takeWhileSchema } from '../profileSchemas/mechTestSchema';
 
 interface MechTestGroupItemProps {
     index: number;
@@ -44,7 +44,6 @@ export const MechTestGroupItem = ({
     // Watch child cards inside this group
     const childCards = watch(`${namePrefix}.data.cards`) || [];
 
-    // Helper to recursively verify if child cards and sub-groups are completely configured
     const isCardComplete = (card: any, prefix: string): boolean => {
         if (card.type === 'ramp') {
             const data = watch(`${prefix}.data`) || {};
@@ -52,6 +51,15 @@ export const MechTestGroupItem = ({
         } else if (card.type === 'take') {
             const data = watch(`${prefix}.data`) || {};
             return takeSchema.safeParse(data).success;
+        } else if (card.type === 'dwell') {
+            const data = watch(`${prefix}.data`) || {};
+            return dwellSchema.safeParse(data).success;
+        } else if (card.type === 'cycle') {
+            const data = watch(`${prefix}.data`) || {};
+            return cycleSchema.safeParse(data).success;
+        } else if (card.type === 'takeWhile') {
+            const data = watch(`${prefix}.data`) || {};
+            return takeWhileSchema.safeParse(data).success;
         } else if (card.type === 'group') {
             const innerCards = watch(`${prefix}.data.cards`) || [];
             if (innerCards.length === 0) return true;
@@ -66,35 +74,107 @@ export const MechTestGroupItem = ({
         isCardComplete(card, `${namePrefix}.data.cards.${idx}`)
     );
 
-    const getCardHeaderSummary = (card: any, prefix: string): string => {
+    const renderCardHeaderSummary = (card: any, prefix: string): React.ReactNode => {
         if (card.type === 'ramp') {
             const axis = watch(`${prefix}.data.axis`);
             const controlMode = watch(`${prefix}.data.control`);
-            if (!axis || !controlMode) return 'Unconfigured Step';
-            return `Ramp (${axis}, ${controlMode})`;
+            const content = (axis && controlMode) ? `${axis}, ${controlMode}` : 'Unconfigured';
+            return (
+                <span className="inline-flex items-center gap-1">
+                    <TriangleRight className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
+                    <span className="align-middle">[{content}]</span>
+                </span>
+            );
         } else if (card.type === 'take') {
             const profileID = watch(`${prefix}.data.profileID`);
             const xrayProfiles = draft?.xrayProfiles || [];
             const profile = xrayProfiles.find((p: any) => p.id === profileID);
-            if (!profile) return 'Take (Unconfigured)';
-            return `Take (${profile.name || 'Unnamed'})`;
+            const content = profile ? (profile.name || 'Unnamed') : 'Unconfigured';
+            return (
+                <span className="inline-flex items-center gap-1">
+                    <ScanEye className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
+                    <span className="align-middle">[{content}]</span>
+                </span>
+            );
+        } else if (card.type === 'dwell') {
+            const axis = watch(`${prefix}.data.axis`);
+            const controlMode = watch(`${prefix}.data.control`);
+            const content = (axis && controlMode) ? `${axis}, ${controlMode}` : 'Unconfigured';
+            return (
+                <span className="inline-flex items-center gap-1">
+                    <Gauge className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
+                    <span className="align-middle">[{content}]</span>
+                </span>
+            );
+        } else if (card.type === 'cycle') {
+            const axis = watch(`${prefix}.data.axis`);
+            const controlMode = watch(`${prefix}.data.control`);
+            const content = (axis && controlMode) ? `${axis}, ${controlMode}` : 'Unconfigured';
+            return (
+                <span className="inline-flex items-center gap-1">
+                    <AudioWaveform className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
+                    <span className="align-middle">[{content}]</span>
+                </span>
+            );
+        } else if (card.type === 'takeWhile') {
+            const profileID = watch(`${prefix}.data.take.data.profileID`);
+            const xrayProfiles = draft?.xrayProfiles || [];
+            const profile = xrayProfiles.find((p: any) => p.id === profileID);
+            const takeContent = profile ? (profile.name || 'Unnamed') : 'Unconfigured';
+
+            const stepType = watch(`${prefix}.data.step.type`) || 'ramp';
+            const stepAxis = watch(`${prefix}.data.step.data.axis`);
+            const stepControl = watch(`${prefix}.data.step.data.control`);
+            const stepContent = (stepAxis && stepControl) ? `${stepAxis}, ${stepControl}` : 'Unconfigured';
+
+            const StepIcon = stepType === 'ramp' ? TriangleRight : stepType === 'dwell' ? Gauge : AudioWaveform;
+
+            return (
+                <span className="inline-flex items-center gap-1">
+                    <ScanEye className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
+                    <span className="align-middle">[{takeContent}]</span>
+                    <span className="text-mauve-400 dark:text-mauve-600 mx-0.5 align-middle">+</span>
+                    <StepIcon className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
+                    <span className="align-middle">[{stepContent}]</span>
+                </span>
+            );
         } else if (card.type === 'group') {
             const innerCards = watch(`${prefix}.data.cards`) || [];
-            const innerSummary = innerCards.map((c: any, i: number) => 
-                getCardHeaderSummary(c, `${prefix}.data.cards.${i}`)
-            ).filter(Boolean).join(', ');
-            return `Group (${innerSummary || 'Empty'})`;
+            return (
+                <span className="inline-flex items-center gap-1">
+                    <Group className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
+                    <span className="inline-flex items-center gap-0.5 align-middle">
+                        [
+                        {innerCards.length === 0 ? (
+                            <span>Empty</span>
+                        ) : (
+                            innerCards.map((c: any, i: number) => (
+                                <span key={c.id || i} className="inline-flex items-center">
+                                    {renderCardHeaderSummary(c, `${prefix}.data.cards.${i}`)}
+                                    {i < innerCards.length - 1 && <span className="text-mauve-400 dark:text-mauve-600 mr-1.5 align-middle">,</span>}
+                                </span>
+                            ))
+                        )}
+                        ]
+                    </span>
+                </span>
+            );
         }
-        return '';
+        return null;
     };
 
-    // Calculate dynamic header title for this group
     const getGroupHeaderSummary = () => {
-        const parts = childCards.map((card: any, idx: number) => {
-            return getCardHeaderSummary(card, `${namePrefix}.data.cards.${idx}`);
-        }).filter(Boolean);
-
-        return parts.join(', ') || 'Empty Group';
+        if (childCards.length === 0) return <span>Empty Group</span>;
+        return (
+            <span className="inline-flex items-center gap-1 flex-wrap align-middle">
+                {childCards.map((card: any, idx: number) => (
+                    <span key={card.id || idx} className="inline-flex items-center gap-0.5 align-middle">
+                        {renderCardHeaderSummary(card, `${namePrefix}.data.cards.${idx}`)}
+                        {idx < childCards.length - 1 && <span className="text-mauve-400 dark:text-mauve-600 mr-1.5 align-middle">,</span>}
+                    </span>
+                ))}
+            </span>
+        );
     };
 
     // Inner Drag & Drop Handlers for children reordering
@@ -215,7 +295,7 @@ export const MechTestGroupItem = ({
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => removeCard(index)}
-                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
+                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg cursor-pointer transition-colors"
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
@@ -302,6 +382,7 @@ export const MechTestGroupItem = ({
                                     className="h-7 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700 flex items-center gap-1 cursor-pointer"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
+                                    <Group className="h-3.5 w-3.5 ml-0.5" />
                                     Add Group
                                 </Button>
                             )}
