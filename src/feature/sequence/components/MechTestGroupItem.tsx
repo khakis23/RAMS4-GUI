@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Trash2, Plus, Copy, Ungroup, TriangleRight, ScanEye, AudioWaveform, Gauge, Group } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { GripVertical, Trash2, Plus, Copy, Ungroup, TriangleRight, ScanEye, AudioWaveform, Gauge, Group, RefreshCw } from 'lucide-react';
 import { MechTestCardItem } from './MechTestCardItem';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
@@ -42,6 +43,19 @@ export const MechTestGroupItem = ({
 }: MechTestGroupItemProps) => {
     const { draft } = useConfigurationStore();
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+    const loopsVal = watch(`${namePrefix}.data.loops`) || 1;
+    const [showLoopInput, setShowLoopInput] = useState(loopsVal > 1);
+
+    const handleToggleLoop = () => {
+        if (showLoopInput) {
+            setShowLoopInput(false);
+            setValue(`${namePrefix}.data.loops`, 1, { shouldDirty: true, shouldValidate: true });
+        } else {
+            setShowLoopInput(true);
+            setValue(`${namePrefix}.data.loops`, 1, { shouldDirty: true, shouldValidate: true });
+        }
+    };
 
     // Watch child cards inside this group
     const childCards = watch(`${namePrefix}.data.cards`) || [];
@@ -142,8 +156,12 @@ export const MechTestGroupItem = ({
             );
         } else if (card.type === 'group') {
             const innerCards = watch(`${prefix}.data.cards`) || [];
+            const innerLoops = watch(`${prefix}.data.loops`) || 1;
             return (
                 <span className="inline-flex items-center gap-1">
+                    {innerLoops > 1 && (
+                        <RefreshCw className="h-3 w-3 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle mr-0.5" />
+                    )}
                     <Group className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
                     <span className="inline-flex items-center gap-0.5 align-middle">
                         [
@@ -207,7 +225,7 @@ export const MechTestGroupItem = ({
         const newCard = {
             id: `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type,
-            data: type === 'group' ? { cards: [] } : {}
+            data: type === 'group' ? { cards: [], loops: 1 } : {}
         };
         setValue(`${namePrefix}.data.cards`, [...childCards, newCard], { shouldDirty: true, shouldValidate: true });
     };
@@ -294,11 +312,19 @@ export const MechTestGroupItem = ({
 
                         {/* Title Accordion Trigger */}
                         <AccordionTrigger className="flex-grow py-1.5 px-4 text-xs font-bold text-mauve-850 hover:no-underline [&>svg]:text-mauve-500 shrink min-w-0">
-                            <span className="flex items-center gap-2 select-none truncate pr-4">
-                                <span className="truncate">{getGroupHeaderSummary()}</span>
-                                {!isGroupComplete && (
-                                    <span className="text-[11px] font-semibold text-destructive dark:text-red-400 bg-red-500/10 dark:bg-red-500/20 px-1.5 py-0.5 rounded-sm shrink-0 select-none">
-                                        (incomplete)
+                            <span className="flex items-center justify-between select-none w-full pr-4 min-w-0">
+                                <span className="flex items-center gap-2 truncate">
+                                    <span className="truncate">{getGroupHeaderSummary()}</span>
+                                    {!isGroupComplete && (
+                                        <span className="text-[11px] font-semibold text-destructive dark:text-red-400 bg-red-500/10 dark:bg-red-500/20 px-1.5 py-0.5 rounded-sm shrink-0 select-none">
+                                            (incomplete)
+                                        </span>
+                                    )}
+                                </span>
+                                {loopsVal > 1 && (
+                                    <span className="flex items-center gap-1.5 text-mauve-600 dark:text-mauve-400 font-semibold shrink-0">
+                                        <RefreshCw className="h-3.5 w-3.5" />
+                                        <span>{loopsVal}</span>
                                     </span>
                                 )}
                             </span>
@@ -419,29 +445,54 @@ export const MechTestGroupItem = ({
                         )}
 
                         {/* Action buttons inside group */}
-                        <div className="flex items-center gap-3">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => handleAddCard('ramp')}
-                                className="h-7 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700 flex items-center gap-1 cursor-pointer"
-                            >
-                                <Plus className="h-3.5 w-3.5" />
-                                Add Step
-                            </Button>
-
-                            {depth < 2 && (
+                        <div className="flex items-center justify-between w-full mt-3">
+                            <div className="flex items-center gap-3">
                                 <Button
                                     type="button"
                                     variant="secondary"
-                                    onClick={() => handleAddCard('group')}
+                                    onClick={() => handleAddCard('ramp')}
                                     className="h-7 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700 flex items-center gap-1 cursor-pointer"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
-                                    <Group className="h-3.5 w-3.5 ml-0.5" />
-                                    Add Group
+                                    Add Step
                                 </Button>
-                            )}
+
+                                {depth < 2 && (
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => handleAddCard('group')}
+                                        className="h-7 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700 flex items-center gap-1 cursor-pointer"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" />
+                                        <Group className="h-3.5 w-3.5 ml-0.5" />
+                                        Add Group
+                                    </Button>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {showLoopInput && (
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        {...register(`${namePrefix}.data.loops`, { valueAsNumber: true })}
+                                        className="w-16 h-7 text-xs text-center border border-mauve-250 bg-white rounded-lg px-2 focus-visible:ring-mauve-400"
+                                    />
+                                )}
+                                <Button
+                                    type="button"
+                                    onClick={handleToggleLoop}
+                                    className={`h-7 px-3 text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm transition-all duration-150 ${
+                                        showLoopInput 
+                                            ? 'bg-mauve-600 hover:bg-mauve-700 text-white border border-transparent' 
+                                            : 'bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700'
+                                    }`}
+                                >
+                                    <RefreshCw className="h-3.5 w-3.5" />
+                                    <span>Loop</span>
+                                </Button>
+                            </div>
                         </div>
                     </AccordionContent>
                 </AccordionItem>

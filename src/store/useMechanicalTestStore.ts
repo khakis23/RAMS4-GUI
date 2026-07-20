@@ -91,7 +91,7 @@ const updateCardDataRecursive = (cards: MechTestCard[], id: string, data: any): 
 const updateCardTypeRecursive = (cards: MechTestCard[], id: string, type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile'): MechTestCard[] => {
     return cards.map(card => {
         if (card.id === id) {
-            return { ...card, type, data: type === 'group' ? { cards: [] } : {} };
+            return { ...card, type, data: type === 'group' ? { cards: [], loops: 1 } : {} };
         }
         if (card.type === 'group' && card.data?.cards) {
             return {
@@ -174,7 +174,10 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
     return cards.map(card => {
         if (card.type === 'group') {
             return {
-                group: formatCardsForBackend(card.data?.cards || [])
+                group: {
+                    loops: card.data?.loops ?? 1,
+                    steps: formatCardsForBackend(card.data?.cards || [])
+                }
             };
         }
         if (card.type === 'takeWhile') {
@@ -197,11 +200,16 @@ const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
     return items.map((item, idx) => {
         const type = Object.keys(item)[0] as 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile';
         if (type === 'group') {
+            const groupObj = item.group;
+            const isOldFormat = Array.isArray(groupObj);
+            const loops = isOldFormat ? 1 : (groupObj?.loops ?? 1);
+            const steps = isOldFormat ? groupObj : (groupObj?.steps || []);
             return {
                 id: `card-loaded-group-${depth}-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
                 type: 'group',
                 data: {
-                    cards: parseCardsFromBackend(item.group || [], depth + 1)
+                    loops,
+                    cards: parseCardsFromBackend(steps, depth + 1)
                 }
             };
         }
@@ -250,7 +258,7 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
                     const newCard: MechTestCard = {
                         id: `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                         type,
-                        data: type === 'group' ? { cards: [] } : {}
+                        data: type === 'group' ? { cards: [], loops: 1 } : {}
                     };
                     let updatedCards: MechTestCard[];
                     if (parentId) {

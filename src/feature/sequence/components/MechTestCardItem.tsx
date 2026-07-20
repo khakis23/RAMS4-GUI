@@ -20,7 +20,7 @@ interface MechTestCardItemProps {
     watch: any;
     setValue: any;
     removeCard: (index: number) => void;
-    duplicateCard: (index: number) => void;
+    duplicateCard?: (index: number) => void;
     onDragStart: (e: React.DragEvent) => void;
     onDragOver: (e: React.DragEvent) => void;
     onDragEnd: () => void;
@@ -255,7 +255,7 @@ export const MechTestCardItem = ({
                                             type="button"
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => duplicateCard(index)}
+                                            onClick={() => duplicateCard?.(index)}
                                             className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-primary hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
                                         >
                                             <Copy className="h-4 w-4" />

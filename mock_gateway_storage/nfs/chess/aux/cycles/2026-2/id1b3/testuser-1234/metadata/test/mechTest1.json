@@ -1,20 +1,5 @@
 [
   {
-    "ramp": {
-      "target": 1,
-      "time": 1,
-      "max_displacement": 1,
-      "axis": "A",
-      "mode": "absolute",
-      "control": "displacement",
-      "dispToggle": "time",
-      "enable_dic": false,
-      "skipDICpos": false,
-      "incrementSeg": false,
-      "wait": true
-    }
-  },
-  {
     "takeWhile": {
       "take": {
         "profileID": "xrayProfile1784548522164",
@@ -40,75 +25,51 @@
     }
   },
   {
-    "take": {
-      "profileID": "xrayProfile1784548563369",
-      "pauseTsDaq": true,
-      "imgMode": null
-    }
-  },
-  {
-    "takeWhile": {
-      "take": {
-        "profileID": "xrayProfile1784302394141",
-        "imgMode": "tomo",
-        "pauseTsDaq": false
-      },
-      "step": {
-        "type": "cycle",
-        "data": {
-          "upper": 1,
-          "lower": 1,
-          "frequency": 1,
-          "cycleEnd": 1,
-          "ampScale": 0.95,
-          "manualDispUpper": null,
-          "manualDispLower": null,
-          "axis": "A",
-          "mode": "relative",
-          "control": "displacement",
-          "countMode": "relative",
-          "discoverEndpoints": false,
-          "recallEndpoints": false,
-          "enable DIC": false,
-          "wait": true
+    "group": {
+      "loops": 9,
+      "steps": [
+        {
+          "group": {
+            "loops": 2,
+            "steps": [
+              {
+                "ramp": {
+                  "target": 1,
+                  "time": 1,
+                  "max_displacement": 1,
+                  "axis": "A",
+                  "mode": "absolute",
+                  "control": "displacement",
+                  "dispToggle": "time",
+                  "enable_dic": false,
+                  "skipDICpos": false,
+                  "incrementSeg": false,
+                  "wait": true
+                }
+              }
+            ]
+          }
         }
-      }
+      ]
     }
   },
   {
-    "group": [
-      {
-        "group": [
-          {
-            "dwell": {
-              "target": 1,
-              "velocity": 1,
-              "time": 1,
-              "axis": "A",
-              "control": "load",
-              "wait": true
-            }
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "group": [
-      {
-        "group": [
-          {
-            "dwell": {
-              "target": 1,
-              "velocity": 1,
-              "time": 1,
-              "axis": "A",
-              "control": "load",
-              "wait": true
-            }
-          }
-        ]
-      }
-    ]
+    "cycle": {
+      "upper": 1,
+      "lower": 1,
+      "frequency": 1,
+      "cycleEnd": 1,
+      "ampScale": 0.95,
+      "manualDispUpper": 1,
+      "manualDispLower": 2,
+      "axis": "A",
+      "mode": "absolute",
+      "control": "displacement",
+      "countMode": "relative",
+      "discoverEndpoints": false,
+      "recallEndpoints": false,
+      "enable DIC": false,
+      "wait": true
+    }
   }
 ]

@@ -276,7 +276,7 @@ const MechanicalTestInner = () => {
                         onClick={() => append({
                             id: `card-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                             type: 'group',
-                            data: { cards: [] }
+                            data: { cards: [], loops: 1 }
                         })}
                         className="h-8 px-4 text-xs font-semibold rounded-lg bg-white border border-mauve-300 hover:bg-mauve-50 text-mauve-850 flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in animate-duration-200"
                     >

@@ -26,16 +26,31 @@ export const CycleForm = ({ namePrefix, register, errors, control, watch, setVal
 
     // Set default values if not defined
     useEffect(() => {
-        const currentControl = watch(`${namePrefix}.data.control`);
-        if (!currentControl) {
+        if (watch(`${namePrefix}.data.control`) === undefined) {
             setValue(`${namePrefix}.data.control`, 'displacement');
+        }
+        if (watch(`${namePrefix}.data.axis`) === undefined) {
             setValue(`${namePrefix}.data.axis`, 'A');
+        }
+        if (watch(`${namePrefix}.data.mode`) === undefined) {
             setValue(`${namePrefix}.data.mode`, 'relative');
+        }
+        if (watch(`${namePrefix}.data.countMode`) === undefined) {
             setValue(`${namePrefix}.data.countMode`, 'relative');
+        }
+        if (watch(`${namePrefix}.data.ampScale`) === undefined) {
             setValue(`${namePrefix}.data.ampScale`, 0.95);
+        }
+        if (watch(`${namePrefix}.data.discoverEndpoints`) === undefined) {
             setValue(`${namePrefix}.data.discoverEndpoints`, false);
+        }
+        if (watch(`${namePrefix}.data.recallEndpoints`) === undefined) {
             setValue(`${namePrefix}.data.recallEndpoints`, false);
+        }
+        if (watch(`${namePrefix}.data['enable DIC']`) === undefined) {
             setValue(`${namePrefix}.data['enable DIC']`, false);
+        }
+        if (watch(`${namePrefix}.data.wait`) === undefined) {
             setValue(`${namePrefix}.data.wait`, true);
         }
     }, [namePrefix, setValue, watch]);
