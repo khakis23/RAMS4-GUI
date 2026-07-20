@@ -28,6 +28,8 @@ interface MechanicalTestState {
     saveMechTest: (directory: string, experiment: string) => Promise<void>;
     resetStore: () => void;
     setHasHydrated: (val: boolean) => void;
+    validationErrors: string[];
+    setValidationErrors: (errors: string[]) => void;
 }
 
 const checkIsDirty = (current: MechTestCard[], saved: MechTestCard[]) => {
@@ -244,7 +246,10 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
             isLoading: false,
             error: null,
             lastLoadedPath: null,
+            validationErrors: [],
             _hasHydrated: false,
+
+            setValidationErrors: (errors) => set({ validationErrors: errors }),
 
             setCards: (cards) => {
                 set((state) => {
@@ -362,7 +367,7 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
             },
 
             resetStore: () => {
-                set({ cards: [], savedCards: [], isDirty: false, error: null, isLoading: false, lastLoadedPath: null });
+                set({ cards: [], savedCards: [], isDirty: false, error: null, isLoading: false, lastLoadedPath: null, validationErrors: [] });
             },
 
             setHasHydrated: (val) => set({ _hasHydrated: val })

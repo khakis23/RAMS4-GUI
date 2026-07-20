@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { useMechanicalTestStore } from '@/store/useMechanicalTestStore';
-import { useValidationStore } from '@/store/useConfigurationStore';
 import { Button } from '@/components/ui/button';
 import { Sliders, Plus, Save, FileJson, Check, Group } from 'lucide-react';
 import { useFormAutoSave } from '../configuration/hooks/useFormAutoSave';
@@ -74,7 +73,9 @@ const MechanicalTestInner = () => {
         saveMechTest,
         setCards,
         resetStore,
-        lastLoadedPath
+        lastLoadedPath,
+        validationErrors,
+        setValidationErrors
     } = useMechanicalTestStore();
 
     const configDirectory = draft?.configDirectory;
@@ -160,26 +161,23 @@ const MechanicalTestInner = () => {
     });
 
     // Validate sequence continuously and sync to validation store
-    const { setErrors } = useValidationStore();
     useEffect(() => {
         const result = mechTestFormSchema.safeParse(watchedValues);
         if (!result.success) {
             const errorStrings = compileMechTestErrors(result.error);
-            const existingErrors = useValidationStore.getState().errors['sequence'] || [];
             const hasChanged = 
-                existingErrors.length !== errorStrings.length ||
-                errorStrings.some((msg: string, idx: number) => msg !== existingErrors[idx]);
+                validationErrors.length !== errorStrings.length ||
+                errorStrings.some((msg: string, idx: number) => msg !== validationErrors[idx]);
             
             if (hasChanged) {
-                setErrors('sequence', errorStrings);
+                setValidationErrors(errorStrings);
             }
         } else {
-            const existingErrors = useValidationStore.getState().errors['sequence'] || [];
-            if (existingErrors.length > 0) {
-                setErrors('sequence', []);
+            if (validationErrors.length > 0) {
+                setValidationErrors([]);
             }
         }
-    }, [watchedValues, setErrors]);
+    }, [watchedValues, validationErrors, setValidationErrors]);
 
     // Load mechanical test when config directory or experiment changes
     useEffect(() => {

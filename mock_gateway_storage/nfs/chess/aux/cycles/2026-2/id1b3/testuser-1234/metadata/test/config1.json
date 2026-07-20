@@ -11,7 +11,7 @@
     "RB"
   ],
   "daqFrequency": 5,
-  "samplePoints": 1000,
+  "samplePoints": 1001,
   "handlerProfiles": [
     {
       "mode": "time-series",
