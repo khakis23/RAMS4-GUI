@@ -64,6 +64,74 @@
       "layerStart": 1,
       "layerEnd": 1,
       "numLayers": 1
+    },
+    {
+      "id": "xrayProfile1784548504966",
+      "name": "stills",
+      "mode": "stills",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "stillPoints": [
+        {
+          "ramsx": 1,
+          "ramsz": 1,
+          "ome": 1,
+          "numPoints": 1
+        }
+      ]
+    },
+    {
+      "id": "xrayProfile1784548522164",
+      "name": "tseries",
+      "mode": "tseries",
+      "ramsx": 1,
+      "ramsz": 1,
+      "ome": 1,
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "numPoints": 1
+    },
+    {
+      "id": "xrayProfile1784548540816",
+      "name": "dscan",
+      "mode": "dscan",
+      "ramsx": 1,
+      "ramsz": 1,
+      "ome": 1,
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "numPoints": 1,
+      "axis1Name": "ramsx",
+      "axis1Start": 1,
+      "axis1Stop": 1,
+      "axis1Images": 1
+    },
+    {
+      "id": "xrayProfile1784548563369",
+      "name": "grid",
+      "mode": "mesh",
+      "ramsx": 1,
+      "ramsz": 1,
+      "ome": 1,
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "numPoints": 1,
+      "axis1Name": "ramsz",
+      "axis1Start": 1,
+      "axis1Stop": 1,
+      "axis1Images": 1,
+      "axis2Name": "ome",
+      "axis2Start": 1,
+      "axis2Stop": 1,
+      "axis2Images": 1
     }
   ],
   "settingsVersion": 0,

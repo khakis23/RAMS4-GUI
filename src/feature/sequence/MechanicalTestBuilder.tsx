@@ -93,10 +93,40 @@ const MechanicalTestInner = () => {
         }
     });
 
-    const { fields, append, remove, move } = useFieldArray({
+    const { fields, append, remove, move, insert } = useFieldArray({
         control,
         name: "cards"
     });
+
+    const cloneCardWithNewIds = (card: any): any => {
+        const newId = card.type === 'group'
+            ? `card-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            : `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        if (card.type === 'group' && card.data?.cards) {
+            return {
+                ...card,
+                id: newId,
+                data: {
+                    ...card.data,
+                    cards: card.data.cards.map((c: any) => cloneCardWithNewIds(c))
+                }
+            };
+        }
+
+        return {
+            ...card,
+            id: newId,
+            data: JSON.parse(JSON.stringify(card.data || {}))
+        };
+    };
+
+    const duplicateCard = (idx: number) => {
+        const originalCard = watch(`cards.${idx}`);
+        if (!originalCard) return;
+        const duplicatedCard = cloneCardWithNewIds(originalCard);
+        insert(idx + 1, duplicatedCard);
+    };
 
     const lastLoading = useRef<boolean>(false);
     const loadedPathRef = useRef<string>("");
@@ -273,7 +303,7 @@ const MechanicalTestInner = () => {
             </div>
 
             {/* Scrollable Cards Container */}
-            <div className="flex-grow overflow-y-auto py-6 min-h-0">
+            <div className="flex-grow overflow-y-auto py-6 min-h-0 overscroll-y-contain">
                 {fields.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-[300px] border border-mauve-200 rounded-sm p-8 text-center bg-white">
                         <p className="text-sm text-mauve-500">
@@ -311,6 +341,7 @@ const MechanicalTestInner = () => {
                                         watch={watch}
                                         setValue={setValue}
                                         removeCard={remove}
+                                        duplicateCard={duplicateCard}
                                         onDragStart={(e) => handleDragStart(index, e)}
                                         onDragOver={(e) => handleDragOver(index, e)}
                                         onDragEnd={handleDragEnd}
@@ -329,6 +360,7 @@ const MechanicalTestInner = () => {
                                         watch={watch}
                                         setValue={setValue}
                                         removeCard={remove}
+                                        duplicateCard={duplicateCard}
                                         onDragStart={(e) => handleDragStart(index, e)}
                                         onDragOver={(e) => handleDragOver(index, e)}
                                         onDragEnd={handleDragEnd}

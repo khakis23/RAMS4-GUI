@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Trash2, Plus, Ungroup, TriangleRight, ScanEye, AudioWaveform, Gauge, Group } from 'lucide-react';
+import { GripVertical, Trash2, Plus, Copy, Ungroup, TriangleRight, ScanEye, AudioWaveform, Gauge, Group } from 'lucide-react';
 import { MechTestCardItem } from './MechTestCardItem';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
@@ -17,6 +17,7 @@ interface MechTestGroupItemProps {
     watch: any;
     setValue: any;
     removeCard: (index: number) => void;
+    duplicateCard: (index: number) => void;
     onDragStart: (e: React.DragEvent) => void;
     onDragOver: (e: React.DragEvent) => void;
     onDragEnd: () => void;
@@ -33,6 +34,7 @@ export const MechTestGroupItem = ({
     watch,
     setValue,
     removeCard,
+    duplicateCard,
     onDragStart,
     onDragOver,
     onDragEnd,
@@ -62,7 +64,7 @@ export const MechTestGroupItem = ({
             return takeWhileSchema.safeParse(data).success;
         } else if (card.type === 'group') {
             const innerCards = watch(`${prefix}.data.cards`) || [];
-            if (innerCards.length === 0) return true;
+            if (innerCards.length === 0) return false;
             return innerCards.every((c: any, i: number) => 
                 isCardComplete(c, `${prefix}.data.cards.${i}`)
             );
@@ -70,7 +72,7 @@ export const MechTestGroupItem = ({
         return false;
     };
 
-    const isGroupComplete = childCards.every((card: any, idx: number) => 
+    const isGroupComplete = childCards.length > 0 && childCards.every((card: any, idx: number) => 
         isCardComplete(card, `${namePrefix}.data.cards.${idx}`)
     );
 
@@ -226,6 +228,39 @@ export const MechTestGroupItem = ({
         }
     };
 
+    const cloneCardWithNewIds = (card: any): any => {
+        const newId = card.type === 'group'
+            ? `card-group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            : `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        if (card.type === 'group' && card.data?.cards) {
+            return {
+                ...card,
+                id: newId,
+                data: {
+                    ...card.data,
+                    cards: card.data.cards.map((c: any) => cloneCardWithNewIds(c))
+                }
+            };
+        }
+
+        return {
+            ...card,
+            id: newId,
+            data: JSON.parse(JSON.stringify(card.data || {}))
+        };
+    };
+
+    const duplicateChildCard = (idx: number) => {
+        const originalCard = childCards[idx];
+        if (!originalCard) return;
+        const duplicatedCard = cloneCardWithNewIds(originalCard);
+
+        const updatedCards = [...childCards];
+        updatedCards.splice(idx + 1, 0, duplicatedCard);
+        setValue(`${namePrefix}.data.cards`, updatedCards, { shouldDirty: true, shouldValidate: true });
+    };
+
     // Determine progressive shading background color
     const shadingBg = depth === 1 
         ? 'bg-mauve-100 dark:bg-black/15 border-l-2 border-l-mauve-400'
@@ -290,6 +325,25 @@ export const MechTestGroupItem = ({
                                 </Tooltip>
                             </TooltipProvider>
 
+                            <TooltipProvider>
+                                <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => duplicateCard(index)}
+                                            className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-primary hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs text-xs p-2 bg-popover text-popover-foreground rounded shadow-md border border-mauve-150">
+                                        Duplicate
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
                             <Button
                                 type="button"
                                 variant="ghost"
@@ -330,6 +384,7 @@ export const MechTestGroupItem = ({
                                                     const updatedCards = childCards.filter((_: any, i: number) => i !== idx);
                                                     setValue(`${namePrefix}.data.cards`, updatedCards, { shouldDirty: true, shouldValidate: true });
                                                 }}
+                                                duplicateCard={duplicateChildCard}
                                                 onDragStart={(e) => handleInnerDragStart(idx, e)}
                                                 onDragOver={(e) => handleInnerDragOver(idx, e)}
                                                 onDragEnd={handleInnerDragEnd}
@@ -351,6 +406,7 @@ export const MechTestGroupItem = ({
                                                     const updatedCards = childCards.filter((_: any, i: number) => i !== idx);
                                                     setValue(`${namePrefix}.data.cards`, updatedCards, { shouldDirty: true, shouldValidate: true });
                                                 }}
+                                                duplicateCard={duplicateChildCard}
                                                 onDragStart={(e) => handleInnerDragStart(idx, e)}
                                                 onDragOver={(e) => handleInnerDragOver(idx, e)}
                                                 onDragEnd={handleInnerDragEnd}

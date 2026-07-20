@@ -177,6 +177,16 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
                 group: formatCardsForBackend(card.data?.cards || [])
             };
         }
+        if (card.type === 'takeWhile') {
+            // Strip the nested data key from take for consistent backend representation
+            const { take, step } = card.data || {};
+            return {
+                takeWhile: {
+                    take: take?.data || {},
+                    step: step || {}
+                }
+            };
+        }
         return {
             [card.type]: card.data
         };
@@ -192,6 +202,20 @@ const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
                 type: 'group',
                 data: {
                     cards: parseCardsFromBackend(item.group || [], depth + 1)
+                }
+            };
+        }
+        if (type === 'takeWhile') {
+            // Wrap backend's flat take data into take.data structure expected by React Hook Form
+            const { take, step } = item.takeWhile || {};
+            return {
+                id: `card-loaded-step-${depth}-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                type: 'takeWhile',
+                data: {
+                    take: {
+                        data: take || {}
+                    },
+                    step: step || {}
                 }
             };
         }

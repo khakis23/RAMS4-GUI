@@ -221,7 +221,7 @@ export const mechTestCardSchema: z.ZodType<MechTestCardData> = z.lazy(() =>
             }
         } else if (card.type === 'group') {
             const groupDataSchema = z.object({
-                cards: z.array(mechTestCardSchema)
+                cards: z.array(mechTestCardSchema).min(1, "Group must contain at least one step")
             });
             const res = groupDataSchema.safeParse(card.data);
             if (!res.success) {

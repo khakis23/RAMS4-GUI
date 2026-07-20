@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GripVertical, Trash2, TriangleRight, ScanEye, AudioWaveform, Gauge } from 'lucide-react';
+import { GripVertical, Trash2, Copy, TriangleRight, ScanEye, AudioWaveform, Gauge } from 'lucide-react';
 import { RampForm } from './RampForm';
 import { TakeForm } from './TakeForm';
 import { DwellForm } from './DwellForm';
@@ -8,6 +8,7 @@ import { CycleForm } from './CycleForm';
 import { TakeWhileForm } from './TakeWhileForm';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { rampSchema, takeSchema, dwellSchema, cycleSchema, takeWhileSchema } from '../profileSchemas/mechTestSchema';
 
 interface MechTestCardItemProps {
@@ -19,6 +20,7 @@ interface MechTestCardItemProps {
     watch: any;
     setValue: any;
     removeCard: (index: number) => void;
+    duplicateCard: (index: number) => void;
     onDragStart: (e: React.DragEvent) => void;
     onDragOver: (e: React.DragEvent) => void;
     onDragEnd: () => void;
@@ -34,6 +36,7 @@ export const MechTestCardItem = ({
     watch,
     setValue,
     removeCard,
+    duplicateCard,
     onDragStart,
     onDragOver,
     onDragEnd,
@@ -244,7 +247,26 @@ export const MechTestCardItem = ({
                         </AccordionTrigger>
 
                         {/* Right Actions */}
-                        <div className="shrink-0 flex items-center">
+                        <div className="shrink-0 flex items-center gap-1.5">
+                            <TooltipProvider>
+                                <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => duplicateCard(index)}
+                                            className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-primary hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs text-xs p-2 bg-popover text-popover-foreground rounded shadow-md border border-mauve-150">
+                                        Duplicate
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
                             <Button
                                 type="button"
                                 variant="ghost"
