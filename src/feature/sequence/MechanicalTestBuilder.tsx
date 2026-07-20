@@ -155,7 +155,8 @@ const MechanicalTestInner = () => {
         },
         mapValues: (watched: any) => ({
             cards: watched.cards || []
-        })
+        }),
+        disabled: isLoading || !configDirectory || !experimentNumber
     });
 
     // Validate sequence continuously and sync to validation store
@@ -397,6 +398,10 @@ const MechanicalTestInner = () => {
 };
 export const MechanicalTestBuilder = () => {
     const _hasHydrated = useMechanicalTestStore(state => state._hasHydrated);
+    const { draft } = useConfigurationStore();
+    const configDirectory = draft?.configDirectory || "";
+    const experimentNumber = draft?.experimentNumber || "";
+    const pathKey = `${configDirectory}::${experimentNumber}`;
 
     if (!_hasHydrated) {
         return (
@@ -406,7 +411,7 @@ export const MechanicalTestBuilder = () => {
         );
     }
 
-    return <MechanicalTestInner />;
+    return <MechanicalTestInner key={pathKey} />;
 };
 
 interface WarningModalProps {

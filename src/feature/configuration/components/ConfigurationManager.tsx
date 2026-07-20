@@ -757,6 +757,14 @@ export const ConfigurationManager = () => {
 
     const handleConfirmDiscard = async () => {
         setShowDiscardModal(false);
+
+        // Reset configuration draft and sequence cards to clean saved baselines
+        if (savedConfig) {
+            updateDraft(JSON.parse(JSON.stringify(savedConfig)));
+        }
+        const mechStore = useMechanicalTestStore.getState();
+        mechStore.setCards(JSON.parse(JSON.stringify(mechStore.savedCards)));
+
         if (pendingPathChange) {
             const { type, val } = pendingPathChange;
             switch (type) {

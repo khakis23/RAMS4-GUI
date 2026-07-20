@@ -5,6 +5,7 @@ interface UseFormAutoSaveProps<T, M> {
     storeDraft: T;
     updateDraft: (data: Partial<T>) => void;
     mapValues?: (watched: any) => M; // Optional mapping before comparison/save
+    disabled?: boolean;
 }
 
 const sanitizeObject = (obj: any): any => {
@@ -37,9 +38,12 @@ export const useFormAutoSave = <T, M = T>({
     watchedValues,
     storeDraft,
     updateDraft,
-    mapValues
+    mapValues,
+    disabled
 }: UseFormAutoSaveProps<T, M>) => {
     useEffect(() => {
+        if (disabled) return;
+
         // If custom mapper is provided, transform the watched form values first
         let mappedValues = mapValues ? mapValues(watchedValues) : watchedValues;
 
@@ -52,7 +56,7 @@ export const useFormAutoSave = <T, M = T>({
         if (hasChanged) {
             updateDraft(mappedValues);
         }
-    }, [watchedValues, storeDraft, updateDraft, mapValues]);
+    }, [watchedValues, storeDraft, updateDraft, mapValues, disabled]);
 };
 
 /**
