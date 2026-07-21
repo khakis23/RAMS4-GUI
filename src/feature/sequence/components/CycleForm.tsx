@@ -26,31 +26,41 @@ export const CycleForm = ({ namePrefix, register, errors, control, watch, setVal
 
     // Set default values if not defined
     useEffect(() => {
-        if (watch(`${namePrefix}.data.control`) === undefined) {
+        const currentControl = watch(`${namePrefix}.data.control`);
+        const currentAxis = watch(`${namePrefix}.data.axis`);
+        const currentMode = watch(`${namePrefix}.data.mode`);
+        const currentCountMode = watch(`${namePrefix}.data.countMode`);
+        const currentAmpScale = watch(`${namePrefix}.data.ampScale`);
+        const currentDiscoverEndpoints = watch(`${namePrefix}.data.discoverEndpoints`);
+        const currentRecallEndpoints = watch(`${namePrefix}.data.recallEndpoints`);
+        const currentEnableDIC = watch(`${namePrefix}.data['enable DIC']`);
+        const currentWait = watch(`${namePrefix}.data.wait`);
+
+        if (currentControl === undefined || currentControl === null) {
             setValue(`${namePrefix}.data.control`, 'displacement');
         }
-        if (watch(`${namePrefix}.data.axis`) === undefined) {
+        if (currentAxis === undefined || currentAxis === null) {
             setValue(`${namePrefix}.data.axis`, 'A');
         }
-        if (watch(`${namePrefix}.data.mode`) === undefined) {
+        if (currentMode === undefined || currentMode === null) {
             setValue(`${namePrefix}.data.mode`, 'relative');
         }
-        if (watch(`${namePrefix}.data.countMode`) === undefined) {
+        if (currentCountMode === undefined || currentCountMode === null) {
             setValue(`${namePrefix}.data.countMode`, 'relative');
         }
-        if (watch(`${namePrefix}.data.ampScale`) === undefined) {
+        if (currentAmpScale === undefined || currentAmpScale === null) {
             setValue(`${namePrefix}.data.ampScale`, 0.95);
         }
-        if (watch(`${namePrefix}.data.discoverEndpoints`) === undefined) {
+        if (currentDiscoverEndpoints === undefined || currentDiscoverEndpoints === null) {
             setValue(`${namePrefix}.data.discoverEndpoints`, false);
         }
-        if (watch(`${namePrefix}.data.recallEndpoints`) === undefined) {
+        if (currentRecallEndpoints === undefined || currentRecallEndpoints === null) {
             setValue(`${namePrefix}.data.recallEndpoints`, false);
         }
-        if (watch(`${namePrefix}.data['enable DIC']`) === undefined) {
+        if (currentEnableDIC === undefined || currentEnableDIC === null) {
             setValue(`${namePrefix}.data['enable DIC']`, false);
         }
-        if (watch(`${namePrefix}.data.wait`) === undefined) {
+        if (currentWait === undefined || currentWait === null) {
             setValue(`${namePrefix}.data.wait`, true);
         }
     }, [namePrefix, setValue, watch]);

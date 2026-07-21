@@ -17,19 +17,41 @@ const stillPointSchema = z.object({
     ome: safeRequiredNumber,
     numPoints: z.preprocess(
         (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Number of Images is required." }).int().min(1, "Must be 1 or more images.")
+        z.number({ message: "Images is required." }).int().min(1, "Must be 1 or more images.")
+    )
+});
+
+export const mapscanAxisSchema = z.object({
+    axisName: z.string().min(1, "Moving Axis is required."),
+    start: safeRequiredNumber,
+    stop: safeRequiredNumber,
+    points: z.preprocess(
+        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
+        z.number({ message: "Points is required." }).int().min(1, "Must be at least 1 point.")
+    )
+});
+
+export const rotationLayerRangeSchema = z.object({
+    omeStart: safeRequiredNumber,
+    omeStop: safeRequiredNumber,
+    numPoints: z.preprocess(
+        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
+        z.number({ message: "Points is required." }).int().min(1, "Must be at least 1 point.")
+    ),
+    layerStart: safeRequiredNumber,
+    layerEnd: safeRequiredNumber,
+    numLayers: z.preprocess(
+        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
+        z.number({ message: "Layers is required." }).int().min(1, "Must be at least 1 layer.")
     )
 });
 
 export const xrayProfileSchema = z.object({
     id: z.string(),
     name: z.string().min(1, "Profile Name is required."),
-    mode: z.enum(['rotation-series', 'stills', 'tseries', 'dscan', 'mesh']),
+    mode: z.enum(['rotation-series', 'stills', 'mapscan']),
     
-    // Shared parameters (made structurally nullable; required checks are performed conditionally per-mode in superRefine)
-    ramsx: safeNullableNumber,
-    ramsz: safeNullableNumber,
-    ome: safeNullableNumber,
+    // Shared general parameters
     ctime: z.preprocess(
         (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
         z.number({ message: "Exposure Time is required." }).min(0.0001, "Exposure Time must be greater than 0.")
@@ -37,131 +59,51 @@ export const xrayProfileSchema = z.object({
     beamHeight: safeRequiredNumber.refine(val => val >= 0, "Beam Height must be 0 or positive."),
     beamWidth: safeRequiredNumber.refine(val => val >= 0, "Beam Width must be 0 or positive."),
     atten: safeRequiredNumber.refine(val => val >= 0, "Attenuation must be 0 or positive."),
-    numPoints: safeNullableNumber,
 
-    // Optional fields with Zod refine checks or validation
-    omeStart: safeNullableNumber,
-    omeStop: safeNullableNumber,
-    layerStart: safeNullableNumber,
-    layerEnd: safeNullableNumber,
-    numLayers: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number().int().min(1, "Must be at least 1 layer.").optional()
-    ),
+    // Shared reference coordinates
+    ramsx: safeNullableNumber,
+    ramsz: safeNullableNumber,
+    ome: safeNullableNumber,
 
     stillPoints: z.array(stillPointSchema).optional(),
-
-    axis1Name: z.string().optional(),
-    axis1Start: safeNullableNumber,
-    axis1Stop: safeNullableNumber,
-    axis1Images: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number().int().min(1, "Must be at least 1 image.").optional()
-    ),
-
-    axis2Name: z.string().optional(),
-    axis2Start: safeNullableNumber,
-    axis2Stop: safeNullableNumber,
-    axis2Images: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number().int().min(1, "Must be at least 1 image.").optional()
-    ),
+    mapscanAxes: z.array(mapscanAxisSchema).max(2, "Maximum 2 axes allowed for Mapscan.").optional(),
+    layerRanges: z.array(rotationLayerRangeSchema).optional()
 }).superRefine((data, ctx) => {
-    // Mode-specific validation checks
-    if (data.mode === 'rotation-series') {
-        if (data.ramsx === undefined) {
+    if (data.mode === 'stills') {
+        if (!data.stillPoints || data.stillPoints.length === 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Stills profile must contain at least one point.",
+                path: ["stillPoints"]
+            });
+        }
+    } else if (data.mode === 'mapscan') {
+        if (data.ramsx === undefined || data.ramsx === null) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
         }
-        if (data.omeStart === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initial Angle is required for Rotation Series.", path: ["omeStart"] });
-        }
-        if (data.omeStop === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Final Angle is required for Rotation Series.", path: ["omeStop"] });
-        }
-        if (data.layerStart === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Layer Start is required.", path: ["layerStart"] });
-        }
-        if (data.layerEnd === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Layer End is required.", path: ["layerEnd"] });
-        }
-        if (data.numLayers === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Num Layers is required.", path: ["numLayers"] });
-        }
-        if (data.numPoints === undefined || data.numPoints === null) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Number of Images is required.", path: ["numPoints"] });
-        } else if (!Number.isInteger(data.numPoints) || data.numPoints < 1) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Number of Images must be 1 or more.", path: ["numPoints"] });
-        }
-    } else if (data.mode === 'tseries') {
-        if (data.ramsx === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
-        }
-        if (data.ramsz === undefined) {
+        if (data.ramsz === undefined || data.ramsz === null) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Z is required.", path: ["ramsz"] });
         }
-        if (data.ome === undefined) {
+        if (data.ome === undefined || data.ome === null) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Angle is required.", path: ["ome"] });
         }
-        if (data.numPoints === undefined || data.numPoints === null) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Number of Images is required.", path: ["numPoints"] });
-        } else if (!Number.isInteger(data.numPoints) || data.numPoints < 1) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Number of Images must be 1 or more.", path: ["numPoints"] });
+        if (!data.mapscanAxes || data.mapscanAxes.length === 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Mapscan profile must contain at least one axis.",
+                path: ["mapscanAxes"]
+            });
         }
-    } else if (data.mode === 'dscan') {
-        if (data.ramsx === undefined) {
+    } else if (data.mode === 'rotation-series') {
+        if (data.ramsx === undefined || data.ramsx === null) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
         }
-        if (data.ramsz === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Z is required.", path: ["ramsz"] });
-        }
-        if (data.ome === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Angle is required.", path: ["ome"] });
-        }
-        if (!data.axis1Name) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Moving Axis 1 is required.", path: ["axis1Name"] });
-        }
-        if (data.axis1Start === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Start limit is required.", path: ["axis1Start"] });
-        }
-        if (data.axis1Stop === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Stop limit is required.", path: ["axis1Stop"] });
-        }
-        if (data.axis1Images === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Num Images is required.", path: ["axis1Images"] });
-        }
-    } else if (data.mode === 'mesh') {
-        if (data.ramsx === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });
-        }
-        if (data.ramsz === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Z is required.", path: ["ramsz"] });
-        }
-        if (data.ome === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Angle is required.", path: ["ome"] });
-        }
-        if (!data.axis1Name) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Moving Axis 1 is required.", path: ["axis1Name"] });
-        }
-        if (data.axis1Start === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Start limit is required.", path: ["axis1Start"] });
-        }
-        if (data.axis1Stop === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Stop limit is required.", path: ["axis1Stop"] });
-        }
-        if (data.axis1Images === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Num Images is required.", path: ["axis1Images"] });
-        }
-        if (!data.axis2Name) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Moving Axis 2 is required.", path: ["axis2Name"] });
-        }
-        if (data.axis2Start === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Start limit is required.", path: ["axis2Start"] });
-        }
-        if (data.axis2Stop === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Stop limit is required.", path: ["axis2Stop"] });
-        }
-        if (data.axis2Images === undefined) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Num Images is required.", path: ["axis2Images"] });
+        if (!data.layerRanges || data.layerRanges.length === 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Rotation Series profile must contain at least one layer range.",
+                path: ["layerRanges"]
+            });
         }
     }
 });

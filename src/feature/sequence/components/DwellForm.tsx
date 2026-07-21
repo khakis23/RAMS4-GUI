@@ -25,9 +25,16 @@ export const DwellForm = ({ namePrefix, register, errors, control, watch, setVal
     // Set default values if not defined
     useEffect(() => {
         const currentControl = watch(`${namePrefix}.data.control`);
-        if (!currentControl) {
+        const currentAxis = watch(`${namePrefix}.data.axis`);
+        const currentWait = watch(`${namePrefix}.data.wait`);
+
+        if (currentControl === undefined || currentControl === null) {
             setValue(`${namePrefix}.data.control`, 'load');
+        }
+        if (currentAxis === undefined || currentAxis === null) {
             setValue(`${namePrefix}.data.axis`, 'A');
+        }
+        if (currentWait === undefined || currentWait === null) {
             setValue(`${namePrefix}.data.wait`, true);
         }
     }, [namePrefix, setValue, watch]);

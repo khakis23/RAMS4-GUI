@@ -12,70 +12,33 @@
   ],
   "daqFrequency": 1,
   "samplePoints": 1000,
-  "handlerProfiles": [
-    {
-      "mode": "peak-valley",
-      "filename": "peakvalley_test_1-2",
-      "verboseAxis": "-1",
-      "verboseSystem": -1,
-      "verboseTask": "-1",
-      "verboseIO": -1,
-      "verboseAi": "",
-      "signalAxis": "A",
-      "signalItem": "PositionFeedback",
-      "signalProminence": 1
-    },
-    {
-      "mode": "time-series",
-      "filename": "timeseries_test_1-1",
-      "verboseAxis": "-1",
-      "verboseSystem": -1,
-      "verboseTask": "-1",
-      "verboseIO": -1,
-      "verboseAi": "Strain, SpecComm",
-      "frequency": 1000,
-      "cycles": [
-        {
-          "start": 1,
-          "stop": 10,
-          "step": 1
-        }
-      ]
-    }
-  ],
+  "handlerProfiles": [],
   "xrayProfiles": [
     {
-      "id": "xrayProfile1784646053447",
-      "name": "dscan",
-      "mode": "dscan",
-      "ramsx": 1,
-      "ramsz": 1,
-      "ome": 1,
+      "id": "xrayProfile1784678083915",
+      "name": "test",
+      "mode": "mapscan",
       "ctime": 1,
       "beamHeight": 1,
       "beamWidth": 1,
       "atten": 1,
-      "numPoints": 1,
-      "axis1Name": "ramsx",
-      "axis1Start": 1,
-      "axis1Stop": 1,
-      "axis1Images": 1
-    },
-    {
-      "id": "xrayProfile1784645833148",
-      "name": "rot",
-      "mode": "rotation-series",
-      "ramsx": 1,
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "numPoints": 1,
-      "omeStart": 1,
-      "omeStop": 1,
-      "layerStart": 1,
-      "layerEnd": 1,
-      "numLayers": 1
+      "ramsx": 2,
+      "ramsz": 2,
+      "ome": 2,
+      "mapscanAxes": [
+        {
+          "axisName": "ramsz",
+          "start": 2,
+          "stop": 2,
+          "points": 2
+        },
+        {
+          "axisName": "ome",
+          "start": 2,
+          "stop": 1,
+          "points": 1
+        }
+      ]
     }
   ],
   "settingsVersion": 0,

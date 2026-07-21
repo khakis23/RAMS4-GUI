@@ -138,6 +138,7 @@ export const MechTestCardItem = ({
                 switch (m) {
                     case 'rotation-series': return 'Rotation Series';
                     case 'stills': return 'Stills';
+                    case 'mapscan': return 'Mapscan';
                     case 'tseries': return 'Mapscan: Time Series';
                     case 'dscan': return 'Mapscan: Line Scan';
                     case 'mesh': return 'Mapscan: Grid Scan';

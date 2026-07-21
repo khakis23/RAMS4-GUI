@@ -72,22 +72,24 @@ const pruneConfigForSave = (config: any) => {
                 id: xp.id,
                 name: xp.name,
                 mode: xp.mode,
-                ramsx: xp.ramsx,
-                ramsz: xp.ramsz,
-                ome: xp.ome,
                 ctime: xp.ctime,
                 beamHeight: xp.beamHeight,
                 beamWidth: xp.beamWidth,
                 atten: xp.atten,
-                numPoints: xp.numPoints,
             };
 
             if (xp.mode === 'rotation-series') {
-                if (xp.omeStart !== null && xp.omeStart !== undefined) cleanXp.omeStart = xp.omeStart;
-                if (xp.omeStop !== null && xp.omeStop !== undefined) cleanXp.omeStop = xp.omeStop;
-                if (xp.layerStart !== null && xp.layerStart !== undefined) cleanXp.layerStart = xp.layerStart;
-                if (xp.layerEnd !== null && xp.layerEnd !== undefined) cleanXp.layerEnd = xp.layerEnd;
-                if (xp.numLayers !== null && xp.numLayers !== undefined) cleanXp.numLayers = xp.numLayers;
+                if (xp.ramsx !== null && xp.ramsx !== undefined) cleanXp.ramsx = xp.ramsx;
+                if (xp.layerRanges && xp.layerRanges.length > 0) {
+                    cleanXp.layerRanges = xp.layerRanges.map((lr: any) => ({
+                        omeStart: lr.omeStart,
+                        omeStop: lr.omeStop,
+                        numPoints: lr.numPoints,
+                        layerStart: lr.layerStart,
+                        layerEnd: lr.layerEnd,
+                        numLayers: lr.numLayers
+                    }));
+                }
             } else if (xp.mode === 'stills') {
                 if (xp.stillPoints && xp.stillPoints.length > 0) {
                     cleanXp.stillPoints = xp.stillPoints.map((sp: any) => ({
@@ -97,20 +99,18 @@ const pruneConfigForSave = (config: any) => {
                         numPoints: sp.numPoints
                     }));
                 }
-            } else if (xp.mode === 'dscan') {
-                if (xp.axis1Name !== null && xp.axis1Name !== undefined) cleanXp.axis1Name = xp.axis1Name;
-                if (xp.axis1Start !== null && xp.axis1Start !== undefined) cleanXp.axis1Start = xp.axis1Start;
-                if (xp.axis1Stop !== null && xp.axis1Stop !== undefined) cleanXp.axis1Stop = xp.axis1Stop;
-                if (xp.axis1Images !== null && xp.axis1Images !== undefined) cleanXp.axis1Images = xp.axis1Images;
-            } else if (xp.mode === 'mesh') {
-                if (xp.axis1Name !== null && xp.axis1Name !== undefined) cleanXp.axis1Name = xp.axis1Name;
-                if (xp.axis1Start !== null && xp.axis1Start !== undefined) cleanXp.axis1Start = xp.axis1Start;
-                if (xp.axis1Stop !== null && xp.axis1Stop !== undefined) cleanXp.axis1Stop = xp.axis1Stop;
-                if (xp.axis1Images !== null && xp.axis1Images !== undefined) cleanXp.axis1Images = xp.axis1Images;
-                if (xp.axis2Name !== null && xp.axis2Name !== undefined) cleanXp.axis2Name = xp.axis2Name;
-                if (xp.axis2Start !== null && xp.axis2Start !== undefined) cleanXp.axis2Start = xp.axis2Start;
-                if (xp.axis2Stop !== null && xp.axis2Stop !== undefined) cleanXp.axis2Stop = xp.axis2Stop;
-                if (xp.axis2Images !== null && xp.axis2Images !== undefined) cleanXp.axis2Images = xp.axis2Images;
+            } else if (xp.mode === 'mapscan') {
+                if (xp.ramsx !== null && xp.ramsx !== undefined) cleanXp.ramsx = xp.ramsx;
+                if (xp.ramsz !== null && xp.ramsz !== undefined) cleanXp.ramsz = xp.ramsz;
+                if (xp.ome !== null && xp.ome !== undefined) cleanXp.ome = xp.ome;
+                if (xp.mapscanAxes && xp.mapscanAxes.length > 0) {
+                    cleanXp.mapscanAxes = xp.mapscanAxes.map((ma: any) => ({
+                        axisName: ma.axisName,
+                        start: ma.start,
+                        stop: ma.stop,
+                        points: ma.points
+                    }));
+                }
             }
             return cleanXp;
         });
@@ -147,7 +147,7 @@ const normalizeConfig = (config: any) => {
         cleanConfig.xrayProfiles = cleanConfig.xrayProfiles.map((xp: any) => ({
             id: xp.id,
             name: xp.name,
-            mode: xp.mode,
+            mode: xp.mode || 'rotation-series',
             ramsx: xp.ramsx ?? null,
             ramsz: xp.ramsz ?? null,
             ome: xp.ome ?? null,
@@ -155,21 +155,9 @@ const normalizeConfig = (config: any) => {
             beamHeight: xp.beamHeight ?? null,
             beamWidth: xp.beamWidth ?? null,
             atten: xp.atten ?? null,
-            numPoints: xp.numPoints ?? null,
-            omeStart: xp.omeStart ?? null,
-            omeStop: xp.omeStop ?? null,
-            layerStart: xp.layerStart ?? null,
-            layerEnd: xp.layerEnd ?? null,
-            numLayers: xp.numLayers ?? null,
             stillPoints: xp.stillPoints || [],
-            axis1Name: xp.axis1Name || "ramsx",
-            axis1Start: xp.axis1Start ?? null,
-            axis1Stop: xp.axis1Stop ?? null,
-            axis1Images: xp.axis1Images ?? null,
-            axis2Name: xp.axis2Name || "ramsz",
-            axis2Start: xp.axis2Start ?? null,
-            axis2Stop: xp.axis2Stop ?? null,
-            axis2Images: xp.axis2Images ?? null,
+            mapscanAxes: xp.mapscanAxes || [],
+            layerRanges: xp.layerRanges || []
         }));
     }
 

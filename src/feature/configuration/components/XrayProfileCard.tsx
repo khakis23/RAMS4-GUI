@@ -49,6 +49,25 @@ export const XrayProfileCard = ({
         name: `xrayProfiles.${index}.stillPoints`
     });
 
+    // Mapscan axes manager
+    const {
+        fields: mapscanFields,
+        append: appendMapscanAxis,
+        remove: removeMapscanAxis
+    } = useFieldArray({
+        control,
+        name: `xrayProfiles.${index}.mapscanAxes`
+    });
+
+    // Rotation series layer ranges manager
+    const {
+        fields: layerFields,
+        append: appendLayerRange,
+        remove: removeLayerRange
+    } = useFieldArray({
+        control,
+        name: `xrayProfiles.${index}.layerRanges`
+    });
 
     const profileValues = useWatch({
         control,
@@ -76,177 +95,85 @@ export const XrayProfileCard = ({
                                 <SelectValue placeholder="Select scan mode" />
                             </SelectTrigger>
                             <SelectContent className="bg-white">
-                                <SelectItem value="rotation-series" className="text-xs cursor-pointer">Rotation Series (Layers)</SelectItem>
-                                <SelectItem value="stills" className="text-xs cursor-pointer">Stills (Point List)</SelectItem>
-                                <SelectItem value="tseries" className="text-xs cursor-pointer">Mapscan: Time Series (tseries)</SelectItem>
-                                <SelectItem value="dscan" className="text-xs cursor-pointer">Mapscan: Line Scan (dscan)</SelectItem>
-                                <SelectItem value="mesh" className="text-xs cursor-pointer">Mapscan: Grid Scan (mesh)</SelectItem>
+                                <SelectItem value="rotation-series" className="text-xs cursor-pointer">Rotation Series</SelectItem>
+                                <SelectItem value="stills" className="text-xs cursor-pointer">Stills</SelectItem>
+                                <SelectItem value="mapscan" className="text-xs cursor-pointer">Mapscan</SelectItem>
                             </SelectContent>
                         </Select>
                     )}
                 />
             }
         >
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-5 px-5">
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Profile Name" tooltip={tooltips.xrayProfileName} required={true} />
-                                <Input 
-                                    placeholder="e.g. Elastic Array"
-                                    className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.name ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.name`)}
-                                />
-                                {profileErrors?.name && (
-                                    <p className="text-xs text-destructive">{profileErrors.name.message}</p>
-                                )}
-                            </div>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-5 px-5">
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="Profile Name" tooltip={tooltips.xrayProfileName} required={true} />
+                    <Input 
+                        placeholder="e.g. Elastic Array"
+                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.name ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        {...register(`xrayProfiles.${index}.name`)}
+                    />
+                    {profileErrors?.name && (
+                        <p className="text-xs text-destructive">{profileErrors.name.message}</p>
+                    )}
+                </div>
 
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Exposure Time (s)" tooltip={tooltips.xrayProfileCtime} required={true} />
-                                <Input 
-                                    type="number" 
-                                    step="any"
-                                    className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.ctime ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.ctime`, { valueAsNumber: true })}
-                                />
-                                {profileErrors?.ctime && <p className="text-xs text-destructive">{profileErrors.ctime.message}</p>}
-                            </div>
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="Exposure Time (s)" tooltip={tooltips.xrayProfileCtime} required={true} />
+                    <Input 
+                        type="number" 
+                        step="any"
+                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.ctime ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        {...register(`xrayProfiles.${index}.ctime`, { valueAsNumber: true })}
+                    />
+                    {profileErrors?.ctime && <p className="text-xs text-destructive">{profileErrors.ctime.message}</p>}
+                </div>
 
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Attenuation (mm)" tooltip={tooltips.xrayProfileAtten} required={true} />
-                                <Input 
-                                    type="number" 
-                                    step="any"
-                                    className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.atten ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.atten`, { valueAsNumber: true })}
-                                />
-                                {profileErrors?.atten && <p className="text-xs text-destructive">{profileErrors.atten.message}</p>}
-                            </div>
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="Attenuation (mm)" tooltip={tooltips.xrayProfileAtten} required={true} />
+                    <Input 
+                        type="number" 
+                        step="any"
+                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.atten ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        {...register(`xrayProfiles.${index}.atten`, { valueAsNumber: true })}
+                    />
+                    {profileErrors?.atten && <p className="text-xs text-destructive">{profileErrors.atten.message}</p>}
+                </div>
 
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Beam Height (mm)" tooltip={tooltips.xrayProfileBeamHeight} required={true} />
-                                <Input 
-                                    type="number" 
-                                    step="any"
-                                    className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.beamHeight ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.beamHeight`, { valueAsNumber: true })}
-                                />
-                                {profileErrors?.beamHeight && <p className="text-xs text-destructive">{profileErrors.beamHeight.message}</p>}
-                            </div>
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="Beam Height (mm)" tooltip={tooltips.xrayProfileBeamHeight} required={true} />
+                    <Input 
+                        type="number" 
+                        step="any"
+                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.beamHeight ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        {...register(`xrayProfiles.${index}.beamHeight`, { valueAsNumber: true })}
+                    />
+                    {profileErrors?.beamHeight && <p className="text-xs text-destructive">{profileErrors.beamHeight.message}</p>}
+                </div>
 
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Beam Width (mm)" tooltip={tooltips.xrayProfileBeamWidth} required={true} />
-                                <Input 
-                                    type="number" 
-                                    step="any"
-                                    className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.beamWidth ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.beamWidth`, { valueAsNumber: true })}
-                                />
-                                {profileErrors?.beamWidth && <p className="text-xs text-destructive">{profileErrors.beamWidth.message}</p>}
-                            </div>
-                        </div>
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="Beam Width (mm)" tooltip={tooltips.xrayProfileBeamWidth} required={true} />
+                    <Input 
+                        type="number" 
+                        step="any"
+                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.beamWidth ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        {...register(`xrayProfiles.${index}.beamWidth`, { valueAsNumber: true })}
+                    />
+                    {profileErrors?.beamWidth && <p className="text-xs text-destructive">{profileErrors.beamWidth.message}</p>}
+                </div>
+            </div>
 
-                        <hr className="border-mauve-150 my-5 mx-5" />
+            <hr className="border-mauve-150 my-5 mx-5" />
 
-                        <div className="flex flex-col">
-                {/* Rotation Series (Layers) */}
-                {mode === 'rotation-series' && (
-                    <div className="flex flex-col gap-5">
-                        <div className="px-5 flex flex-col gap-2">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Reference X (mm)" tooltip={tooltips.xrayProfileX} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.ramsx ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.ramsx`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.ramsx && <p className="text-xs text-destructive">{profileErrors.ramsx.message}</p>}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-xray-shading py-5 px-5 flex flex-col gap-5">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Initial Angle (º)" tooltip={tooltips.xrayProfileOmeStart} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.omeStart ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.omeStart`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.omeStart && <p className="text-xs text-destructive">{profileErrors.omeStart.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Final Angle (º)" tooltip={tooltips.xrayProfileOmeStop} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.omeStop ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.omeStop`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.omeStop && <p className="text-xs text-destructive">{profileErrors.omeStop.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Number of Points" tooltip={tooltips.numPoints || "Exposure counts"} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.numPoints ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.numPoints`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.numPoints && <p className="text-xs text-destructive">{profileErrors.numPoints.message}</p>}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-mauve-250/30 pt-4">
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Layer Start Z (mm)" tooltip={tooltips.xrayProfileLayerStart} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.layerStart ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.layerStart`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.layerStart && <p className="text-xs text-destructive">{profileErrors.layerStart.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Layer End Z (mm)" tooltip={tooltips.xrayProfileLayerEnd} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.layerEnd ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.layerEnd`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.layerEnd && <p className="text-xs text-destructive">{profileErrors.layerEnd.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Number of Layers" tooltip={tooltips.xrayProfileNumLayers} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.numLayers ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.numLayers`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.numLayers && <p className="text-xs text-destructive">{profileErrors.numLayers.message}</p>}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Stills (Point List) */}
+            <div className="flex flex-col">
+                {/* 1. STILLS PROFILE */}
                 {mode === 'stills' && (
                     <div className="flex flex-col">
                         <div className="flex justify-end items-center px-5 mb-3">
                             <Button 
                                 type="button" 
                                 variant="secondary" 
-                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white"
-                                onClick={() => appendPoint({ ramsx: 0, ramsz: 0, ome: 0, numPoints: 1 })}
+                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white cursor-pointer"
+                                onClick={() => appendPoint({ ramsx: null, ramsz: null, ome: null, numPoints: null })}
                             >
                                 <Plus className="h-3.5 w-3.5 mr-1" /> Add Point
                             </Button>
@@ -292,7 +219,7 @@ export const XrayProfileCard = ({
                                                     />
                                                 </div>
                                                 <div className="flex flex-col gap-2">
-                                                    <FieldLabel text="Number of Points" tooltip={tooltips.xrayProfileStillPointCount} />
+                                                    <FieldLabel text="Images" tooltip={tooltips.xrayProfileStillPointCount} />
                                                     <Input 
                                                         type="number" 
                                                         className={`h-8 bg-white border-mauve-250 ${pointErrors?.numPoints ? "border-destructive focus-visible:ring-destructive" : ""}`}
@@ -303,7 +230,7 @@ export const XrayProfileCard = ({
                                             <Button 
                                                 type="button" 
                                                 variant="secondary" 
-                                                className="h-8 w-8 p-0 text-red-650  hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 bg-white border border-mauve-200"
+                                                className="h-8 w-8 p-0 text-red-650 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 bg-white border border-mauve-200 cursor-pointer"
                                                 onClick={() => removePoint(ptIdx)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -316,62 +243,12 @@ export const XrayProfileCard = ({
                     </div>
                 )}
 
-                {/* Mapscan: Time Series (tseries) */}
-                {mode === 'tseries' && (
-                    <div className="bg-xray-shading py-5 px-5">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Reference X (mm)" tooltip={tooltips.xrayProfileX} required={true} />
-                                <Input 
-                                    type="number" 
-                                    step="any"
-                                    className={`h-8 bg-white border-mauve-250 ${profileErrors?.ramsx ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.ramsx`, { valueAsNumber: true })}
-                                />
-                                {profileErrors?.ramsx && <p className="text-xs text-destructive">{profileErrors.ramsx.message}</p>}
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Reference Z (mm)" tooltip={tooltips.xrayProfileZ} required={true} />
-                                <Input 
-                                    type="number" 
-                                    step="any"
-                                    className={`h-8 bg-white border-mauve-250 ${profileErrors?.ramsz ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.ramsz`, { valueAsNumber: true })}
-                                />
-                                {profileErrors?.ramsz && <p className="text-xs text-destructive">{profileErrors.ramsz.message}</p>}
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Reference Angle (º)" tooltip={tooltips.xrayProfileOme} required={true} />
-                                <Input 
-                                    type="number" 
-                                    step="any"
-                                    className={`h-8 bg-white border-mauve-250 ${profileErrors?.ome ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.ome`, { valueAsNumber: true })}
-                                />
-                                {profileErrors?.ome && <p className="text-xs text-destructive">{profileErrors.ome.message}</p>}
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Number of Points" tooltip={tooltips.numPoints} required={true} />
-                                <Input
-                                    type="number" 
-                                    className={`h-8 bg-white border-mauve-250 ${profileErrors?.numPoints ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                    {...register(`xrayProfiles.${index}.numPoints`, { valueAsNumber: true })}
-                                />
-                                {profileErrors?.numPoints && <p className="text-xs text-destructive">{profileErrors.numPoints.message}</p>}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Mapscan: Line Scan (dscan) */}
-                {mode === 'dscan' && (
-                    <div className="flex flex-col gap-5">
-                        {/* Reference Coords */}
-                        <div className="px-5 flex flex-col gap-2">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* 2. MAPSCAN PROFILE */}
+                {mode === 'mapscan' && (
+                    <div className="flex flex-col">
+                        {/* Reference Section */}
+                        <div className="px-5 mb-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="flex flex-col gap-2">
                                     <FieldLabel text="Reference X (mm)" tooltip={tooltips.xrayProfileX} required={true} />
                                     <Input 
@@ -404,85 +281,107 @@ export const XrayProfileCard = ({
                                     />
                                     {profileErrors?.ome && <p className="text-xs text-destructive">{profileErrors.ome.message}</p>}
                                 </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Number of Images" tooltip={tooltips.numPoints} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.numPoints ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.numPoints`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.numPoints && <p className="text-xs text-destructive">{profileErrors.numPoints.message}</p>}
-                                </div>
                             </div>
                         </div>
 
-                        {/* Moving Axis control */}
-                        <div className="bg-xray-shading py-5 px-5">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Moving Axis" tooltip={tooltips.xrayProfileAxis1Name} required={true} />
-                                    <Controller
-                                        control={control}
-                                        name={`xrayProfiles.${index}.axis1Name`}
-                                        render={({ field }) => (
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <SelectTrigger className="h-8 bg-white border-mauve-200">
-                                                    <SelectValue placeholder="Select axis" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white">
-                                                     <SelectItem value="ramsx" className="text-xs cursor-pointer">X</SelectItem>
-                                                     <SelectItem value="ramsz" className="text-xs cursor-pointer">Z</SelectItem>
-                                                     <SelectItem value="ome" className="text-xs cursor-pointer">Rotation</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
-                                    {profileErrors?.axis1Name && <p className="text-xs text-destructive">{profileErrors.axis1Name.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Start" tooltip={tooltips.xrayProfileAxisStart} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis1Start ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis1Start`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis1Start && <p className="text-xs text-destructive">{profileErrors.axis1Start.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Stop" tooltip={tooltips.xrayProfileAxisStop} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis1Stop ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis1Stop`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis1Stop && <p className="text-xs text-destructive">{profileErrors.axis1Stop.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Number of Points" tooltip={tooltips.xrayProfileAxisImages} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis1Images ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis1Images`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis1Images && <p className="text-xs text-destructive">{profileErrors.axis1Images.message}</p>}
-                                </div>
-                            </div>
+                        {/* Add Axis Button Header */}
+                        <div className="flex justify-end items-center px-5 mb-3">
+                            <Button 
+                                type="button" 
+                                variant="secondary" 
+                                disabled={mapscanFields.length >= 2}
+                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white disabled:opacity-50 cursor-pointer"
+                                onClick={() => appendMapscanAxis({ axisName: "ramsx", start: null, stop: null, points: null })}
+                            >
+                                <Plus className="h-3.5 w-3.5 mr-1" /> Add Axis
+                            </Button>
                         </div>
+
+                        {/* Axes Card List */}
+                        {mapscanFields.length === 0 ? (
+                            <div className="px-5 pb-5">
+                                <p className="text-xs text-mauve-500 italic text-center py-4 bg-mauve-100/20 border border-mauve-150 rounded-xl">
+                                    No moving axes defined yet. Click &apos;Add Axis&apos; above (maximum 2 axes).
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col bg-xray-shading pb-5">
+                                {mapscanFields.map((field, axIdx) => {
+                                    const axisErrors = profileErrors?.mapscanAxes?.[axIdx] as any;
+                                    return (
+                                        <div key={field.id} className="flex items-end gap-3 py-3 px-5 border-b border-mauve-150/40 last:border-b-0">
+                                            <div className="flex-1 grid grid-cols-4 gap-4">
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Moving Axis" tooltip={tooltips.xrayProfileAxis1Name} required={true} />
+                                                    <Controller
+                                                        control={control}
+                                                        name={`xrayProfiles.${index}.mapscanAxes.${axIdx}.axisName`}
+                                                        render={({ field: selectField }) => (
+                                                            <Select onValueChange={selectField.onChange} value={selectField.value}>
+                                                                <SelectTrigger className="h-8 bg-white border-mauve-250">
+                                                                    <SelectValue placeholder="Select axis" />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="bg-white">
+                                                                    <SelectItem value="ramsx" className="text-xs cursor-pointer">X</SelectItem>
+                                                                    <SelectItem value="ramsz" className="text-xs cursor-pointer">Z</SelectItem>
+                                                                    <SelectItem value="ome" className="text-xs cursor-pointer">Rotation</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        )}
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Start" tooltip={tooltips.xrayProfileAxisStart} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        step="any"
+                                                        className={`h-8 bg-white border-mauve-250 ${axisErrors?.start ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.mapscanAxes.${axIdx}.start`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Stop" tooltip={tooltips.xrayProfileAxisStop} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        step="any"
+                                                        className={`h-8 bg-white border-mauve-250 ${axisErrors?.stop ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.mapscanAxes.${axIdx}.stop`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Points" tooltip={tooltips.xrayProfileAxisImages} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        className={`h-8 bg-white border-mauve-250 ${axisErrors?.points ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.mapscanAxes.${axIdx}.points`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <Button 
+                                                type="button" 
+                                                variant="secondary" 
+                                                className="h-8 w-8 p-0 text-red-650 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 bg-white border border-mauve-200 cursor-pointer"
+                                                onClick={() => removeMapscanAxis(axIdx)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {/* Mapscan: Grid Scan (mesh) */}
-                {mode === 'mesh' && (
-                    <div className="flex flex-col gap-5">
-                        {/* Reference Coords */}
-                        <div className="px-5 flex flex-col gap-2">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* 3. ROTATION SERIES PROFILE */}
+                {mode === 'rotation-series' && (
+                    <div className="flex flex-col">
+                        {/* Reference Section (Single Field: Reference X) */}
+                        <div className="px-5 mb-5">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="flex flex-col gap-2">
                                     <FieldLabel text="Reference X (mm)" tooltip={tooltips.xrayProfileX} required={true} />
                                     <Input 
@@ -493,149 +392,107 @@ export const XrayProfileCard = ({
                                     />
                                     {profileErrors?.ramsx && <p className="text-xs text-destructive">{profileErrors.ramsx.message}</p>}
                                 </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Reference Z (mm)" tooltip={tooltips.xrayProfileZ} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.ramsz ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.ramsz`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.ramsz && <p className="text-xs text-destructive">{profileErrors.ramsz.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Reference Angle (º)" tooltip={tooltips.xrayProfileOme} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.ome ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.ome`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.ome && <p className="text-xs text-destructive">{profileErrors.ome.message}</p>}
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Number of Images" tooltip={tooltips.numPoints} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${profileErrors?.numPoints ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.numPoints`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.numPoints && <p className="text-xs text-destructive">{profileErrors.numPoints.message}</p>}
-                                </div>
                             </div>
                         </div>
 
-                        {/* Contiguous Shaded region for Axis Sweeps */}
-                        <div className="bg-xray-shading py-5 px-5 flex flex-col gap-5">
-                            {/* Axis 1 Sweep */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Moving Axis" tooltip={tooltips.xrayProfileAxis1Name} required={true} />
-                                    <Controller
-                                        control={control}
-                                        name={`xrayProfiles.${index}.axis1Name`}
-                                        render={({ field }) => (
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <SelectTrigger className="h-8 bg-white border-mauve-200">
-                                                    <SelectValue placeholder="Select Axis 1" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white">
-                                                    <SelectItem value="ramsx" className="text-xs cursor-pointer">X</SelectItem>
-                                                    <SelectItem value="ramsz" className="text-xs cursor-pointer">Z</SelectItem>
-                                                    <SelectItem value="ome" className="text-xs cursor-pointer">Rotation</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
-                                    {profileErrors?.axis1Name && <p className="text-xs text-destructive">{profileErrors.axis1Name.message}</p>}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Start" tooltip={tooltips.xrayProfileAxisStart} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis1Start ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis1Start`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis1Start && <p className="text-xs text-destructive">{profileErrors.axis1Start.message}</p>}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Stop" tooltip={tooltips.xrayProfileAxisStop} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis1Stop ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis1Stop`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis1Stop && <p className="text-xs text-destructive">{profileErrors.axis1Stop.message}</p>}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Number of Points" tooltip={tooltips.xrayProfileAxisImages} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis1Images ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis1Images`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis1Images && <p className="text-xs text-destructive">{profileErrors.axis1Images.message}</p>}
-                                </div>
-                            </div>
-
-                            {/* Axis 2 Sweep */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t border-mauve-250/30 pt-4">
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Moving Axis" tooltip={tooltips.xrayProfileAxis2Name} required={true} />
-                                    <Controller
-                                        control={control}
-                                        name={`xrayProfiles.${index}.axis2Name`}
-                                        render={({ field }) => (
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <SelectTrigger className="h-8 bg-white border-mauve-200">
-                                                    <SelectValue placeholder="Select Axis 2" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-white">
-                                                    <SelectItem value="ramsx" className="text-xs cursor-pointer">X</SelectItem>
-                                                    <SelectItem value="ramsz" className="text-xs cursor-pointer">Z</SelectItem>
-                                                    <SelectItem value="ome" className="text-xs cursor-pointer">Rotation</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
-                                    {profileErrors?.axis2Name && <p className="text-xs text-destructive">{profileErrors.axis2Name.message}</p>}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Start" tooltip={tooltips.xrayProfileAxisStart} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis2Start ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis2Start`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis2Start && <p className="text-xs text-destructive">{profileErrors.axis2Start.message}</p>}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Stop" tooltip={tooltips.xrayProfileAxisStop} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        step="any"
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis2Stop ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis2Stop`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis2Stop && <p className="text-xs text-destructive">{profileErrors.axis2Stop.message}</p>}
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <FieldLabel text="Number of Points" tooltip={tooltips.xrayProfileAxisImages} required={true} />
-                                    <Input 
-                                        type="number" 
-                                        className={`h-8 bg-white border-mauve-250 ${profileErrors?.axis2Images ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                        {...register(`xrayProfiles.${index}.axis2Images`, { valueAsNumber: true })}
-                                    />
-                                    {profileErrors?.axis2Images && <p className="text-xs text-destructive">{profileErrors.axis2Images.message}</p>}
-                                </div>
-                            </div>
+                        {/* Add Layer Range Button Header */}
+                        <div className="flex justify-end items-center px-5 mb-3">
+                            <Button 
+                                type="button" 
+                                variant="secondary" 
+                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white cursor-pointer"
+                                onClick={() => appendLayerRange({ omeStart: null, omeStop: null, numPoints: null, layerStart: null, layerEnd: null, numLayers: null })}
+                            >
+                                <Plus className="h-3.5 w-3.5 mr-1" /> Add Layer Range
+                            </Button>
                         </div>
+
+                        {/* Layer Ranges Card List */}
+                        {layerFields.length === 0 ? (
+                            <div className="px-5 pb-5">
+                                <p className="text-xs text-mauve-500 italic text-center py-4 bg-mauve-100/20 border border-mauve-150 rounded-xl">
+                                    No rotation layer ranges defined yet. Click &apos;Add Layer Range&apos; above.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col bg-xray-shading pb-5">
+                                {layerFields.map((field, rngIdx) => {
+                                    const rangeErrors = profileErrors?.layerRanges?.[rngIdx] as any;
+                                    return (
+                                        <div key={field.id} className="flex items-end gap-3 py-3 px-5 border-b border-mauve-150/40 last:border-b-0">
+                                            <div className="flex-1 grid grid-cols-2 md:grid-cols-6 gap-3">
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Initial Angle (º)" tooltip={tooltips.xrayProfileOmeStart} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        step="any"
+                                                        className={`h-8 bg-white border-mauve-250 ${rangeErrors?.omeStart ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.layerRanges.${rngIdx}.omeStart`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Final Angle (º)" tooltip={tooltips.xrayProfileOmeStop} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        step="any"
+                                                        className={`h-8 bg-white border-mauve-250 ${rangeErrors?.omeStop ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.layerRanges.${rngIdx}.omeStop`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Points" tooltip={tooltips.numPoints || "Exposure counts"} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        className={`h-8 bg-white border-mauve-250 ${rangeErrors?.numPoints ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.layerRanges.${rngIdx}.numPoints`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Layer Start (mm)" tooltip={tooltips.xrayProfileLayerStart} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        step="any"
+                                                        className={`h-8 bg-white border-mauve-250 ${rangeErrors?.layerStart ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.layerRanges.${rngIdx}.layerStart`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Layer End (mm)" tooltip={tooltips.xrayProfileLayerEnd} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        step="any"
+                                                        className={`h-8 bg-white border-mauve-250 ${rangeErrors?.layerEnd ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.layerRanges.${rngIdx}.layerEnd`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
+                                                    <FieldLabel text="Layers" tooltip={tooltips.xrayProfileNumLayers} required={true} />
+                                                    <Input 
+                                                        type="number" 
+                                                        className={`h-8 bg-white border-mauve-250 ${rangeErrors?.numLayers ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                                        {...register(`xrayProfiles.${index}.layerRanges.${rngIdx}.numLayers`, { valueAsNumber: true })}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <Button 
+                                                type="button" 
+                                                variant="secondary" 
+                                                className="h-8 w-8 p-0 text-red-650 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 bg-white border border-mauve-200 cursor-pointer"
+                                                onClick={() => removeLayerRange(rngIdx)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

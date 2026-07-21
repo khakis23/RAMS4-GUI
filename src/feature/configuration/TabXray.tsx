@@ -36,21 +36,9 @@ export const TabXray = () => {
                 beamHeight: p.beamHeight ?? null,
                 beamWidth: p.beamWidth ?? null,
                 atten: p.atten ?? null,
-                numPoints: p.numPoints ?? null,
-                omeStart: p.omeStart ?? null,
-                omeStop: p.omeStop ?? null,
-                layerStart: p.layerStart ?? null,
-                layerEnd: p.layerEnd ?? null,
-                numLayers: p.numLayers ?? null,
                 stillPoints: p.stillPoints || [],
-                axis1Name: p.axis1Name || "ramsx",
-                axis1Start: p.axis1Start ?? null,
-                axis1Stop: p.axis1Stop ?? null,
-                axis1Images: p.axis1Images ?? null,
-                axis2Name: p.axis2Name || "ramsz",
-                axis2Start: p.axis2Start ?? null,
-                axis2Stop: p.axis2Stop ?? null,
-                axis2Images: p.axis2Images ?? null
+                mapscanAxes: p.mapscanAxes || [],
+                layerRanges: p.layerRanges || []
             })),
         }
     });
@@ -71,21 +59,9 @@ export const TabXray = () => {
                     beamHeight: p.beamHeight ?? null,
                     beamWidth: p.beamWidth ?? null,
                     atten: p.atten ?? null,
-                    numPoints: p.numPoints ?? null,
-                    omeStart: p.omeStart ?? null,
-                    omeStop: p.omeStop ?? null,
-                    layerStart: p.layerStart ?? null,
-                    layerEnd: p.layerEnd ?? null,
-                    numLayers: p.numLayers ?? null,
                     stillPoints: p.stillPoints || [],
-                    axis1Name: p.axis1Name || "ramsx",
-                    axis1Start: p.axis1Start ?? null,
-                    axis1Stop: p.axis1Stop ?? null,
-                    axis1Images: p.axis1Images ?? null,
-                    axis2Name: p.axis2Name || "ramsz",
-                    axis2Start: p.axis2Start ?? null,
-                    axis2Stop: p.axis2Stop ?? null,
-                    axis2Images: p.axis2Images ?? null
+                    mapscanAxes: p.mapscanAxes || [],
+                    layerRanges: p.layerRanges || []
                 })),
             });
         }
@@ -154,8 +130,9 @@ export const TabXray = () => {
                         beamHeight: null,
                         beamWidth: null,
                         atten: null,
-                        numPoints: null,
-                        stillPoints: []
+                        stillPoints: [],
+                        mapscanAxes: [],
+                        layerRanges: []
                     })}
                     className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
                 >

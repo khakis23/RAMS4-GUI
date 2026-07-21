@@ -172,6 +172,73 @@ const ungroupCardRecursive = (cards: MechTestCard[], id: string): MechTestCard[]
 };
 
 // Serialization Helpers
+const pruneStepData = (type: string, data: any): any => {
+    if (!data) return {};
+    const pruned = { ...data };
+
+    if (type === 'ramp') {
+        pruned.enable_dic = !!pruned.enable_dic;
+        pruned.skipDICpos = !!pruned.skipDICpos;
+        pruned.incrementSeg = !!pruned.incrementSeg;
+        pruned.wait = pruned.wait !== false;
+        pruned.max_displacement = typeof pruned.max_displacement === 'number' ? pruned.max_displacement : 1.0;
+
+        if (pruned.control === 'displacement') {
+            if (pruned.dispToggle === 'time') {
+                pruned.velocity = null;
+            } else {
+                pruned.time = null;
+            }
+        } else {
+            pruned.time = null;
+            pruned.dispToggle = null;
+        }
+    } else if (type === 'dwell') {
+        pruned.wait = pruned.wait !== false;
+    } else if (type === 'cycle') {
+        pruned.ampScale = typeof pruned.ampScale === 'number' ? pruned.ampScale : 0.95;
+        pruned.discoverEndpoints = !!pruned.discoverEndpoints;
+        pruned.recallEndpoints = !!pruned.recallEndpoints;
+        pruned["enable DIC"] = !!pruned["enable DIC"];
+        pruned.wait = pruned.wait !== false;
+    }
+
+    return pruned;
+};
+
+const defaultStepData = (type: string, data: any): any => {
+    if (!data) return {};
+    const defaulted = { ...data };
+
+    if (type === 'ramp') {
+        defaulted.control = defaulted.control ?? 'displacement';
+        defaulted.dispToggle = defaulted.dispToggle ?? 'time';
+        defaulted.axis = defaulted.axis ?? 'A';
+        defaulted.mode = defaulted.mode ?? 'absolute';
+        defaulted.max_displacement = typeof defaulted.max_displacement === 'number' ? defaulted.max_displacement : 1.0;
+        defaulted.enable_dic = !!defaulted.enable_dic;
+        defaulted.skipDICpos = !!defaulted.skipDICpos;
+        defaulted.incrementSeg = !!defaulted.incrementSeg;
+        defaulted.wait = defaulted.wait !== false;
+    } else if (type === 'dwell') {
+        defaulted.control = defaulted.control ?? 'load';
+        defaulted.axis = defaulted.axis ?? 'A';
+        defaulted.wait = defaulted.wait !== false;
+    } else if (type === 'cycle') {
+        defaulted.control = defaulted.control ?? 'displacement';
+        defaulted.axis = defaulted.axis ?? 'A';
+        defaulted.mode = defaulted.mode ?? 'relative';
+        defaulted.countMode = defaulted.countMode ?? 'relative';
+        defaulted.ampScale = typeof defaulted.ampScale === 'number' ? defaulted.ampScale : 0.95;
+        defaulted.discoverEndpoints = !!defaulted.discoverEndpoints;
+        defaulted.recallEndpoints = !!defaulted.recallEndpoints;
+        defaulted["enable DIC"] = !!defaulted["enable DIC"];
+        defaulted.wait = defaulted.wait !== false;
+    }
+
+    return defaulted;
+};
+
 const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
     return cards.map(card => {
         if (card.type === 'group') {
@@ -183,17 +250,19 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
             };
         }
         if (card.type === 'takeWhile') {
-            // Strip the nested data key from take for consistent backend representation
             const { take, step } = card.data || {};
             return {
                 takeWhile: {
                     take: take?.data || {},
-                    step: step || {}
+                    step: {
+                        type: step?.type || 'ramp',
+                        data: pruneStepData(step?.type || 'ramp', step?.data)
+                    }
                 }
             };
         }
         return {
-            [card.type]: card.data
+            [card.type]: pruneStepData(card.type, card.data)
         };
     });
 };
@@ -216,8 +285,8 @@ const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
             };
         }
         if (type === 'takeWhile') {
-            // Wrap backend's flat take data into take.data structure expected by React Hook Form
             const { take, step } = item.takeWhile || {};
+            const stepType = step?.type || 'ramp';
             return {
                 id: `card-loaded-step-${depth}-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
                 type: 'takeWhile',
@@ -225,14 +294,17 @@ const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
                     take: {
                         data: take || {}
                     },
-                    step: step || {}
+                    step: {
+                        type: stepType,
+                        data: defaultStepData(stepType, step?.data)
+                    }
                 }
             };
         }
         return {
             id: `card-loaded-step-${depth}-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
             type,
-            data: item[type] || {}
+            data: defaultStepData(type, item[type])
         };
     });
 };

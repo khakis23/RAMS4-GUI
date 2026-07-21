@@ -28,15 +28,40 @@ export const RampForm = ({ namePrefix, register, errors, control, watch, setValu
     // Set default keys if they are not defined
     useEffect(() => {
         const currentControl = watch(`${namePrefix}.data.control`);
-        if (!currentControl) {
+        const currentAxis = watch(`${namePrefix}.data.axis`);
+        const currentMode = watch(`${namePrefix}.data.mode`);
+        const currentDispToggle = watch(`${namePrefix}.data.dispToggle`);
+        const currentMaxDisp = watch(`${namePrefix}.data.max_displacement`);
+        const currentEnableDic = watch(`${namePrefix}.data.enable_dic`);
+        const currentSkipDic = watch(`${namePrefix}.data.skipDICpos`);
+        const currentIncSeg = watch(`${namePrefix}.data.incrementSeg`);
+        const currentWait = watch(`${namePrefix}.data.wait`);
+
+        if (currentControl === undefined || currentControl === null) {
             setValue(`${namePrefix}.data.control`, 'displacement');
+        }
+        if (currentDispToggle === undefined || currentDispToggle === null) {
             setValue(`${namePrefix}.data.dispToggle`, 'time');
+        }
+        if (currentAxis === undefined || currentAxis === null) {
             setValue(`${namePrefix}.data.axis`, 'A');
+        }
+        if (currentMode === undefined || currentMode === null) {
             setValue(`${namePrefix}.data.mode`, 'absolute');
+        }
+        if (currentMaxDisp === undefined || currentMaxDisp === null) {
             setValue(`${namePrefix}.data.max_displacement`, 1.0);
+        }
+        if (currentEnableDic === undefined || currentEnableDic === null) {
             setValue(`${namePrefix}.data.enable_dic`, false);
+        }
+        if (currentSkipDic === undefined || currentSkipDic === null) {
             setValue(`${namePrefix}.data.skipDICpos`, false);
+        }
+        if (currentIncSeg === undefined || currentIncSeg === null) {
             setValue(`${namePrefix}.data.incrementSeg`, false);
+        }
+        if (currentWait === undefined || currentWait === null) {
             setValue(`${namePrefix}.data.wait`, true);
         }
     }, [namePrefix, setValue, watch]);
