@@ -1,90 +1,41 @@
 [
   {
-    "takeWhile": {
-      "take": {
-        "profileID": "xrayProfile1784548522164",
-        "imgMode": null,
-        "pauseTsDaq": false
-      },
-      "step": {
-        "type": "ramp",
-        "data": {
-          "target": 1,
-          "time": 1,
-          "max_displacement": 1,
-          "axis": "A",
-          "mode": "absolute",
-          "control": "displacement",
-          "dispToggle": "time",
-          "enable_dic": false,
-          "skipDICpos": false,
-          "incrementSeg": false,
-          "wait": true
-        }
-      }
+    "take": {
+      "profileID": "xrayProfile1784646053447",
+      "pauseTsDaq": false,
+      "imgMode": null
     }
   },
   {
     "group": {
-      "loops": 9,
+      "loops": 5,
       "steps": [
         {
-          "group": {
-            "loops": 2,
-            "steps": [
-              {
-                "ramp": {
-                  "target": 1,
-                  "time": 1,
-                  "max_displacement": 1,
-                  "axis": "A",
-                  "mode": "absolute",
-                  "control": "displacement",
-                  "dispToggle": "time",
-                  "enable_dic": false,
-                  "skipDICpos": false,
-                  "incrementSeg": false,
-                  "wait": true
-                }
+          "takeWhile": {
+            "take": {
+              "profileID": "xrayProfile1784645833148",
+              "imgMode": "nf",
+              "pauseTsDaq": false
+            },
+            "step": {
+              "type": "ramp",
+              "data": {
+                "target": 1,
+                "time": 1,
+                "max_displacement": 1,
+                "axis": "A",
+                "mode": "absolute",
+                "control": "displacement",
+                "dispToggle": "time",
+                "enable_dic": false,
+                "skipDICpos": false,
+                "incrementSeg": false,
+                "wait": true
               }
-            ]
+            }
           }
         }
       ]
-    }
-  },
-  {
-    "cycle": {
-      "upper": 1,
-      "lower": 1,
-      "frequency": 1,
-      "cycleEnd": 1,
-      "ampScale": 0.95,
-      "manualDispUpper": 1,
-      "manualDispLower": 2,
-      "axis": "A",
-      "mode": "absolute",
-      "control": "displacement",
-      "countMode": "relative",
-      "discoverEndpoints": false,
-      "recallEndpoints": false,
-      "enable DIC": false,
-      "wait": true
-    }
-  },
-  {
-    "ramp": {
-      "target": 1,
-      "time": 1,
-      "max_displacement": 1,
-      "axis": "A",
-      "mode": "absolute",
-      "control": "displacement",
-      "dispToggle": "time",
-      "enable_dic": false,
-      "skipDICpos": false,
-      "incrementSeg": false,
-      "wait": true
     }
   }
 ]

@@ -63,7 +63,7 @@ export const CoreLayout = () => {
                 <StatusBar currentView={currentView} />
 
                 {/* Active View Content viewport with padding and scroll */}
-                <main className="flex-1 overflow-y-auto p-8 min-h-0">
+                <main className="flex-1 overflow-y-auto px-8 pt-4 pb-2 min-h-0">
                     {renderActiveView()}
                 </main>
             </div>

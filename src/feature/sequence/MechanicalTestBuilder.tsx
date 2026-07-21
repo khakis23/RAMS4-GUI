@@ -158,7 +158,7 @@ const MechanicalTestInner = () => {
             cards: watched.cards || []
         }),
         disabled: isLoading || !configDirectory || !experimentNumber
-    });
+    } as any);
 
     // Validate sequence continuously and sync to validation store
     useEffect(() => {
@@ -246,7 +246,7 @@ const MechanicalTestInner = () => {
     return (
         <form className="flex flex-col h-full flex-1 max-w-5xl mx-auto min-h-0">
             {/* Top Toolbar Header (Always Visible) */}
-            <div className="flex items-center justify-between pb-3 border-b border-mauve-200 shrink-0">
+            <div className="flex items-center justify-between pb-2 border-b border-mauve-200 shrink-0">
                 <div className="flex flex-col gap-1">
                     <h2 className="text-xs font-bold text-mauve-850 flex items-center gap-2">
                         <FileJson className="h-5 w-5 text-mauve-650" />
@@ -302,7 +302,7 @@ const MechanicalTestInner = () => {
             </div>
 
             {/* Scrollable Cards Container */}
-            <div className="flex-grow overflow-y-auto py-6 min-h-0 overscroll-y-contain">
+            <div className="flex-grow overflow-y-auto pt-3 pb-12 min-h-0 overscroll-y-contain">
                 {fields.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-[300px] border border-mauve-200 rounded-sm p-8 text-center bg-white">
                         <p className="text-sm text-mauve-500">

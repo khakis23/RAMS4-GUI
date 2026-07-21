@@ -53,7 +53,7 @@ const pruneConfigForSave = (config: any) => {
 
             if (hp.mode === 'time-series') {
                 if (hp.frequency !== null && hp.frequency !== undefined) cleanHp.frequency = hp.frequency;
-                if (hp.cycles && hp.cycles.length > 0) cleanHp.cycles = hp.cycles;
+                if (hp.cycles) cleanHp.cycles = hp.cycles;
             } else if (hp.mode === 'peak-valley') {
                 if (hp.signalAxis !== null && hp.signalAxis !== undefined) cleanHp.signalAxis = hp.signalAxis;
                 if (hp.signalItem !== null && hp.signalItem !== undefined) cleanHp.signalItem = hp.signalItem;
@@ -207,7 +207,7 @@ export const ConfigurationManager = () => {
     const { errors: validationErrors } = useValidationStore();
 
     // Baseline configuration state is read from global useConfigurationStore
-    const { draft, updateDraft, setLastLoadedPath, savedConfig, setSavedConfig } = useConfigurationStore();
+    const { draft, updateDraft, lastLoadedPath, setLastLoadedPath, savedConfig, setSavedConfig } = useConfigurationStore();
     const [selectedStation, setSelectedStation] = useState<string>("");
 
     const lastCycle = useRef(draft.cycleNumber);
@@ -338,6 +338,11 @@ export const ConfigurationManager = () => {
 
         if (!dir || !exp) {
             setSavedConfig(null);
+            return;
+        }
+
+        // Only load if the path has actually changed from what is currently in memory
+        if (lastLoadedPath === `${dir}::${exp}`) {
             return;
         }
 
@@ -475,7 +480,7 @@ export const ConfigurationManager = () => {
         };
 
         loadConfig();
-    }, [draft.configDirectory, draft.experimentNumber]);
+    }, [draft.configDirectory, draft.experimentNumber, lastLoadedPath]);
 
     const revertPathSelectors = () => {
         updateDraft({
@@ -860,9 +865,9 @@ export const ConfigurationManager = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     return (
-        <div className="flex flex-col gap-3 w-full max-w-5xl mx-auto min-w-[800px] h-full min-h-0 text-left">
+        <div className="flex flex-col gap-2 w-full max-w-5xl mx-auto min-w-[800px] h-full min-h-0 text-left">
             {/* Top Toolbar Header (Always Visible) */}
-            <div className="flex items-center justify-between pb-3 border-b border-mauve-200 shrink-0">
+            <div className="flex items-center justify-between pb-2 border-b border-mauve-200 shrink-0">
                 <div className="flex flex-col">
                     <h2 className="text-xs font-bold text-mauve-850 flex items-center gap-2">
                         <Sliders className="h-5 w-5 text-mauve-650" />
@@ -872,9 +877,9 @@ export const ConfigurationManager = () => {
 
                 <div className="flex items-center gap-3 min-w-0">
                     {/* Inline Path Selectors with Scroll & Fade Mask */}
-                    <div className="relative h-11 flex items-center shrink min-w-0">
+                    <div className="relative h-9 flex items-center shrink min-w-0">
                         {isManualPath ? (
-                            <div className="mb-1 mr-4 flex items-center gap-2 min-w-lg max-w-full md:w-2xl">
+                            <div className="mb-0 mr-4 flex items-center gap-2 min-w-lg max-w-full md:w-2xl">
                                 <span className="shrink-0 text-xs text-mauve-850 font-semibold">Directory:</span>
                                 <Input
                                     value={draft.configDirectory}
@@ -887,7 +892,7 @@ export const ConfigurationManager = () => {
                             <div className="relative flex items-center">
                                 <div
                                     ref={scrollRef}
-                                    className="flex flex-row items-center gap-3.5 overflow-x-auto sleek-scrollbar pb-2 pt-1 pr-4 font-semibold text-mauve-650 text-xs max-w-xl md:max-w-full"
+                                    className="flex flex-row items-center gap-3.5 overflow-x-auto sleek-scrollbar pb-1 pt-0.5 pr-4 font-semibold text-mauve-650 text-xs max-w-xl md:max-w-full"
                                 >
                                     {/* 1. Cycle Select */}
                                     <div className="flex items-center gap-1.5 shrink-0">
@@ -965,7 +970,7 @@ export const ConfigurationManager = () => {
                     </div>
 
                     {/* Manual Path Mode Toggle Button - shifted to the right of path selector */}
-                    <div className="flex items-center pb-2 pt-1">
+                    <div className="flex items-center pb-1 pt-0.5">
                         <TooltipProvider delayDuration={350}>
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1035,7 +1040,7 @@ export const ConfigurationManager = () => {
                 </div>
 
                 {/* Tab Content view */}
-                <div className="flex-1 overflow-y-auto p-5 min-h-0">
+                <div className="flex-1 overflow-y-auto px-5 pt-3 pb-1 min-h-0">
                     {draft.configDirectory && draft.experimentNumber ? (
                         activeTab && renderTabContent()
                     ) : (

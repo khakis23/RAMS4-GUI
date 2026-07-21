@@ -93,7 +93,7 @@ export const TabXray = () => {
 
     const {
         fields,
-        append,
+        prepend,
         remove
     } = useFieldArray({
         control,
@@ -143,7 +143,7 @@ export const TabXray = () => {
             headerAction={
                 <Button 
                     type="button" 
-                    onClick={() => append({ 
+                    onClick={() => prepend({ 
                         id: `xrayProfile${Date.now()}`,
                         name: "",
                         mode: "rotation-series",
@@ -163,7 +163,7 @@ export const TabXray = () => {
                 </Button>
             }
             profiles={
-                <div className="w-full space-y-6">
+                <div className="w-full space-y-6 pb-12">
                     {/* Render active scan profiles list */}
                     {fields.map((field, index) => (
                         <XrayProfileCard
