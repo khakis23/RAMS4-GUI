@@ -23,7 +23,7 @@ export const handlerProfileSchema = z.object({
     verboseSystem: safeRequiredNumber,
     verboseTask: z.string(),
     verboseIO: safeRequiredNumber,
-    verboseAi: z.string(),
+    verboseAi: z.array(z.string()).default([]),
     loadA: z.boolean().optional(),
     strain: z.boolean().optional(),
     specLoadFrameComm: z.boolean().optional(),

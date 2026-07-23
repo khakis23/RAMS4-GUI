@@ -115,7 +115,7 @@ export interface HandlerProfile {
     verboseSystem: number;
     verboseTask: string;
     verboseIO: number;
-    verboseAi: string;
+    verboseAi: string[];
 
     // Time-series specific fields
     frequency?: number;

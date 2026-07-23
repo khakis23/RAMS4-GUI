@@ -5,8 +5,8 @@ import path from 'path';
 import fs from 'fs';
 
 const seedMockGateway = () => {
-    const root = path.resolve(__dirname, './mock_gateway_storage/nfs/chess/aux/cycles');
-    if (fs.existsSync(root)) return; // already seeded
+    const mockStorageRoot = path.resolve(__dirname, './mock_gateway_storage');
+    const cyclesRoot = path.join(mockStorageRoot, 'nfs/chess/aux/cycles');
 
     const structure = {
         '2026-2': {
@@ -49,29 +49,112 @@ const seedMockGateway = () => {
             if (Array.isArray(val)) {
                 const metadataPath = path.join(base, 'metadata', key);
                 fs.mkdirSync(metadataPath, { recursive: true });
+                
+                // Seed hardware settings directory (RAMS-settings/settings0.json) under station/hutch level
+                const stationMatch = base.match(/(?:nfs\/chess\/aux\/)?cycles\/[^\/]+\/([^\/]+)/);
+                if (stationMatch) {
+                    const stationDir = base.substring(0, base.indexOf(stationMatch[1]) + stationMatch[1].length);
+                    const settingsDir = path.join(stationDir, 'RAMS-settings');
+                    fs.mkdirSync(settingsDir, { recursive: true });
+                    const settingsFile = path.join(settingsDir, 'settings0.json');
+                    if (!fs.existsSync(settingsFile)) {
+                        fs.writeFileSync(settingsFile, JSON.stringify({
+                            specHost: "id1a3.classe.cornell.edu:spec",
+                            requireSpecEnable: true,
+                            systemName: "RAMS4_CHESS",
+                            controllerHost: "10.0.0.1",
+                            axisCount: 5,
+                            taskCount: 5,
+                            axesSettings: [
+                                { name: "A", max_velocity: 50, max_acceleration: 100 },
+                                { name: "B", max_velocity: 50, max_acceleration: 100 },
+                                { name: "RA", max_velocity: 10, max_acceleration: 20 },
+                                { name: "RB", max_velocity: 10, max_acceleration: 20 },
+                                { name: "TENS", max_velocity: 5, max_acceleration: 10 }
+                            ],
+                            signalSettings: [
+                                { name: "Load A", slope: 1.0, intercept: 0.0, channel: 0 },
+                                { name: "Load B", slope: 1.0, intercept: 0.0, channel: 1 },
+                                { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
+                            ]
+                        }, null, 2), 'utf8');
+                    }
+                }
+
                 val.forEach(expNum => {
                     const expFile = path.join(metadataPath, `config${expNum}.json`);
-                    const mockPayload = {
-                        cycleNumber: base.includes('2026-2') ? '2026-2' : '2026-1',
-                        userId: base.split(path.sep).slice(-2)[0],
-                        sampleName: key,
-                        experimentNumber: expNum,
-                        configDirectory: metadataPath.replace(path.resolve(__dirname, './mock_gateway_storage'), '') + '/',
-                        requiredAxes: ["A", "B", "RA", "RB"],
-                        daqFrequency: 1,
-                        samplePoints: 1000,
-                        handlerProfiles: [],
-                        xrayProfiles: []
-                    };
-                    if (key === 'titanium_specimen_02' && expNum === '1') {
-                        mockPayload.daqFrequency = 10;
-                        mockPayload.samplePoints = 500;
-                        mockPayload.requiredAxes = ["A", "B", "RA"];
-                        mockPayload.handlerProfiles = [
-                            { mode: "time-series", filename: "ts_specimen_1", verboseAxis: "A", verboseSystem: 1, verboseTask: "A", verboseIO: 0, verboseAi: "A", frequency: 10 }
-                        ];
+                    const mechFile = path.join(metadataPath, `mechTest${expNum}.json`);
+
+                    if (!fs.existsSync(expFile)) {
+                        const mockPayload = {
+                            cycleNumber: base.includes('2026-2') ? '2026-2' : '2026-1',
+                            userId: base.split(path.sep).slice(-2)[0],
+                            sampleName: key,
+                            experimentNumber: expNum,
+                            configDirectory: metadataPath.replace(mockStorageRoot, '').replace(/^\//, '/') + '/',
+                            requiredAxes: ["A", "B", "RA", "RB"],
+                            daqFrequency: 1,
+                            samplePoints: 1000,
+                            handlerProfiles: [],
+                            xrayProfiles: []
+                        };
+                        if (key === 'titanium_specimen_02' && expNum === '1') {
+                            mockPayload.daqFrequency = 10;
+                            mockPayload.samplePoints = 500;
+                            mockPayload.requiredAxes = ["A", "B", "RA"];
+                            mockPayload.handlerProfiles = [
+                                { mode: "time-series", filename: "ts_specimen_1", verboseAxis: "A", verboseSystem: 1, verboseTask: "A", verboseIO: 0, verboseAi: ["LoadA"], frequency: 10 }
+                            ];
+                            mockPayload.xrayProfiles = [
+                                {
+                                    id: "rotation-1",
+                                    name: "Rotation Series Profile",
+                                    mode: "rotation-series",
+                                    ramsx: 10.5,
+                                    ctime: 0.5,
+                                    beamHeight: 1.0,
+                                    beamWidth: 2.0,
+                                    atten: 0,
+                                    layerRanges: [
+                                        { omeStart: 0, omeStop: 180, numPoints: 180, layerStart: 0, layerEnd: 5, numLayers: 3 }
+                                    ]
+                                }
+                            ];
+                        }
+                        fs.writeFileSync(expFile, JSON.stringify(mockPayload, null, 2), 'utf8');
                     }
-                    fs.writeFileSync(expFile, JSON.stringify(mockPayload, null, 2), 'utf8');
+
+                    if (!fs.existsSync(mechFile) && key === 'titanium_specimen_02' && expNum === '1') {
+                        fs.writeFileSync(mechFile, JSON.stringify([
+                            {
+                                id: "step-1",
+                                type: "ramp",
+                                data: {
+                                    axis: "A",
+                                    mode: "relative",
+                                    control: "displacement",
+                                    target: 5.0,
+                                    dispToggle: "time",
+                                    time: 60.0,
+                                    velocity: null,
+                                    max_displacement: 10.0,
+                                    enable_dic: true,
+                                    skipDICpos: false,
+                                    incrementSeg: false,
+                                    wait: true
+                                }
+                            },
+                            {
+                                id: "step-2",
+                                type: "take",
+                                data: {
+                                    profileID: "rotation-1",
+                                    imgMode: "rotation-series",
+                                    pauseTsDaq: false
+                                }
+                            }
+                        ], null, 2), 'utf8');
+                    }
                 });
             } else if (typeof val === 'object') {
                 createStructure(currentPath, val);
@@ -79,7 +162,7 @@ const seedMockGateway = () => {
         });
     };
 
-    createStructure(root, structure);
+    createStructure(cyclesRoot, structure);
 };
 
 // Seed mock gateway directory structure on load
@@ -91,7 +174,7 @@ const mockGatewayPlugin = () => {
         configureServer(server) {
             server.middlewares.use(async (req, res, next) => {
                 const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
-                if (url.pathname === '/mock-gateway-api') {
+                if (url.pathname.startsWith('/api/') || url.pathname === '/mock-gateway-api') {
                     const queryPath = url.searchParams.get('path');
                     const action = url.searchParams.get('action');
                     const queryType = url.searchParams.get('type');

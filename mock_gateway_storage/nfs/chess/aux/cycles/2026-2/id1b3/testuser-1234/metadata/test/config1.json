@@ -7,41 +7,92 @@
   "requiredAxes": [
     "A",
     "B",
-    "RA",
-    "RB"
+    "RT",
+    "RB",
+    "TENS"
   ],
   "daqFrequency": 1,
   "samplePoints": 1000,
-  "handlerProfiles": [],
+  "handlerProfiles": [
+    {
+      "mode": "peak-valley",
+      "filename": "peakvalley_test_1-1",
+      "verboseAxis": "-1",
+      "verboseSystem": -1,
+      "verboseTask": "-1",
+      "verboseIO": -1,
+      "verboseAi": [],
+      "signalAxis": "RT",
+      "signalItem": "PositionFeedback",
+      "signalProminence": 1
+    }
+  ],
   "xrayProfiles": [
     {
+      "id": "xrayProfile1784806518438",
+      "name": "stills",
+      "mode": "stills",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "stillPoints": [
+        {
+          "ramsx": 1,
+          "ramsz": 1,
+          "ome": 1,
+          "numPoints": 1
+        }
+      ]
+    },
+    {
+      "id": "xrayProfile1784806481919",
+      "name": "rot",
+      "mode": "rotation-series",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "ramsx": 1,
+      "layerRanges": [
+        {
+          "omeStart": 1,
+          "omeStop": 1,
+          "numPoints": 1,
+          "layerStart": 1,
+          "layerEnd": 1,
+          "numLayers": 1
+        }
+      ]
+    },
+    {
       "id": "xrayProfile1784678083915",
-      "name": "test",
+      "name": "map",
       "mode": "mapscan",
       "ctime": 1,
       "beamHeight": 1,
       "beamWidth": 1,
       "atten": 1,
-      "ramsx": 2,
-      "ramsz": 2,
-      "ome": 2,
+      "ramsx": 1,
+      "ramsz": 1,
+      "ome": 1,
       "mapscanAxes": [
-        {
-          "axisName": "ramsz",
-          "start": 2,
-          "stop": 2,
-          "points": 2
-        },
         {
           "axisName": "ome",
           "start": 2,
+          "stop": 1,
+          "points": 1
+        },
+        {
+          "axisName": "ramsz",
+          "start": 1,
           "stop": 1,
           "points": 1
         }
       ]
     }
   ],
-  "settingsVersion": 0,
+  "settingsVersion": 7,
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
   "systemName": "RAMS4_CHESS",
@@ -60,7 +111,7 @@
       "max_acceleration": 100
     },
     {
-      "name": "RA",
+      "name": "RT",
       "max_velocity": 10,
       "max_acceleration": 20
     },

@@ -322,7 +322,7 @@ export const MechTestGroupItem = ({
                                     )}
                                 </span>
                                 {loopsVal > 1 && (
-                                    <span className="flex items-center gap-1.5 text-mauve-600 dark:text-mauve-400 font-semibold shrink-0">
+                                    <span className="flex items-center gap-1.5 text-mauve-600 dark:text-mauve-600 font-semibold shrink-0">
                                         <RefreshCw className="h-3.5 w-3.5" />
                                         <span>{loopsVal}</span>
                                     </span>

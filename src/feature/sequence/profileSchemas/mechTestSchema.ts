@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const rampSchema = z.object({
-    axis: z.enum(['A', 'B', 'RA', 'RB', 'TENS'], { message: "Axis is required" }),
+    axis: z.string().min(1, "Axis is required"),
     mode: z.enum(['relative', 'absolute'], { message: "Mode is required" }),
     control: z.enum(['displacement', 'load', 'strain'], { message: "Control is required" }),
     target: z.preprocess(
@@ -59,7 +59,7 @@ export const takeSchema = z.object({
 });
 
 export const dwellSchema = z.object({
-    axis: z.enum(['A', 'B', 'RA', 'RB', 'TENS'], { message: "Axis is required" }),
+    axis: z.string().min(1, "Axis is required"),
     control: z.enum(['load', 'strain'], { message: "Control is required" }),
     target: z.preprocess(
         (val) => (val === '' || val === undefined || val === null || Number.isNaN(Number(val))) ? undefined : Number(val),
@@ -77,7 +77,7 @@ export const dwellSchema = z.object({
 });
 
 export const cycleSchema = z.object({
-    axis: z.enum(['A', 'B', 'RA', 'RB', 'TENS'], { message: "Axis is required" }),
+    axis: z.string().min(1, "Axis is required"),
     control: z.enum(['displacement', 'load', 'strain'], { message: "Control is required" }),
     mode: z.enum(['absolute', 'relative'], { message: "Mode is required" }),
     upper: z.preprocess(

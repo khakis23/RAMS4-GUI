@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Control, Controller, FieldErrors, UseFormRegister, useFieldArray, useWatch } from 'react-hook-form';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Trash2 } from 'lucide-react';
 import { Input } from '../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Button } from '../../../components/ui/button';
@@ -9,6 +9,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { tooltips } from "@/config/tooltips.ts";
 import { handlerProfileSchema } from '../profileSchemas/daqSchema';
 import { ProfileCardLayout } from './ProfileCardLayout';
+import { useAvailableAxes } from '@/hooks/useAvailableAxes';
 
 const verboseAxisOptions = [
     { label: "None", value: -1 },
@@ -92,10 +93,10 @@ const CyclesFieldArray = ({ control, register, profileIndex }: CyclesFieldArrayP
                                 type="button" 
                                 variant="ghost" 
                                 size="icon"
-                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
+                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg cursor-pointer transition-colors"
                                 onClick={() => remove(cycleIndex)}
                             >
-                                <X className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />
                             </Button>
                         </div>
                     ))}
@@ -133,6 +134,8 @@ export const DAQProfileCard = ({
     currentMode,
     requiredAxes
 }: DAQProfileCardProps) => {
+    const availableAxes = useAvailableAxes();
+    const axesOptions = availableAxes;
     const profileErrors = (errors.handlersProfile as any)?.[index] as any;
 
     const profileValues = useWatch({
@@ -228,18 +231,21 @@ export const DAQProfileCard = ({
                             <Controller
                                 control={control}
                                 name={`handlersProfile.${index}.signalAxis`}
-                                render={({ field }) => (
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
-                                        <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
-                                            <SelectValue placeholder="Select axis" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white">
-                                            {requiredAxes.map((axis: string) => (
-                                                <SelectItem key={axis} value={axis} className="text-xs cursor-pointer">{axis}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
+                                render={({ field }) => {
+                                    const selectValue = (field.value && axesOptions.includes(field.value)) ? field.value : undefined;
+                                    return (
+                                        <Select onValueChange={field.onChange} value={selectValue}>
+                                            <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                <SelectValue placeholder="Select axis" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white">
+                                                {axesOptions.map((axis: string) => (
+                                                    <SelectItem key={axis} value={axis} className="text-xs cursor-pointer">{axis}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    );
+                                }}
                             />
                             {profileErrors?.signalAxis && (
                                 <p className="text-xs text-destructive">{profileErrors.signalAxis.message}</p>
@@ -303,18 +309,21 @@ export const DAQProfileCard = ({
                             <Controller
                                 control={control}
                                 name={`handlersProfile.${index}.psoAxis`}
-                                render={({ field }) => (
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
-                                        <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
-                                            <SelectValue placeholder="Select axis" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white">
-                                            {requiredAxes.map((axis: string) => (
-                                                <SelectItem key={axis} value={axis} className="text-xs cursor-pointer">{axis}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
+                                render={({ field }) => {
+                                    const selectValue = (field.value && axesOptions.includes(field.value)) ? field.value : undefined;
+                                    return (
+                                        <Select onValueChange={field.onChange} value={selectValue}>
+                                            <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                <SelectValue placeholder="Select axis" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-white">
+                                                {axesOptions.map((axis: string) => (
+                                                    <SelectItem key={axis} value={axis} className="text-xs cursor-pointer">{axis}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    );
+                                }}
                             />
                             {profileErrors?.psoAxis && (
                                 <p className="text-xs text-destructive">{profileErrors.psoAxis.message}</p>

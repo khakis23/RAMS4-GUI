@@ -20,11 +20,47 @@ npm run dev
 Navigate to the `localhost` link provided in the terminal.
 
 
-## API Requests
+## API Endpoints
+
+### Directory 
+
+#### GET /api/directory 
+- Query Parameters:
+  - `action`: "list"
+  - `path`: URL-encoded relative filesystem path
+  - `type`: Directory tier level
+    ('cycle' | 'station' | 'btr' | 'sample' | 'experiment')
+- Response Payload:
+  - String array of available directory names (ex. `['sjobs-123', 'tcook-456', 'jternus789']`)
+
+
+### Config
+TODO
+
+### Settings
+TODO
+
+### Sequence
+
+#### GET /api/mechtest
+- Query Parameters:
+  - `path`: URL-encoded file path
+    (e.g., `<path>.json`)
+- Response Payload:
+  - _Sequence Builder Payload_ (see _Schemas & JSON Payloads_)
+
+#### POST /api/mechtest
+- Request Payload:
+  - A JSON containing the file path and Sequence Object
+    (e.g., `customFilePath: <path>.json, data: <Sequence Payload>`)
+
 
 ## Schemas & JSON Payloads
 
-### Sequence Builder
+### Sequence Builder Payload
+
+A test sequence JSON is exchanged between the frontend and backend through the 
+`mechanicalTestApi.ts`.
 
 #### Ramp
 
@@ -216,7 +252,7 @@ Example:
 | `group.loops` | Number | Yes | `1` | The number of times to loop the group. |
 | `group.steps` | List | Yes | `[]` | The list of steps or groups contained by the outer group |
 
-**NOTE:** Groups can be **nested _twice_.**
+**NOTE:** Groups can be **nested a _max_ of _twice_.**
 
 
 Example: 
@@ -270,4 +306,252 @@ Example:
     }
   }
 ]
+```
+
+### Configuration & Settings Payload
+
+TODO!
+
+### DAQ Handler Profiles
+
+`handlerProfiles` are a part of the configuration JSONs changed by the configuration API.
+
+#### Advanced
+All the DAQ Handler Profiles have these advanced parameters.
+
+| Parameter | Type | Required / Default | Description |
+| :--- | :--- | :--- | :--- |
+| `verboseAxis` | Number | Yes | Motor stage signal logging detail: `-1` (Disabled), `0` (Basic: Position, Velocity, Acceleration), `1` (Standard: Commands & Primary Feedback), `2` (Full Diagnostic: Errors & Motor Temp). |
+| `verboseSystem` | Number | `-1` | Controller system timer detail: `-1` (Disabled), `0` (Basic Timer), `1` (Detailed Performance). |
+| `verboseTask` | Number | `-1` | Controller background task script logging detail: `-1` (Disabled), `0` (Task State & Mode), `1` (Errors & Warnings), `2` (Program Line Number). |
+| `verboseIO` | Number | `-1` | Hardware digital & analog pin logging detail: `-1` (Disabled), `0` (Primary Analog Pins), `1`-`2` (Full Channel States). |
+| `verboseAi` | List of Enums | [] | Active logging inputs. |
+
+
+#### Time Series
+
+| Parameter | Type | Required / Default | Description |
+| :--- | :--- | :--- | :--- |
+| `filename` | String | Yes | Filename used for save in data location (holding_bay). |
+| `frequency` | Number | Yes | Frequency (Hz) that this DAQ save data at. |
+| `cycles` | List of JSON Objects | No | Defined range that the DAQ will run at for experiment. JSON Objects containing {`start`, `stop`, `step`}. |
+
+
+
+Example:
+
+```json
+"handlerProfiles": [
+  {
+    "mode": "time-series",
+    "filename": "timeseries_test_1-2",
+    "verboseAxis": "-1",
+    "verboseSystem": -1,
+    "verboseTask": "-1",
+    "verboseIO": -1,
+    "verboseAi": ["LoadA"],
+    "frequency": 1000,
+    "cycles": [
+      {
+        "start": 1,
+        "stop": 10,
+        "step": 1
+      }
+    ]
+  }
+]
+```
+
+#### Peak Valley
+
+| Parameter | Type | Required | Options / Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `filename` | String | Yes |  | Filename used for save in data location (holding_bay). |
+| `signalAxis` | Enum | Yes | `A`, `B`, `RA`, `RB`, `TENS` | Axis driving signal wave. |
+| `signalItem` | Enum | Yes | `PositionFeedback`, `VelocityFeedback`, `AccelerationFeedback` | Controller feedback signal type | 
+| `signalProminence` | Number | Yes | | Minimum amplitude threshold required to identify a peak/valley. |
+
+
+Example: 
+
+```json
+  "handlerProfiles": [
+    {
+      "mode": "peak-valley",
+      "filename": "peakvalley_test_1-1",
+      "verboseAxis": "-1",
+      "verboseSystem": -1,
+      "verboseTask": "-1",
+      "verboseIO": -1,
+      "verboseAi": [],
+      "signalAxis": "A",
+      "signalItem": "VelocityFeedback",
+      "signalProminence": 0
+    }
+  ],
+```
+
+
+#### Position Synchronized Output (PSO)
+
+| Parameter | Type | Required | Options / Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `filename` | String | Yes |  | Filename used for save in data location (holding_bay). |
+| `psoAxis` | Enum | Yes | `A`, `B`, `RA`, `RB` | The axis that generates pulses. |
+
+Example: 
+
+```json
+"handlerProfiles": [
+  {
+    "mode": "pso",
+    "filename": "pso_test_1-1",
+    "verboseAxis": "2",
+    "verboseSystem": 0,
+    "verboseTask": "1",
+    "verboseIO": 1,
+    "verboseAi": ["LoadA", "Strain", "SpecComm"],
+    "psoAxis": "A"
+  }
+],
+```
+
+
+### X-ray Scan Profiles
+
+`xrayProfiles` are a part of the configuration JSONs changed by the configuration API.
+
+
+#### Base X-ray Profile Configuration
+The following parameters are present in every X-ray profile.
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `name` | String | Yes | User-facing name used for easy user-identification |
+| `ctime` | Number | Yes | Exposure time (s) |
+| `atten` | Number | Yes | Attenuated foil thickness (mm) |
+| `beamHeight` | Number | Yes | Beam Height (mm) |
+| `beamWidth` | Number | Yes | Beam Width (mm) |
+
+
+
+#### Rotation Series
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `ramsx` | Number | Yes | Reference X position (mm) |
+| `layerRanges` | List of Objects | Yes (**at least 1 list item**) | Contains the following **required** **numeric** items per object for building layers: {`omeStart`, `omeStop`, `numPoints`, `layerStart`, `layerEnd`, `numLayers`}. |
+
+Example:
+
+```json
+"xrayProfiles": [
+    {
+      "id": "xrayProfile1784806481919",
+      "name": "rot",
+      "mode": "rotation-series",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "ramsx": 1,
+      "layerRanges": [
+        {
+          "omeStart": 1,
+          "omeStop": 1,
+          "numPoints": 1,
+          "layerStart": 1,
+          "layerEnd": 1,
+          "numLayers": 1
+        }
+      ]
+    },
+]
+```
+
+#### Stills
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| stillPoints | List of Objects | Yes (**at least 1 list item**) |  Contains the following **required** **numeric** items per object: {`ramsx`, `ramsz`, `ome`, `numPoints`}. |
+
+
+Example: 
+
+```json
+"xrayProfiles": [
+    {
+      "id": "xrayProfile1784806518438",
+      "name": "stills",
+      "mode": "stills",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "stillPoints": [
+        {
+          "ramsx": 1,
+          "ramsz": 1,
+          "ome": 1,
+          "numPoints": 1
+        }
+      ]
+    },
+]
+```
+
+
+#### Mapscan
+
+Main Profile:
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `ramsx` | Number | Yes | Reference X position (mm) |
+| `ramsz` | Number | Yes | Reference Z position (mm) |
+| `ome` | Number | Yes | Reference Angle position (º) |
+| `mapscanAxes` | List of Objects | Yes (**at least 1 list item**) | Contains **1 or 2** axe(s) |
+
+`mapscanAxes` Object Item:
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `axisName` | Enum | Yes | The moving axis name: `ramsz`, `ramsz`, or `ome`. |
+| `start` | Number | Yes | Start position (mm) |
+| `stop` | Number | Yes | Stop position (mm) |
+| `points` | Number | Yes | Number of points along the axis. |
+
+
+
+
+
+Example:
+
+```json
+"xrayProfiles": [
+  {
+      "id": "xrayProfile1784678083915",
+      "name": "map",
+      "mode": "mapscan",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "ramsx": 1,
+      "ramsz": 1,
+      "ome": 1,
+      "mapscanAxes": [
+        {
+          "axisName": "ramsz",
+          "start": 2,
+          "stop": 1,
+          "points": 1
+        },
+        {
+          "axisName": "ramsx",
+          "start": 1,
+          "stop": 1,
+          "points": 1
+        }
+      ]
+    }
+  ],
 ```

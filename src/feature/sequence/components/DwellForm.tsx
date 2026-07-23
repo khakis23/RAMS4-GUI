@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { Switch } from '@/components/ui/switch';
 import { tooltips } from '@/config/tooltips';
+import { useAvailableAxes } from '@/hooks/useAvailableAxes';
 
 interface DwellFormProps {
     namePrefix: string;
@@ -20,6 +21,7 @@ const getNestedError = (errors: any, path: string) => {
 };
 
 export const DwellForm = ({ namePrefix, register, errors, control, watch, setValue }: DwellFormProps) => {
+    const availableAxes = useAvailableAxes();
     const controlMode = watch(`${namePrefix}.data.control`) || 'load';
 
     // Set default values if not defined
@@ -31,13 +33,13 @@ export const DwellForm = ({ namePrefix, register, errors, control, watch, setVal
         if (currentControl === undefined || currentControl === null) {
             setValue(`${namePrefix}.data.control`, 'load');
         }
-        if (currentAxis === undefined || currentAxis === null) {
-            setValue(`${namePrefix}.data.axis`, 'A');
+        if (currentAxis === undefined || currentAxis === null || !availableAxes.includes(currentAxis)) {
+            setValue(`${namePrefix}.data.axis`, availableAxes[0] || 'A');
         }
         if (currentWait === undefined || currentWait === null) {
             setValue(`${namePrefix}.data.wait`, true);
         }
-    }, [namePrefix, setValue, watch]);
+    }, [namePrefix, setValue, watch, availableAxes]);
 
     const dwellErrors = getNestedError(errors, namePrefix)?.data;
 
@@ -51,20 +53,24 @@ export const DwellForm = ({ namePrefix, register, errors, control, watch, setVal
                     <Controller
                         control={control}
                         name={`${namePrefix}.data.axis`}
-                        render={({ field }) => (
-                            <Select onValueChange={field.onChange} value={field.value || 'A'}>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select axis" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white">
-                                    <SelectItem value="A" className="cursor-pointer">A</SelectItem>
-                                    <SelectItem value="B" className="cursor-pointer">B</SelectItem>
-                                    <SelectItem value="RA" className="cursor-pointer">RA</SelectItem>
-                                    <SelectItem value="RB" className="cursor-pointer">RB</SelectItem>
-                                    <SelectItem value="TENS" className="cursor-pointer">TENS</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        )}
+                        render={({ field }) => {
+                            const axisOptions = availableAxes;
+                            const selectValue = availableAxes.includes(field.value) ? field.value : (availableAxes[0] || 'A');
+                            return (
+                                <Select onValueChange={field.onChange} value={selectValue}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select axis" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white">
+                                        {axisOptions.map((axis) => (
+                                            <SelectItem key={axis} value={axis} className="cursor-pointer">
+                                                {axis}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            );
+                        }}
                     />
                 </div>
 

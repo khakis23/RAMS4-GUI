@@ -133,7 +133,7 @@ const normalizeConfig = (config: any) => {
             verboseTask: hp.verboseTask || "-1",
             verboseSystem: hp.verboseSystem ?? -1,
             verboseIO: hp.verboseIO ?? -1,
-            verboseAi: hp.verboseAi ?? "",
+            verboseAi: Array.isArray(hp.verboseAi) ? hp.verboseAi : (hp.verboseAi ? hp.verboseAi.split(',').map((s: string) => s.trim()) : []),
             frequency: hp.frequency ?? null,
             cycles: hp.cycles || [],
             signalAxis: hp.signalAxis ?? null,

@@ -230,7 +230,7 @@ export const XrayProfileCard = ({
                                             <Button 
                                                 type="button" 
                                                 variant="secondary" 
-                                                className="h-8 w-8 p-0 text-red-650 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 bg-white border border-mauve-200 cursor-pointer"
+                                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 cursor-pointer transition-colors"
                                                 onClick={() => removePoint(ptIdx)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -363,7 +363,7 @@ export const XrayProfileCard = ({
                                             <Button 
                                                 type="button" 
                                                 variant="secondary" 
-                                                className="h-8 w-8 p-0 text-red-650 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 bg-white border border-mauve-200 cursor-pointer"
+                                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 cursor-pointer transition-colors"
                                                 onClick={() => removeMapscanAxis(axIdx)}
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -483,7 +483,7 @@ export const XrayProfileCard = ({
                                             <Button 
                                                 type="button" 
                                                 variant="secondary" 
-                                                className="h-8 w-8 p-0 text-red-650 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 bg-white border border-mauve-200 cursor-pointer"
+                                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg shrink-0 cursor-pointer transition-colors"
                                                 onClick={() => removeLayerRange(rngIdx)}
                                             >
                                                 <Trash2 className="h-4 w-4" />

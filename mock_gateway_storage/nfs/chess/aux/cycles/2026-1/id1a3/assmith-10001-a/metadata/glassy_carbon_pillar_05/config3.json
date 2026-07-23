@@ -1,0 +1,17 @@
+{
+  "cycleNumber": "2026-1",
+  "userId": "id1a3",
+  "sampleName": "glassy_carbon_pillar_05",
+  "experimentNumber": "3",
+  "configDirectory": "/nfs/chess/aux/cycles/2026-1/id1a3/assmith-10001-a/metadata/glassy_carbon_pillar_05/",
+  "requiredAxes": [
+    "A",
+    "B",
+    "RA",
+    "RB"
+  ],
+  "daqFrequency": 1,
+  "samplePoints": 1000,
+  "handlerProfiles": [],
+  "xrayProfiles": []
+}

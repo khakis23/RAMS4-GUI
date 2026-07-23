@@ -1,0 +1,28 @@
+[
+  {
+    "takeWhile": {
+      "take": {
+        "profileID": "xrayProfile1784806481919",
+        "imgMode": "tomo",
+        "pauseTsDaq": false
+      },
+      "step": {
+        "type": "ramp",
+        "data": {
+          "target": 1,
+          "time": 1,
+          "max_displacement": 1,
+          "axis": "RT",
+          "mode": "absolute",
+          "control": "displacement",
+          "dispToggle": "time",
+          "enable_dic": false,
+          "skipDICpos": false,
+          "incrementSeg": false,
+          "wait": true,
+          "velocity": null
+        }
+      }
+    }
+  }
+]

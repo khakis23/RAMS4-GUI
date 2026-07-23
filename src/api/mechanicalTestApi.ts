@@ -1,8 +1,28 @@
 /**
- * Service API for saving and loading Mechanical Test sequences (mechTest<experiment>.json)
- * to/from the user's data directory on the gateway server.
+ * Saves a mechanical test sequence (`mechTest<experiment>.json`) to the
+ * user's experiment directory on the gateway server.
+ * 
+ * HTTP Details:
+ * - Method: POST
+ * - Endpoint: /api/mechtest
+ * - Query Parameters: None
+ * 
+ * JSON Payload Summary:
+ * - Outer Request:
+ *   {
+ *     customFilePath: `${directory}mechTest${experiment}.json`,
+ *     data: StepObject[]
+ *   }
+ * - `data` Payload:
+ *   An array of sequence step objects (`ramp`, `dwell`, `cycle`,
+ *   `take`, `take-while`, `group`). Includes control modes, targets,
+ *   velocity/time rates, safety displacement limits, DIC flags, and
+ *   nested card groups.
+ * 
+ * Trigger / Call Context:
+ * Triggered automatically via auto-save or manually when modifying
+ * mechanical test sequence cards in the Sequence Builder tab.
  */
-
 export const postMechTestToGateway = async (
     directory: string,
     experiment: string,
@@ -15,7 +35,7 @@ export const postMechTestToGateway = async (
     console.log("Saving Mechanical Test sequence to path:", filePath);
 
     try {
-        const response = await fetch('/mock-gateway-api', {
+        const response = await fetch('/api/mechtest', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -34,6 +54,25 @@ export const postMechTestToGateway = async (
     }
 };
 
+/**
+ * Reads a mechanical test sequence JSON file (`mechTest<experiment>.json`)
+ * for a given experiment from the gateway server.
+ * 
+ * HTTP Details:
+ * - Method: GET
+ * - Endpoint: /api/mechtest
+ * - Query Parameters:
+ *   - `path`: URL-encoded file path
+ *     (e.g., `${directory}mechTest${experiment}.json`)
+ * 
+ * JSON Payload / Response Summary:
+ * Returns an array of mechanical test sequence step objects (`StepObject[]`)
+ * or `null` if no test sequence file exists for the experiment.
+ * 
+ * Trigger / Call Context:
+ * Triggered when an experiment is selected or loaded in the Sequence
+ * Builder workspace to populate the sequence builder canvas.
+ */
 export const fetchMechTestFromGateway = async (
     directory: string,
     experiment: string
@@ -45,7 +84,7 @@ export const fetchMechTestFromGateway = async (
     console.log(`Checking mechanical test file: ${filePath}`);
 
     try {
-        const response = await fetch(`/mock-gateway-api?path=${encodeURIComponent(filePath)}`);
+        const response = await fetch(`/api/mechtest?path=${encodeURIComponent(filePath)}`);
         if (response.ok) {
             return await response.json();
         }

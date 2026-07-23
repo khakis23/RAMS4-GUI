@@ -33,8 +33,25 @@ const staticMockData: Record<string, (prev: string) => string[]> = {
 };
 
 /**
- * Sends a single complete JSON file to the user's data directory on the Python gateway server.
- * Includes a temporary fallback for static host environments.
+ * Saves experiment configuration options to the backend gateway.
+ * 
+ * HTTP Details:
+ * - Method: POST
+ * - Endpoint: /api/config
+ * - Query Parameters: None
+ * 
+ * JSON Payload Summary:
+ * Expects a full experiment configuration object (`config<N>.json`):
+ * - Metadata: `cycleNumber`, `userId`, `sampleName`,
+ *   `experimentNumber`, `configDirectory`
+ * - DAQ: `requiredAxes`, `daqFrequency`, `samplePoints`,
+ *   `handlerProfiles` array
+ * - X-ray: `xrayProfiles` array (`stills`, `mapscan`,
+ *   or `rotation-series` profiles)
+ * 
+ * Trigger / Call Context:
+ * Invoked during auto-save or manual configuration saves whenever
+ * inputs in the Configuration tab are modified.
  */
 export const postConfigToGateway = async (
     payload: any
@@ -45,7 +62,7 @@ export const postConfigToGateway = async (
     console.log("Saving Config to backend gateway for path:", payload?.configDirectory);
 
     try {
-        const response = await fetch('/mock-gateway-api', {
+        const response = await fetch('/api/config', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -64,8 +81,23 @@ export const postConfigToGateway = async (
 
 
 /**
- * Simulates reading a configuration JSON file from the gateway server at the specified path.
- * Includes a temporary fallback for static host environments to keep demo layouts pre-populated.
+ * Retrieves a saved experiment configuration JSON file (`config<N>.json`)
+ * from the gateway server.
+ * 
+ * HTTP Details:
+ * - Method: GET
+ * - Endpoint: /api/config
+ * - Query Parameters:
+ *   - `path`: URL-encoded full file path
+ *     (e.g., `${directory}config${experiment}.json`)
+ * 
+ * JSON Payload / Response Summary:
+ * Returns the parsed experiment configuration JSON object matching the
+ * `postConfigToGateway` payload schema, or `null` if no file exists on disk.
+ * 
+ * Trigger / Call Context:
+ * Triggered when switching active experiments or loading directory paths
+ * in the Configuration Gateway header bar.
  */
 export const fetchConfigFromGateway = async (
     directory: string,
@@ -78,7 +110,7 @@ export const fetchConfigFromGateway = async (
     console.log(`Checking config file: ${filePath}`);
     
     try {
-        const response = await fetch(`/mock-gateway-api?path=${encodeURIComponent(filePath)}`);
+        const response = await fetch(`/api/config?path=${encodeURIComponent(filePath)}`);
         if (response.ok) {
             return await response.json();
         }
@@ -105,7 +137,7 @@ export const fetchConfigFromGateway = async (
                     verboseSystem: 1,
                     verboseTask: "A",
                     verboseIO: 0,
-                    verboseAi: "A",
+                    verboseAi: ["A"],
                     frequency: 10
                 }
             ],
@@ -144,12 +176,27 @@ export interface PathsResponse {
 }
 
 /**
- * /nfs/chess/aux/cycles/current/id1a3/<BTR>/metadata/
+ * Scans and lists child subdirectories or experiment files on the
+ * gateway server filesystem.
+ * 
+ * HTTP Details:
+ * - Method: GET
+ * - Endpoint: /api/directory
+ * - Query Parameters:
+ *   - `action`: "list"
+ *   - `path`: URL-encoded relative filesystem path
+ *   - `type`: Directory tier level
+ *     ('cycle' | 'station' | 'btr' | 'sample' | 'experiment')
+ * 
+ * JSON Payload / Response Summary:
+ * Returns a string array (`string[]`) of folder names or available
+ * experiment IDs matching the requested directory level.
+ * 
+ * Trigger / Call Context:
+ * Invoked dynamically during cascade navigation in `ConfigurationGateway.tsx`
+ * when selecting a folder level (Cycle -> Station -> BTR -> Sample -> Experiment).
  */
 export const fetchDirItems = async (getDir: PathType, prevDirName: string): Promise<string[]> => {
-    // Simulate API latency
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
     let relativePath = '';
     switch (getDir) {
         case 'cycle':
@@ -173,7 +220,7 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
     }
 
     try {
-        const response = await fetch(`/mock-gateway-api?action=list&path=${encodeURIComponent(relativePath)}&type=${getDir}`);
+        const response = await fetch(`/api/directory?action=list&path=${encodeURIComponent(relativePath)}&type=${getDir}`);
         if (response.ok) {
             return await response.json();
         }
@@ -187,6 +234,11 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
 };
 
 
+/**
+ * Helper utility to derive the hardware settings directory path
+ * (`/nfs/chess/aux/cycles/<cycle>/<station>/RAMS-settings/`)
+ * from a given experiment configuration directory path.
+ */
 export const getSettingsDir = (configDirectory: string): string => {
     const match = configDirectory.match(/(?:nfs\/chess\/aux\/)?cycles\/([^\/]+)\/([^\/]+)/);
     if (match) {
@@ -196,10 +248,26 @@ export const getSettingsDir = (configDirectory: string): string => {
 };
 
 /**
- * Reads a versioned settings configuration file (settings<version>.json)
- * from the gateway server. If version is not found, it falls back to the latest.
+ * Reads a versioned system hardware settings JSON file
+ * (`settings<version>.json`) from the gateway server.
  * 
- * TEMPORARY FRONTEND GATEWAY CONNECTOR
+ * HTTP Details:
+ * - Method: GET
+ * - Endpoint: /api/settings
+ * - Query Parameters:
+ *   - Discovery request: `action=list&path=${settingsDir}&type=settings`
+ *   - Fetch request: `path=${settingsDir}settings${version}.json`
+ * 
+ * JSON Payload / Response Summary:
+ * Returns `{ data: SettingsData, version: number, isFallback: boolean }`
+ * or `null`. `data` contains global hardware options:
+ * - SPEC / Host: `specHost`, `requireSpecEnable`, `systemName`, `controllerHost`
+ * - Limits & Counters: `axisCount`, `taskCount`
+ * - Mappings: `axesSettings` array and `signalSettings` array
+ * 
+ * Trigger / Call Context:
+ * Invoked when loading global settings or switching experiments to bind
+ * system-wide hardware constraints to the workspace.
  */
 export const fetchSettingsFromGateway = async (directory: string, version: number | null | undefined): Promise<{ data: any; version: number; isFallback: boolean } | null> => {
     // Simulate API latency
@@ -210,7 +278,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
     // Helper to scan settings folder and find highest version
     const getLatestVersion = async (): Promise<number | null> => {
         try {
-            const listUrl = `/mock-gateway-api?action=list&path=${encodeURIComponent(settingsDir)}&type=settings`;
+            const listUrl = `/api/settings?action=list&path=${encodeURIComponent(settingsDir)}&type=settings`;
             const response = await fetch(listUrl);
             if (response.ok) {
                 const versions: number[] = await response.json();
@@ -239,7 +307,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
     console.log(`Checking settings file: ${filePath}`);
 
     try {
-        const response = await fetch(`/mock-gateway-api?path=${encodeURIComponent(filePath)}`);
+        const response = await fetch(`/api/settings?path=${encodeURIComponent(filePath)}`);
         if (response.ok) {
             const data = await response.json();
             return { data, version: targetVersion, isFallback: false };
@@ -247,7 +315,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
             // Target settings version goes missing. Attempt fallback to latest settings version.
             const latest = await getLatestVersion();
             if (latest !== null) {
-                const fallbackResponse = await fetch(`/mock-gateway-api?path=${encodeURIComponent(`${settingsDir}settings${latest}.json`)}`);
+                const fallbackResponse = await fetch(`/api/settings?path=${encodeURIComponent(`${settingsDir}settings${latest}.json`)}`);
                 if (fallbackResponse.ok) {
                     const data = await fallbackResponse.json();
                     return { data, version: latest, isFallback: true }; // caller will notice the mismatch
@@ -290,9 +358,25 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
 };
 
 /**
- * Saves settings properties to gateway server using auto-incrementing file naming: settings{N}.json.
+ * Writes updated global hardware settings into an auto-incremented
+ * versioned file (`settings<N>.json`) on the gateway server.
  * 
- * TEMPORARY FRONTEND GATEWAY CONNECTOR
+ * HTTP Details:
+ * - Method: POST
+ * - Endpoint: /api/settings
+ * - Query Parameters: None
+ * 
+ * JSON Payload Summary:
+ * Outer Request:
+ * {
+ *   customFilePath: `${settingsDir}settings_auto_increment`,
+ *   data: HardwareSettingsPayload
+ * }
+ * Returns `{ success: boolean, version: number }` indicating the newly
+ * assigned auto-incremented version integer.
+ * 
+ * Trigger / Call Context:
+ * Called when a user explicitly saves changes in the Settings modal / section.
  */
 export const postSettingsToGateway = async (directory: string, settings: any): Promise<{ success: boolean; version: number }> => {
     // Simulate API latency
@@ -312,7 +396,7 @@ export const postSettingsToGateway = async (directory: string, settings: any): P
     };
 
     try {
-        const response = await fetch('/mock-gateway-api', {
+        const response = await fetch('/api/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ customFilePath: targetFile, data: payload })

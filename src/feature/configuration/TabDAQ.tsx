@@ -15,9 +15,11 @@ import { DAQProfileCard } from "./components/DAQProfileCard.tsx";
 import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
 import { tooltips } from "@/config/tooltips.ts";
 import { Plus } from 'lucide-react';
+import { useAvailableAxes } from '@/hooks/useAvailableAxes';
 
 export const TabDAQ = () => {
     const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
+    const availableAxes = useAvailableAxes();
     const loadedPathRef = useRef<string>("");
 
     const {
@@ -31,17 +33,20 @@ export const TabDAQ = () => {
         resolver: zodResolver(daqSchema),
         mode: "onChange",
         defaultValues: {
-            requiredAxes: draft.requiredAxes || ["A", "B", "RA", "RB"],
+            requiredAxes: availableAxes,
             daqFrequency: draft.daqFrequency,
             samplePoints: draft.samplePoints,
             handlersProfile: (draft.handlerProfiles || []).map(profile => {
-                const rawAi = profile.verboseAi || "";
+                const rawAi = Array.isArray(profile.verboseAi) 
+                    ? profile.verboseAi 
+                    : (profile.verboseAi ? (profile.verboseAi as string).split(',').map(s => s.trim()) : []);
                 return {
                     ...profile,
                     verboseAxis: profile.verboseAxis || "-1",
                     verboseTask: profile.verboseTask || "-1",
                     verboseSystem: profile.verboseSystem ?? -1,
                     verboseIO: profile.verboseIO ?? -1,
+                    verboseAi: rawAi,
                     loadA: rawAi.includes("LoadA"),
                     strain: rawAi.includes("Strain"),
                     specLoadFrameComm: rawAi.includes("SpecComm"),
@@ -56,17 +61,20 @@ export const TabDAQ = () => {
         if (lastLoadedPath && lastLoadedPath !== loadedPathRef.current) {
             loadedPathRef.current = lastLoadedPath;
             reset({
-                requiredAxes: draft.requiredAxes || ["A", "B", "RA", "RB"],
+                requiredAxes: availableAxes,
                 daqFrequency: draft.daqFrequency,
                 samplePoints: draft.samplePoints,
                 handlersProfile: (draft.handlerProfiles || []).map(profile => {
-                    const rawAi = profile.verboseAi || "";
+                    const rawAi = Array.isArray(profile.verboseAi) 
+                        ? profile.verboseAi 
+                        : (profile.verboseAi ? (profile.verboseAi as string).split(',').map(s => s.trim()) : []);
                     return {
                         ...profile,
                         verboseAxis: profile.verboseAxis || "-1",
                         verboseTask: profile.verboseTask || "-1",
                         verboseSystem: profile.verboseSystem ?? -1,
                         verboseIO: profile.verboseIO ?? -1,
+                        verboseAi: rawAi,
                         loadA: rawAi.includes("LoadA"),
                         strain: rawAi.includes("Strain"),
                         specLoadFrameComm: rawAi.includes("SpecComm"),
@@ -126,7 +134,7 @@ export const TabDAQ = () => {
                 verboseTask: profile.verboseTask,
                 verboseSystem: profile.verboseSystem,
                 verboseIO: profile.verboseIO,
-                verboseAi: aiArray.join(", "),
+                verboseAi: aiArray,
                 frequency: profile.frequency,
                 cycles: profile.cycles,
                 signalAxis: profile.signalAxis,
@@ -184,7 +192,7 @@ export const TabDAQ = () => {
                     verboseTask: profile.verboseTask,
                     verboseSystem: profile.verboseSystem,
                     verboseIO: profile.verboseIO,
-                    verboseAi: aiArray.join(", "),
+                    verboseAi: aiArray,
                     frequency: profile.frequency,
                     cycles: profile.cycles,
                     signalAxis: profile.signalAxis,
@@ -222,7 +230,7 @@ export const TabDAQ = () => {
                         verboseSystem: -1,
                         verboseTask: "-1",
                         verboseIO: -1,
-                        verboseAi: "",
+                        verboseAi: [],
                         loadA: false,
                         strain: false,
                         specLoadFrameComm: false,
@@ -250,7 +258,7 @@ export const TabDAQ = () => {
                             errors={errors}
                             remove={remove}
                             currentMode={watch(`handlersProfile.${index}.mode`)}
-                            requiredAxes={watch("requiredAxes") || draft.requiredAxes || ["A", "B", "RA", "RB"]}
+                            requiredAxes={availableAxes}
                         />
                     ))}
                 </div>

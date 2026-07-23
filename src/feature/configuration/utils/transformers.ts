@@ -36,16 +36,11 @@ export const compileToBackendPayload = (
                 ? cleanTask.split(',').map((val) => toSafeNum(val, 0))
                 : toSafeNum(cleanTask, -1);
 
-            // Parse verboseAi string back into list format containing aliases (strings) and indices (arrays of numbers)
-            const cleanAi = p.verboseAi
-                ? p.verboseAi.split(',').map(x => {
-                    const trimmed = x.trim();
-                    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-                        return trimmed.replace(/[\[\]]/g, '').replace(',', ' ').split(/\s+/).map(n => toSafeNum(n, 0));
-                    }
-                    return trimmed;
-                }).filter(Boolean)
-                : null;
+            const cleanAi = Array.isArray(p.verboseAi)
+                ? (p.verboseAi.length > 0 ? p.verboseAi : null)
+                : (p.verboseAi
+                    ? p.verboseAi.split(',').map(x => x.trim()).filter(Boolean)
+                    : null);
 
             const profilePayload: any = {
                 mode: p.mode,
