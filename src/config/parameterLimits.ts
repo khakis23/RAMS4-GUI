@@ -1,5 +1,5 @@
 /**
- * SCIENTIST-FRIENDLY PARAMETER LIMITS CONFIGURATION
+ * PARAMETER LIMITS CONFIGURATION
  * 
  * Central configuration for numeric validation boundaries (minimums, maximums,
  * steps, defaults) across mechanical steps, X-ray scan profiles, DAQ, and hardware.
@@ -7,7 +7,7 @@
 
 export const PARAMETER_LIMITS = {
     // =========================================================================
-    // 1. MECHANICAL TEST BUILDER STEPS
+    //  MECHANICAL TEST BUILDER STEPS
     // =========================================================================
     mechTest: {
         ramp: {
@@ -34,7 +34,7 @@ export const PARAMETER_LIMITS = {
     },
 
     // =========================================================================
-    // 2. X-RAY SCAN PROFILES
+    //  X-RAY SCAN PROFILES
     // =========================================================================
     xray: {
         exposureTime: { min: 0.0001, max: 3600 },
@@ -55,7 +55,7 @@ export const PARAMETER_LIMITS = {
     },
 
     // =========================================================================
-    // 3. DATA ACQUISITION (DAQ)
+    // DATA ACQUISITION (DAQ)
     // =========================================================================
     daq: {
         daqFrequency: { min: 1, max: 250000 },
@@ -68,7 +68,7 @@ export const PARAMETER_LIMITS = {
     },
 
     // =========================================================================
-    // 4. SYSTEM & CONTROLLER SETTINGS
+    // SYSTEM & CONTROLLER SETTINGS
     // =========================================================================
     settings: {
         axisCount: { min: 1, max: 64 },
