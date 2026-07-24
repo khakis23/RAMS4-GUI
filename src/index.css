@@ -331,5 +331,5 @@ code {
 }
 
 .animate-prepend-card {
-  animation: prepend-highlight 0.2s ease-out forwards;
+  animation: prepend-highlight 0.3s ease-out forwards;
 }

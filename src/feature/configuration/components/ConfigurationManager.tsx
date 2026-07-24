@@ -4,7 +4,13 @@ import { Button } from "../../../components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
-import { postConfigToGateway, fetchDirItems, fetchConfigFromGateway, fetchSettingsFromGateway } from "../../../api/configApi.ts";
+import {
+    postConfigToGateway,
+    fetchDirItems,
+    fetchConfigFromGateway,
+    fetchSettingsFromGateway,
+    postSettingsToGateway
+} from "../../../api/configApi.ts";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
 import { useMechanicalTestStore } from "@/store/useMechanicalTestStore";
 import {PencilLine, Save, Sliders, Check} from 'lucide-react';
