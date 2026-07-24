@@ -2,10 +2,15 @@
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
   "systemName": "RAMS4_CHESS",
-  "controllerHost": "10.1.16.21",
+  "controllerHost": "10.0.0.1",
   "axisCount": 5,
   "taskCount": 5,
   "axesSettings": [
+    {
+      "name": "A",
+      "max_velocity": 50,
+      "max_acceleration": 100
+    },
     {
       "name": "B",
       "max_velocity": 50,
@@ -28,6 +33,18 @@
     }
   ],
   "signalSettings": [
+    {
+      "name": "Load A",
+      "slope": 1,
+      "intercept": 0,
+      "channel": 0
+    },
+    {
+      "name": "Load B",
+      "slope": 1,
+      "intercept": 0,
+      "channel": 1
+    },
     {
       "name": "Torque",
       "slope": 1,

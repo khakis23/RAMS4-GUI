@@ -11,6 +11,7 @@ import {PencilLine, Save, Sliders, Check} from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
 import { Input } from "../../../components/ui/input.tsx";
 import { Checkbox } from "../../../components/ui/checkbox.tsx";
+import { WarningModal } from "../../../components/ui/WarningModal.tsx";
 import { tooltips } from "@/config/tooltips.ts";
 
 type TabName = 'daq' | 'xray' | 'dic';
@@ -1137,51 +1138,4 @@ export const ConfigurationManager = () => {
 };
 
 // Reusable Warning Modal Sub-component
-interface WarningModalProps {
-    isOpen: boolean;
-    title: string;
-    titleColorClass?: string;
-    description: string | React.ReactNode;
-    confirmText: string;
-    cancelText: string;
-    onConfirm: () => void;
-    onCancel: () => void;
-    children?: React.ReactNode;
-}
 
-const WarningModal = ({
-    isOpen,
-    title,
-    titleColorClass = "text-destructive",
-    description,
-    confirmText,
-    cancelText,
-    onConfirm,
-    onCancel,
-    children
-}: WarningModalProps) => {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-md p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200">
-                <div className={`flex items-center gap-2.5 font-bold text-lg ${titleColorClass}`}>
-                    <span>{title}</span>
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                    {description}
-                </p>
-                {children}
-                <div className="flex gap-3 justify-end mt-2">
-                    {cancelText && (
-                        <Button variant="secondary" onClick={onCancel}>
-                            {cancelText}
-                        </Button>
-                    )}
-                    <Button variant="destructive" onClick={onConfirm}>
-                        {confirmText}
-                    </Button>
-                </div>
-            </div>
-        </div>
-    );
-};

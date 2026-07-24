@@ -138,14 +138,14 @@ export const TabSettings = () => {
     return (
         <div className="flex flex-col gap-6 w-full text-left">
             {settingsFallbackActive && (
-                <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-2xl text-yellow-800 text-xs font-semibold shrink-0">
+                <div className="mt-10 flex px-4 items-center justify-between p-2 bg-amber-500/10 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-700/60 rounded-md text-amber-900 dark:text-amber-200 text-xs font-semibold shrink-0 shadow-sm">
                     <div>
-                        Warning: Expected settings version {settingsFallbackActive.expected} was missing. Loaded version {settingsFallbackActive.loaded} instead. Please save to relink.
+                        Warning: Expected settings version {settingsFallbackActive.expected} was missing. Loaded version {settingsFallbackActive.loaded} instead.
                     </div>
                     <button
                         type="button"
                         onClick={() => setSettingsFallbackActive(null)}
-                        className="p-1 rounded-full hover:bg-yellow-100 text-yellow-900 transition-colors ml-4 cursor-pointer"
+                        className="p-1 rounded-full hover:bg-amber-200/50 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-300 transition-colors cursor-pointer"
                         aria-label="Dismiss warning"
                     >
                         <X className="h-4 w-4" />
@@ -232,6 +232,15 @@ export const TabSettings = () => {
         >
             {/* SPEC configurations card */}
             <div className="flex flex-col gap-6 w-full">
+                <div className="flex flex-col gap-2">
+                    <FieldLabel text="Setting Version" tooltip={tooltips.settingsVersion} />
+                    <Input 
+                        value={draft.settingsVersion ?? 0}
+                        readOnly
+                        className="bg-mauve-50/80 dark:bg-zinc-800 text-slate-900 dark:text-slate-100 font-medium font-mono border-mauve-200 dark:border-mauve-900 cursor-default select-none focus-visible:ring-0 focus-visible:border-0 dark:focus-visible:border-mauve-800"
+                    />
+                </div>
+
                 <div className="flex flex-col gap-2">
                     <FieldLabel text="Spec Host" tooltip={tooltips.settingsSpecHost} required={true} />
                     <Input 

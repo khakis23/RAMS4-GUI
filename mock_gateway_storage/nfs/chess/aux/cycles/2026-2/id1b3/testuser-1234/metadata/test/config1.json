@@ -29,23 +29,6 @@
   ],
   "xrayProfiles": [
     {
-      "id": "xrayProfile1784806518438",
-      "name": "stills",
-      "mode": "stills",
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "stillPoints": [
-        {
-          "ramsx": 1,
-          "ramsz": 1,
-          "ome": 1,
-          "numPoints": 1
-        }
-      ]
-    },
-    {
       "id": "xrayProfile1784806481919",
       "name": "rot",
       "mode": "rotation-series",
@@ -92,7 +75,7 @@
       ]
     }
   ],
-  "settingsVersion": 7,
+  "settingsVersion": 12,
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
   "systemName": "RAMS4_CHESS",

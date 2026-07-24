@@ -1,7 +1,7 @@
 {
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "RAMS4_CHESS",
+  "systemName": "RAMS4_CHESSs",
   "controllerHost": "10.1.16.21",
   "axisCount": 5,
   "taskCount": 5,
@@ -17,7 +17,7 @@
       "max_acceleration": 100
     },
     {
-      "name": "RA",
+      "name": "RT",
       "max_velocity": 10,
       "max_acceleration": 20
     },

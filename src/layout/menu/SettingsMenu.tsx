@@ -3,8 +3,7 @@ import { X } from 'lucide-react';
 import { TabSettings } from '../../feature/configuration/TabSettings.tsx';
 import { useConfigurationStore, useValidationStore } from '../../store/useConfigurationStore.ts';
 import { postSettingsToGateway } from '../../api/configApi.ts';
-import { Button } from '../../components/ui/button.tsx';
-import { Checkbox } from '../../components/ui/checkbox.tsx';
+import { WarningModal } from '../../components/ui/WarningModal.tsx';
 
 interface SettingsMenuProps {
     onClose: () => void;
@@ -90,6 +89,24 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
         await performSave();
     };
 
+    const handleDiscardChanges = () => {
+        setShowWarningModal(false);
+        if (savedConfig) {
+            updateDraft({
+                specHost: savedConfig.specHost,
+                requireSpecEnable: savedConfig.requireSpecEnable,
+                systemName: savedConfig.systemName,
+                controllerHost: savedConfig.controllerHost,
+                axisCount: savedConfig.axisCount,
+                taskCount: savedConfig.taskCount,
+                axesSettings: savedConfig.axesSettings,
+                signalSettings: savedConfig.signalSettings,
+                settingsVersion: savedConfig.settingsVersion,
+            });
+        }
+        onClose();
+    };
+
     return (
         <div
             className="fixed inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-50"
@@ -98,13 +115,13 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
             }}
         >
             <div
-                className="w-full max-w-4xl h-[85vh] bg-white rounded-md p-8 flex flex-col shadow-2xl relative border border-mauve-200 overflow-hidden text-left"
+                className="w-full max-w-4xl h-[85vh] bg-white dark:bg-mauve-950 rounded-md p-8 flex flex-col shadow-2xl relative border border-mauve-200 dark:border-mauve-800/80 overflow-hidden text-left"
             >
-                {/* Close Button */}
+                {/* Close Button with Backdrop Blur & Fade Pill */}
                 <button
                     onClick={handleCloseAttempt}
                     disabled={isSaving}
-                    className="absolute top-6 right-6 p-2 rounded-full text-mauve-600 hover:bg-mauve-100 hover:text-mauve-800 transition-all duration-200 cursor-pointer z-10 disabled:opacity-50"
+                    className="absolute top-6 right-6 p-2 rounded-full text-mauve-600 hover:bg-mauve-500/30 hover:text-mauve-900 dark:hover:bg-orange-400/30 dark:text-orange-400 dark:hover:text-orange-300 bg-white/30 dark:bg-mauve-900/30 backdrop-blur-md border border-mauve-200 shadow-smdark:hover:bg-mauve-700/50 transition-all duration-200 cursor-pointer z-10 disabled:opacity-50"
                     aria-label="Close Settings"
                 >
                     <X className="w-5 h-5 shrink-0" />
@@ -123,84 +140,13 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
                 description={
                     <>Changing settings is an <strong>advanced feature</strong>. Modifying these configurations will globally change settings for all future users of this station.</>
                 }
-                confirmText="Proceed"
+                confirmText="Save Changes"
+                discardText="Discard Changes"
                 cancelText="Cancel"
                 onConfirm={handleConfirmProceed}
+                onDiscard={handleDiscardChanges}
                 onCancel={() => setShowWarningModal(false)}
             />
-        </div>
-    );
-};
-
-// Reusable Warning Modal Sub-component
-interface WarningModalProps {
-    isOpen: boolean;
-    title: string;
-    titleColorClass?: string;
-    description: string | React.ReactNode;
-    confirmText: string;
-    cancelText: string;
-    onConfirm: () => void;
-    onCancel: () => void;
-}
-
-const WarningModal = ({
-    isOpen,
-    title,
-    titleColorClass = "text-destructive",
-    description,
-    confirmText,
-    cancelText,
-    onConfirm,
-    onCancel
-}: WarningModalProps) => {
-    const [dontShowAgain, setDontShowAgain] = useState(false);
-
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onCancel}>
-            <div 
-                className="bg-white rounded-md p-6 max-w-md w-full shadow-2xl border border-mauve-150 flex flex-col gap-4 text-left animate-in fade-in zoom-in duration-200"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className={`flex items-center gap-2.5 font-bold text-lg ${titleColorClass}`}>
-                    <span>{title}</span>
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                    {description}
-                </p>
-                
-                <div className="flex items-center gap-2 mt-1">
-                    <Checkbox
-                        id="dontShowSettingsAgain"
-                        checked={dontShowAgain}
-                        onCheckedChange={(checked) => setDontShowAgain(!!checked)}
-                        className="border-mauve-300 data-checked:bg-mauve-600 data-checked:border-mauve-600 data-checked:text-white focus-visible:ring-mauve-400"
-                    />
-                    <label htmlFor="dontShowSettingsAgain" className="text-xs text-gray-550 font-medium select-none cursor-pointer">
-                        Don't show warning again for this session
-                    </label>
-                </div>
-
-                <div className="flex gap-3 justify-end mt-2">
-                    {cancelText && (
-                        <Button variant="secondary" onClick={onCancel}>
-                            {cancelText}
-                        </Button>
-                    )}
-                    <Button 
-                        variant="destructive" 
-                        onClick={() => {
-                            if (dontShowAgain) {
-                                sessionStorage.setItem('dismissSettingsWarning', 'true');
-                            }
-                            onConfirm();
-                        }}
-                    >
-                        {confirmText}
-                    </Button>
-                </div>
-            </div>
         </div>
     );
 };

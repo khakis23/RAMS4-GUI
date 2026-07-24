@@ -44,6 +44,7 @@ export const tooltips = {
 
     // --- SETTINGS TAB FIELDS ---
     settingsSectionTitle: "Configuration variables for system networking, safety boundaries, and input channel scaling.",
+    settingsVersion: "The version index of the currently loaded system settings configuration file.",
     settingsSpecHost: "The network address of the external SPEC server (e.g. id1a3.classe.cornell.edu:spec).",
     settingsRequireSpecEnable: "If enabled, the system requires connection to SPEC to proceed with scans.",
     settingsSystemName: "Name of the mechanical testing system (e.g. RAMS4_CHESS).",
