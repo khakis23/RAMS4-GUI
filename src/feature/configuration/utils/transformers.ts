@@ -1,4 +1,4 @@
-import { GlobalConfig, HandlerProfile } from '../../../store/useConfigurationStore';
+import type { GlobalConfig, HandlerProfile } from '../../../store/useConfigurationStore.ts';
 
 /**
  * Safely converts any value to a number. If it evaluates to NaN, returns the fallback value.

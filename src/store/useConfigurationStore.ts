@@ -184,7 +184,9 @@ export const useConfigurationStore = create<ConfigurationState>()(
         {
             name: 'configuration-store',
             partialize: (state) => ({
-                draft: state.draft
+                draft: state.draft,
+                savedConfig: state.savedConfig,
+                lastLoadedPath: state.lastLoadedPath
             }),
             onRehydrateStorage: () => (state) => {
                 state?.setHasHydrated(true);

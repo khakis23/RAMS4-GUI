@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { fetchMechTestFromGateway, postMechTestToGateway } from '../api/mechanicalTestApi';
+import { fetchMechTestFromGateway, postMechTestToGateway } from '../api/mechanicalTestApi.ts';
 
 export interface MechTestCard {
     id: string;

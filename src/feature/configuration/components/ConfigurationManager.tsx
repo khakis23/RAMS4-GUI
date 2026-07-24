@@ -458,26 +458,26 @@ export const ConfigurationManager = () => {
                     });
                     setSavedConfig(mergedSaved);
                 } else {
-                    // Initialize blank default setup config
+                    // Initialize default setup config only if draft does not already contain user work
                     const defaults = {
                         cycleNumber: draft.cycleNumber,
                         userId: draft.userId,
                         sampleName: draft.sampleName,
                         experimentNumber: draft.experimentNumber,
                         configDirectory: draft.configDirectory,
-                        requiredAxes: ["A", "B", "RA", "RB"],
-                        daqFrequency: 1,
-                        samplePoints: 1000,
-                        handlerProfiles: [],
-                        xrayProfiles: [],
+                        requiredAxes: draft.requiredAxes || ["A", "B", "RA", "RB"],
+                        daqFrequency: draft.daqFrequency ?? 1,
+                        samplePoints: draft.samplePoints ?? 1000,
+                        handlerProfiles: draft.handlerProfiles || [],
+                        xrayProfiles: draft.xrayProfiles || [],
                         ...settingsToApply
                     };
                     updateDraft({
-                        requiredAxes: ["A", "B", "RA", "RB"],
-                        daqFrequency: 1,
-                        samplePoints: 1000,
-                        handlerProfiles: [],
-                        xrayProfiles: [],
+                        requiredAxes: draft.requiredAxes || ["A", "B", "RA", "RB"],
+                        daqFrequency: draft.daqFrequency ?? 1,
+                        samplePoints: draft.samplePoints ?? 1000,
+                        handlerProfiles: draft.handlerProfiles || [],
+                        xrayProfiles: draft.xrayProfiles || [],
                         ...settingsToApply
                     });
                     setSavedConfig(defaults);
