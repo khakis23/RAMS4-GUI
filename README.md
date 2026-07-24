@@ -20,6 +20,47 @@ npm run dev
 Navigate to the `localhost` link provided in the terminal.
 
 
+---
+
+## Quick Adjustments
+
+### Changing Tooltip Descriptions
+
+All tooltip descriptions are centrally located at `src/config/tooltips.ts`. Any changes made here will automatically reflect in the UI.
+
+
+### Setting Parameter Limits
+
+Numeric fields limits are centrally located at `src/config/parameterLimits.ts`. These values will prevent the user from saving fields outside of these limits.
+
+
+---
+
+## User Feedback Summary — TODO...
+
+### Future Features & User Wishlist
+
+#### Test Sequence Visual Verification
+A viewable plot or visualization displaying the steps of the entire test sequence.
+- quick & easy verification for scientist
+- more user friendly
+- requested by several users
+
+
+### Essential Existing Features
+
+TODO
+
+
+---
+
+## Architecture
+
+TODO
+
+
+---
+
 ## API Endpoints
 
 ### Directory 
@@ -54,6 +95,8 @@ TODO
   - A JSON containing the file path and Sequence Object
     (e.g., `customFilePath: <path>.json, data: <Sequence Payload>`)
 
+
+---
 
 ## Schemas & JSON Payloads
 
