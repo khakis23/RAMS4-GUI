@@ -356,8 +356,8 @@ export const ConfigurationManager = () => {
                         { name: "TENS", max_velocity: 5, max_acceleration: 10 }
                     ],
                     signalSettings: draft.signalSettings && draft.signalSettings.length > 0 ? draft.signalSettings : [
-                        { name: "Load A", slope: 1.0, intercept: 0.0, channel: 0 },
-                        { name: "Load B", slope: 1.0, intercept: 0.0, channel: 1 },
+                        { name: "LoadA", slope: 1.0, intercept: 0.0, channel: 0 },
+                        { name: "LoadB", slope: 1.0, intercept: 0.0, channel: 1 },
                         { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
                     ]
                 };
@@ -403,12 +403,24 @@ export const ConfigurationManager = () => {
                     };
                     useConfigurationStore.getState().setSettingsFallbackActive(null);
                 } else {
-                    settingsToApply = defaultSettings;
-                    if (fetched && fetched.settingsVersion !== undefined && fetched.settingsVersion !== null) {
+                    // If no settings exist on server disk, auto-create settings0.json and post immediately
+                    settingsToApply = { ...defaultSettings };
+                    try {
+                        const postRes = await postSettingsToGateway(dir, defaultSettings);
+                        if (postRes && postRes.success) {
+                            settingsToApply.settingsVersion = postRes.version;
+                        }
+                    } catch (err) {
+                        console.warn("Failed to auto-create missing settings file on server", err);
+                    }
+
+                    if (fetched && fetched.settingsVersion !== undefined && fetched.settingsVersion !== null && fetched.settingsVersion !== settingsToApply.settingsVersion) {
                         useConfigurationStore.getState().setSettingsFallbackActive({
                             expected: fetched.settingsVersion,
-                            loaded: 'default'
+                            loaded: settingsToApply.settingsVersion
                         });
+                    } else {
+                        useConfigurationStore.getState().setSettingsFallbackActive(null);
                     }
                 }
 
@@ -416,6 +428,10 @@ export const ConfigurationManager = () => {
 
                 if (normalizedFetched) {
                     // Loaded existing JSON configuration
+                    const effectiveSettingsVersion = (settingsRes && !settingsRes.isFallback)
+                        ? (normalizedFetched.settingsVersion ?? settingsToApply.settingsVersion)
+                        : settingsToApply.settingsVersion;
+
                     const mergedSaved = {
                         ...normalizedFetched,
                         requiredAxes: normalizedFetched.requiredAxes || ["A", "B", "RA", "RB"],
@@ -424,7 +440,7 @@ export const ConfigurationManager = () => {
                         handlerProfiles: normalizedFetched.handlerProfiles || [],
                         xrayProfiles: normalizedFetched.xrayProfiles || [],
                         ...settingsToApply,
-                        settingsVersion: normalizedFetched.settingsVersion ?? settingsToApply.settingsVersion
+                        settingsVersion: effectiveSettingsVersion
                     };
                     updateDraft({
                         requiredAxes: mergedSaved.requiredAxes,
@@ -433,7 +449,7 @@ export const ConfigurationManager = () => {
                         handlerProfiles: mergedSaved.handlerProfiles,
                         xrayProfiles: mergedSaved.xrayProfiles,
                         ...settingsToApply,
-                        settingsVersion: mergedSaved.settingsVersion
+                        settingsVersion: effectiveSettingsVersion
                     });
                     setSavedConfig(mergedSaved);
                 } else {

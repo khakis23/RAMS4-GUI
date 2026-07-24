@@ -326,34 +326,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
         console.warn("Backend mock server unavailable or settings file not found. Resolving in-memory mock configuration presets.", err);
     }
 
-    // Temporary static fallback configuration to ensure titanium_specimen_02 runs with realistic inputs in demo builds
-    if (directory.includes("titanium_specimen_02")) {
-        return {
-            version: 0,
-            isFallback: false,
-            data: {
-                specHost: "id1a3.classe.cornell.edu:spec",
-                requireSpecEnable: true,
-                systemName: "RAMS4_CHESS",
-                controllerHost: "10.0.0.1",
-                axisCount: 5,
-                taskCount: 5,
-                axesSettings: [
-                    { name: "A", max_velocity: 50, max_acceleration: 100 },
-                    { name: "B", max_velocity: 50, max_acceleration: 100 },
-                    { name: "RA", max_velocity: 10, max_acceleration: 20 },
-                    { name: "RB", max_velocity: 10, max_acceleration: 20 },
-                    { name: "TENS", max_velocity: 5, max_acceleration: 10 }
-                ],
-                signalSettings: [
-                    { name: "Load A", slope: 1.0, intercept: 0.0, channel: 0 },
-                    { name: "Load B", slope: 1.0, intercept: 0.0, channel: 1 },
-                    { name: "Torque", slope: 1.0, intercept: 0.0, channel: 2 }
-                ]
-            }
-        };
-    }
-
+    // Standardized fallback configuration if mock backend server is unavailable
     return null;
 };
 

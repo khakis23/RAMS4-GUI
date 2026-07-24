@@ -115,7 +115,7 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
             }}
         >
             <div
-                className="w-full max-w-4xl h-[85vh] bg-white dark:bg-mauve-950 rounded-md p-8 flex flex-col shadow-2xl relative border border-mauve-200 dark:border-mauve-800/80 overflow-hidden text-left"
+                className="w-full max-w-4xl h-[85vh] bg-white rounded-md p-8 flex flex-col shadow-2xl relative border border-mauve-200  overflow-hidden text-left"
             >
                 {/* Close Button with Backdrop Blur & Fade Pill */}
                 <button
