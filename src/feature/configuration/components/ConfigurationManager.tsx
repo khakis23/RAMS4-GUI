@@ -192,7 +192,6 @@ export const ConfigurationManager = () => {
     const [isManualPath, setIsManualPath] = useState(false);
     const [dontShowWarningAgain, setDontShowWarningAgain] = useState(false);
     const [showManualWarningModal, setShowManualWarningModal] = useState(false);
-    const [showFallbackWarningModal, setShowFallbackWarningModal] = useState(false);
     const { errors: validationErrors } = useValidationStore();
 
     // Baseline configuration state is read from global useConfigurationStore
@@ -845,12 +844,6 @@ export const ConfigurationManager = () => {
             return;
         }
 
-        const fallback = useConfigurationStore.getState().settingsFallbackActive;
-        if (fallback) {
-            setShowFallbackWarningModal(true);
-            return;
-        }
-
         await proceedSave();
     };
 
@@ -1126,29 +1119,6 @@ export const ConfigurationManager = () => {
                     </label>
                 </div>
             </WarningModal>
-
-            {/* Settings Fallback Warning Dialog */}
-            <WarningModal
-                isOpen={showFallbackWarningModal}
-                title="Settings Fallback Active"
-                titleColorClass="text-amber-600"
-                description={
-                    <>
-                        This configuration references settings version <strong>{useConfigurationStore.getState().settingsFallbackActive?.expected}</strong>, which was missing on the server.
-                        The station loaded version <strong>{useConfigurationStore.getState().settingsFallbackActive?.loaded}</strong> as a fallback.
-                        Saving now will link this configuration to version <strong>{useConfigurationStore.getState().settingsFallbackActive?.loaded}</strong>.
-                    </>
-                }
-                confirmText="Acknowledge & Save"
-                cancelText="Cancel"
-                onConfirm={async () => {
-                    setShowFallbackWarningModal(false);
-                    await proceedSave();
-                }}
-                onCancel={() => {
-                    setShowFallbackWarningModal(false);
-                }}
-            />
         </div>
     );
 };

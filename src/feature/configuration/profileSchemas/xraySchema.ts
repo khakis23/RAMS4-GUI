@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PARAMETER_LIMITS } from '../../../config/parameterLimits.ts';
 
 // Validation preprocessors following the safe required/nullable number trend in daqSchema.ts
 const safeNullableNumber = z.preprocess(
@@ -17,7 +18,7 @@ const stillPointSchema = z.object({
     ome: safeRequiredNumber,
     numPoints: z.preprocess(
         (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Images is required." }).int().min(1, "Must be 1 or more images.")
+        z.number({ message: "Images is required." }).int().min(PARAMETER_LIMITS.xray.stills.numPoints.min, `Must be ${PARAMETER_LIMITS.xray.stills.numPoints.min} or more images.`)
     )
 });
 
@@ -27,7 +28,7 @@ export const mapscanAxisSchema = z.object({
     stop: safeRequiredNumber,
     points: z.preprocess(
         (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Points is required." }).int().min(1, "Must be at least 1 point.")
+        z.number({ message: "Points is required." }).int().min(PARAMETER_LIMITS.xray.mapscan.points.min, `Must be at least ${PARAMETER_LIMITS.xray.mapscan.points.min} point.`)
     )
 });
 
@@ -36,13 +37,13 @@ export const rotationLayerRangeSchema = z.object({
     omeStop: safeRequiredNumber,
     numPoints: z.preprocess(
         (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Points is required." }).int().min(1, "Must be at least 1 point.")
+        z.number({ message: "Points is required." }).int().min(PARAMETER_LIMITS.xray.rotation.numPoints.min, `Must be at least ${PARAMETER_LIMITS.xray.rotation.numPoints.min} point.`)
     ),
     layerStart: safeRequiredNumber,
     layerEnd: safeRequiredNumber,
     numLayers: z.preprocess(
         (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Layers is required." }).int().min(1, "Must be at least 1 layer.")
+        z.number({ message: "Layers is required." }).int().min(PARAMETER_LIMITS.xray.rotation.numLayers.min, `Must be at least ${PARAMETER_LIMITS.xray.rotation.numLayers.min} layer.`)
     )
 });
 
@@ -54,11 +55,11 @@ export const xrayProfileSchema = z.object({
     // Shared general parameters
     ctime: z.preprocess(
         (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Exposure Time is required." }).min(0.0001, "Exposure Time must be greater than 0.")
+        z.number({ message: "Exposure Time is required." }).min(PARAMETER_LIMITS.xray.exposureTime.min, "Exposure Time must be greater than 0.")
     ),
-    beamHeight: safeRequiredNumber.refine(val => val >= 0, "Beam Height must be 0 or positive."),
-    beamWidth: safeRequiredNumber.refine(val => val >= 0, "Beam Width must be 0 or positive."),
-    atten: safeRequiredNumber.refine(val => val >= 0, "Attenuation must be 0 or positive."),
+    beamHeight: safeRequiredNumber.refine(val => val >= PARAMETER_LIMITS.xray.beamHeight.min, "Beam Height must be 0 or positive."),
+    beamWidth: safeRequiredNumber.refine(val => val >= PARAMETER_LIMITS.xray.beamWidth.min, "Beam Width must be 0 or positive."),
+    atten: safeRequiredNumber.refine(val => val >= PARAMETER_LIMITS.xray.attenuation.min, "Attenuation must be 0 or positive."),
 
     // Shared reference coordinates
     ramsx: safeNullableNumber,
@@ -66,7 +67,7 @@ export const xrayProfileSchema = z.object({
     ome: safeNullableNumber,
 
     stillPoints: z.array(stillPointSchema).optional(),
-    mapscanAxes: z.array(mapscanAxisSchema).max(2, "Maximum 2 axes allowed for Mapscan.").optional(),
+    mapscanAxes: z.array(mapscanAxisSchema).max(PARAMETER_LIMITS.xray.mapscan.maxAxes, `Maximum ${PARAMETER_LIMITS.xray.mapscan.maxAxes} axes allowed for Mapscan.`).optional(),
     layerRanges: z.array(rotationLayerRangeSchema).optional()
 }).superRefine((data, ctx) => {
     if (data.mode === 'stills') {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PARAMETER_LIMITS } from '../../../config/parameterLimits.ts';
 
 export const rampSchema = z.object({
     axis: z.string().min(1, "Axis is required"),
@@ -19,7 +20,7 @@ export const rampSchema = z.object({
     dispToggle: z.enum(['time', 'velocity']).optional().nullable(),
     max_displacement: z.preprocess(
         (val) => (val === '' || val === undefined || val === null || Number.isNaN(Number(val))) ? undefined : Number(val),
-        z.number({ message: "Max displacement must be a number" }).default(1.0)
+        z.number({ message: "Max displacement must be a number" }).default(PARAMETER_LIMITS.mechTest.ramp.maxDisplacement.default)
     ),
     enable_dic: z.boolean().default(false),
     skipDICpos: z.boolean().default(false),
@@ -98,8 +99,8 @@ export const cycleSchema = z.object({
         z.number({ message: "Count is required" })
     ),
     ampScale: z.preprocess(
-        (val) => (val === '' || val === undefined || val === null || Number.isNaN(Number(val))) ? 0.95 : Number(val),
-        z.number({ message: "Amp scale must be a number" }).default(0.95)
+        (val) => (val === '' || val === undefined || val === null || Number.isNaN(Number(val))) ? PARAMETER_LIMITS.mechTest.cycle.ampScale.default : Number(val),
+        z.number({ message: "Amp scale must be a number" }).default(PARAMETER_LIMITS.mechTest.cycle.ampScale.default)
     ),
     discoverEndpoints: z.boolean().default(false),
     recallEndpoints: z.boolean().default(false),
@@ -221,7 +222,7 @@ export const mechTestCardSchema: z.ZodType<MechTestCardData> = z.lazy(() =>
             }
         } else if (card.type === 'group') {
             const groupDataSchema = z.object({
-                loops: z.number().min(1).default(1),
+                loops: z.number().min(PARAMETER_LIMITS.mechTest.group.loops.min).default(PARAMETER_LIMITS.mechTest.group.loops.default),
                 cards: z.array(mechTestCardSchema).min(1, "Group must contain at least one step")
             });
             const res = groupDataSchema.safeParse(card.data);
@@ -254,11 +255,11 @@ export const mechTestFormSchema = z.object({
     cards: z.array(mechTestCardSchema)
 }).superRefine((form, ctx) => {
     const maxDepth = getMaxDepth(form.cards);
-    if (maxDepth > 2) {
+    if (maxDepth > PARAMETER_LIMITS.mechTest.group.maxNestingDepth) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['cards'],
-            message: `Nesting depth of groups exceeds the maximum limit of 2 (current depth: ${maxDepth})`
+            message: `Nesting depth of groups exceeds the maximum limit of ${PARAMETER_LIMITS.mechTest.group.maxNestingDepth} (current depth: ${maxDepth})`
         });
     }
 });

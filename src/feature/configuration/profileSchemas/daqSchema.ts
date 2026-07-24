@@ -1,9 +1,16 @@
 import { z } from 'zod';
+import { PARAMETER_LIMITS } from '../../../config/parameterLimits.ts';
 
 export const cycleRangeSchema = z.object({
-    start: z.number().min(0, "Must be positive."),
-    stop: z.number().min(0, "Must be positive."),
-    step: z.number().min(1, "Must be at least 1."),
+    start: z.number()
+        .min(PARAMETER_LIMITS.daq.cycleRange.start.min, "Must be positive.")
+        .max(PARAMETER_LIMITS.daq.cycleRange.start.max, `Cannot exceed ${PARAMETER_LIMITS.daq.cycleRange.start.max}.`),
+    stop: z.number()
+        .min(PARAMETER_LIMITS.daq.cycleRange.stop.min, "Must be positive.")
+        .max(PARAMETER_LIMITS.daq.cycleRange.stop.max, `Cannot exceed ${PARAMETER_LIMITS.daq.cycleRange.stop.max}.`),
+    step: z.number()
+        .min(PARAMETER_LIMITS.daq.cycleRange.step.min, `Must be at least ${PARAMETER_LIMITS.daq.cycleRange.step.min}.`)
+        .max(PARAMETER_LIMITS.daq.cycleRange.step.max, `Cannot exceed ${PARAMETER_LIMITS.daq.cycleRange.step.max}.`),
 });
 
 const safeNullableNumber = z.preprocess(
@@ -79,12 +86,12 @@ export const handlerProfileSchema = z.object({
 });
 
 export const daqSchema = z.object({
-    requiredAxes: z.array(z.string()).min(2, "At least two axes are required."),
-    daqFrequency: z.number().min(1, "Sampling frequency is required."),
+    requiredAxes: z.array(z.string()),
+    daqFrequency: z.number().min(PARAMETER_LIMITS.daq.daqFrequency.min, "Sampling frequency is required."),
     samplePoints: z.number()
         .min(1, "Sample points are required.")
-        .refine(val => !isNaN(Number(val)) && Number(val) >= 100, {   // TODO placeholder test
-            message: "Must be a number greater than or equal to 100."
+        .refine(val => !isNaN(Number(val)) && Number(val) >= PARAMETER_LIMITS.daq.samplePoints.min, {
+            message: `Must be a number greater than or equal to ${PARAMETER_LIMITS.daq.samplePoints.min}.`
         }),
     handlersProfile: z.array(handlerProfileSchema),
 });

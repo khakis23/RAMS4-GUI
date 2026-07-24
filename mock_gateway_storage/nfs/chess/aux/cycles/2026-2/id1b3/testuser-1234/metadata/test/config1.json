@@ -15,16 +15,15 @@
   "samplePoints": 1000,
   "handlerProfiles": [
     {
-      "mode": "peak-valley",
-      "filename": "peakvalley_test_1-1",
+      "mode": "time-series",
+      "filename": "timeseries_test_1-1",
       "verboseAxis": "-1",
       "verboseSystem": -1,
       "verboseTask": "-1",
       "verboseIO": -1,
       "verboseAi": [],
-      "signalAxis": "RT",
-      "signalItem": "PositionFeedback",
-      "signalProminence": 1
+      "frequency": 1,
+      "cycles": []
     }
   ],
   "xrayProfiles": [
@@ -75,10 +74,10 @@
       ]
     }
   ],
-  "settingsVersion": 12,
+  "settingsVersion": 0,
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "RAMS4_CHESS",
+  "systemName": "RAMS4_CHESSv0",
   "controllerHost": "10.1.16.21",
   "axisCount": 5,
   "taskCount": 5,

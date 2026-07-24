@@ -1,0 +1,17 @@
+{
+  "cycleNumber": "2026-2",
+  "userId": "id1a3",
+  "sampleName": "copper_alloy_03",
+  "experimentNumber": "1",
+  "configDirectory": "/nfs/chess/aux/cycles/2026-2/id1a3/jternus789/metadata/copper_alloy_03/",
+  "requiredAxes": [
+    "A",
+    "B",
+    "RA",
+    "RB"
+  ],
+  "daqFrequency": 1,
+  "samplePoints": 1000,
+  "handlerProfiles": [],
+  "xrayProfiles": []
+}

@@ -1,0 +1,50 @@
+{
+  "cycleNumber": "2026-2",
+  "userId": "id1a3",
+  "sampleName": "titanium_specimen_02",
+  "experimentNumber": "1",
+  "configDirectory": "/nfs/chess/aux/cycles/2026-2/id1a3/sjobs-123/metadata/titanium_specimen_02/",
+  "requiredAxes": [
+    "A",
+    "B",
+    "RA"
+  ],
+  "daqFrequency": 10,
+  "samplePoints": 500,
+  "handlerProfiles": [
+    {
+      "mode": "time-series",
+      "filename": "ts_specimen_1",
+      "verboseAxis": "A",
+      "verboseSystem": 1,
+      "verboseTask": "A",
+      "verboseIO": 0,
+      "verboseAi": [
+        "LoadA"
+      ],
+      "frequency": 10
+    }
+  ],
+  "xrayProfiles": [
+    {
+      "id": "rotation-1",
+      "name": "Rotation Series Profile",
+      "mode": "rotation-series",
+      "ramsx": 10.5,
+      "ctime": 0.5,
+      "beamHeight": 1,
+      "beamWidth": 2,
+      "atten": 0,
+      "layerRanges": [
+        {
+          "omeStart": 0,
+          "omeStop": 180,
+          "numPoints": 180,
+          "layerStart": 0,
+          "layerEnd": 5,
+          "numLayers": 3
+        }
+      ]
+    }
+  ]
+}
