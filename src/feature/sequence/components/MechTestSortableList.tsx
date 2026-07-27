@@ -56,7 +56,7 @@ export const MechTestSortableList = ({
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
             <div
                 ref={setNodeRef}
-                className={`flex flex-col gap-4 min-h-[90px] p-3 ${(depth > 0 || isDraggingFromGroup) ? 'pb-8' : ''} rounded-md transition-colors ${
+                className={`flex flex-col gap-2.5 min-h-[80px] p-2.5 ${(depth > 0 || isDraggingFromGroup) ? 'pb-6' : ''} rounded-md transition-colors ${
                     shouldHighlight ? 'bg-mauve-200/20 dark:bg-mauve-900/20' : ''
                 } ${className}`}
             >

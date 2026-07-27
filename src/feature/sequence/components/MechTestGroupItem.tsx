@@ -337,7 +337,7 @@ export const MechTestGroupItem = ({
                     >
                         <AccordionItem value={cardId} className="border-b-0">
                             {/* Header bar */}
-                            <div className={`flex items-center justify-between p-4 ${shadingBg} gap-3`}>
+                            <div className={`flex items-center justify-between py-2.5 px-3.5 ${shadingBg} gap-3`}>
                                 <div className="flex items-center gap-3 shrink-0">
                                     <div 
                                         ref={handleRef}
@@ -426,7 +426,7 @@ export const MechTestGroupItem = ({
                             </div>
 
                             {/* Subsequence Content */}
-                            <AccordionContent className={`p-5 border-t border-mauve-150 pb-5 text-left ${
+                            <AccordionContent className={`p-3.5 border-t border-mauve-150 pb-3.5 text-left ${
                                 depth === 1 ? 'bg-mauve-50/40 dark:bg-black/10' : 'bg-mauve-100/50 dark:bg-black/25'
                             }`}>
                                 <MechTestSortableList

@@ -189,7 +189,7 @@ export const MechTestCardItem = ({
                     <Accordion type="single" collapsible className="w-full">
                         <AccordionItem value={cardId} className="border-b-0">
                             {/* Header section (Non-scrolling details) */}
-                            <div className={`flex items-center justify-between p-4 gap-3 ${
+                            <div className={`flex items-center justify-between py-2.5 px-3.5 gap-3 ${
                                 type === 'takeWhile' ? 'bg-slate-100/50 dark:bg-zinc-800/30' : 'bg-mauve-50/20'
                             }`}>
                                 {/* Left Drag & Type Selectors */}
@@ -313,7 +313,7 @@ export const MechTestCardItem = ({
                             </div>
 
                             {/* Accordion Expandable Content */}
-                            <AccordionContent className="p-5 bg-white border-t border-mauve-150 pb-5">
+                            <AccordionContent className="p-3.5 bg-white border-t border-mauve-150 pb-3.5">
                                 {type === 'ramp' && (
                                     <RampForm
                                         namePrefix={namePrefix}
