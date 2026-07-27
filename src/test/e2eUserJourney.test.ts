@@ -218,9 +218,10 @@ const deepEqual = (a: any, b: any): boolean => JSON.stringify(a) === JSON.string
 
         // Simulate save API requests
         const settingsRes = await postSettingsToGateway(currentDraft.configDirectory, currentDraft);
-        assert.strictEqual(settingsRes.success, true, "Settings POST response must be successful");
+        assert.strictEqual(typeof settingsRes.version, "number", "Settings POST response version must be a number");
 
-        await postConfigToGateway(payload);
+        const configFilePath = `${currentDraft.configDirectory}config${currentDraft.experimentNumber}`;
+        await postConfigToGateway(configFilePath, payload);
 
         // Sync baseline clean saved state
         const deepCopiedSaved = JSON.parse(JSON.stringify(currentDraft));

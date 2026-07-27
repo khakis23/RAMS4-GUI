@@ -412,7 +412,7 @@ export const ConfigurationManager = () => {
                     settingsToApply = { ...defaultSettings };
                     try {
                         const postRes = await postSettingsToGateway(dir, defaultSettings);
-                        if (postRes && postRes.success) {
+                        if (postRes && postRes.version !== undefined) {
                             settingsToApply.settingsVersion = postRes.version;
                         }
                     } catch (err) {
@@ -829,7 +829,8 @@ export const ConfigurationManager = () => {
     const proceedSave = async () => {
         try {
             const prunedPayload = pruneConfigForSave(draft);
-            await postConfigToGateway(prunedPayload);
+            const configFilePath = `${draft.configDirectory}config${draft.experimentNumber.trim()}`;
+            await postConfigToGateway(configFilePath, prunedPayload);
             const name = "rams4/" + draft.sampleName.trim() + `/config${draft.experimentNumber.trim()}.json`;
             console.log(`Successfully saved and synced config: ${name}`);
             alert(`Configuration successfully saved to: ${name}`);

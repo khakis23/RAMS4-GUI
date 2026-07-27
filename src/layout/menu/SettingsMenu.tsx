@@ -45,7 +45,7 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
                 signalSettings: draft.signalSettings
             };
             const res = await postSettingsToGateway(draft.configDirectory, payload);
-            if (res.success) {
+            if (res && res.version !== undefined) {
                 updateDraft({
                     settingsVersion: res.version,
                     ...payload

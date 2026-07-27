@@ -1,23 +1,18 @@
 /**
- * Saves a mechanical test sequence (`mechTest<experiment>.json`) to the
+ * Saves a mechanical test sequence (`mechTest<experiment>`) to the
  * user's experiment directory on the gateway server.
  * 
  * HTTP Details:
  * - Method: POST
  * - Endpoint: /api/mechtest
- * - Query Parameters: None
+ * - Query Parameters:
+ *   - `path`: URL-encoded target file path (`${directory}mechTest${experiment}`)
  * 
  * JSON Payload Summary:
- * - Outer Request:
- *   {
- *     customFilePath: `${directory}mechTest${experiment}.json`,
- *     data: StepObject[]
- *   }
- * - `data` Payload:
- *   An array of sequence step objects (`ramp`, `dwell`, `cycle`,
- *   `take`, `take-while`, `group`). Includes control modes, targets,
- *   velocity/time rates, safety displacement limits, DIC flags, and
- *   nested card groups.
+ * An array of sequence step objects (`ramp`, `dwell`, `cycle`,
+ * `take`, `take-while`, `group`). Includes control modes, targets,
+ * velocity/time rates, safety displacement limits, DIC flags, and
+ * nested card groups.
  * 
  * Trigger / Call Context:
  * Triggered automatically via auto-save or manually when modifying
@@ -31,19 +26,16 @@ export const postMechTestToGateway = async (
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const filePath = directory + `mechTest${experiment}.json`;
+    const filePath = directory + `mechTest${experiment}`;
     console.log("Saving Mechanical Test sequence to path:", filePath);
 
     try {
-        const response = await fetch('/api/mechtest', {
+        const response = await fetch(`/api/mechtest?path=${encodeURIComponent(filePath)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                customFilePath: filePath,
-                data: cards
-            })
+            body: JSON.stringify(cards)
         });
 
         if (!response.ok) {
@@ -55,7 +47,7 @@ export const postMechTestToGateway = async (
 };
 
 /**
- * Reads a mechanical test sequence JSON file (`mechTest<experiment>.json`)
+ * Reads a mechanical test sequence (`mechTest<experiment>`)
  * for a given experiment from the gateway server.
  * 
  * HTTP Details:
@@ -63,7 +55,7 @@ export const postMechTestToGateway = async (
  * - Endpoint: /api/mechtest
  * - Query Parameters:
  *   - `path`: URL-encoded file path
- *     (e.g., `${directory}mechTest${experiment}.json`)
+ *     (e.g., `${directory}mechTest${experiment}`)
  * 
  * JSON Payload / Response Summary:
  * Returns an array of mechanical test sequence step objects (`StepObject[]`)
@@ -80,7 +72,7 @@ export const fetchMechTestFromGateway = async (
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 150));
 
-    const filePath = directory + `mechTest${experiment}.json`;
+    const filePath = directory + `mechTest${experiment}`;
     console.log(`Checking mechanical test file: ${filePath}`);
 
     try {

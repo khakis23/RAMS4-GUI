@@ -1,6 +1,6 @@
 
 
-// Temporary fallback database for static frontend builds (e.g. GitHub Pages) where no active Node.js mock server is running.
+// Fallback database for static frontend builds (e.g. GitHub Pages) where no active Node.js mock server is running.
 // This allows reviewers and users on static hosts to fully interact with the configuration cascades.
 const staticMockData: Record<string, (prev: string) => string[]> = {
     cycle: () => ['2026-2', '2026-1'],
@@ -38,12 +38,14 @@ const staticMockData: Record<string, (prev: string) => string[]> = {
  * HTTP Details:
  * - Method: POST
  * - Endpoint: /api/config
- * - Query Parameters: None
+ * - Query Parameters:
+ *   - `path`: URL-encoded full file path for the target config file
+ *     (e.g., `${configDirectory}config${experimentNumber}`)
  * 
  * JSON Payload Summary:
- * Expects a full experiment configuration object (`config<N>.json`):
+ * Expects a full experiment configuration object (`config<N>`):
  * - Metadata: `cycleNumber`, `userId`, `sampleName`,
- *   `experimentNumber`, `configDirectory`
+ *   `experimentNumber`
  * - DAQ: `requiredAxes`, `daqFrequency`, `samplePoints`,
  *   `handlerProfiles` array
  * - X-ray: `xrayProfiles` array (`stills`, `mapscan`,
@@ -54,15 +56,16 @@ const staticMockData: Record<string, (prev: string) => string[]> = {
  * inputs in the Configuration tab are modified.
  */
 export const postConfigToGateway = async (
+    filePath: string,
     payload: any
 ): Promise<void> => {
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    console.log("Saving Config to backend gateway for path:", payload?.configDirectory);
+    console.log("Saving Config to backend gateway for path:", filePath);
 
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch(`/api/config?path=${encodeURIComponent(filePath)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -81,7 +84,7 @@ export const postConfigToGateway = async (
 
 
 /**
- * Retrieves a saved experiment configuration JSON file (`config<N>.json`)
+ * Retrieves a saved experiment configuration (`config<N>`)
  * from the gateway server.
  * 
  * HTTP Details:
@@ -89,7 +92,7 @@ export const postConfigToGateway = async (
  * - Endpoint: /api/config
  * - Query Parameters:
  *   - `path`: URL-encoded full file path
- *     (e.g., `${directory}config${experiment}.json`)
+ *     (e.g., `${directory}config${experiment}`)
  * 
  * JSON Payload / Response Summary:
  * Returns the parsed experiment configuration JSON object matching the
@@ -106,7 +109,7 @@ export const fetchConfigFromGateway = async (
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 150));
     
-    const filePath = directory + `config${experiment}.json`;
+    const filePath = directory + `config${experiment}`;
     console.log(`Checking config file: ${filePath}`);
     
     try {
@@ -248,37 +251,38 @@ export const getSettingsDir = (configDirectory: string): string => {
 };
 
 /**
- * Reads a versioned system hardware settings JSON file
- * (`settings<version>.json`) from the gateway server.
+ * Reads a versioned system hardware settings file
+ * (`settings<version>`) from the gateway server.
  * 
  * HTTP Details:
  * - Method: GET
  * - Endpoint: /api/settings
  * - Query Parameters:
- *   - Discovery request: `action=list&path=${settingsDir}&type=settings`
- *   - Fetch request: `path=${settingsDir}settings${version}.json`
+ *   - Discovery request: `action=list&path=${settingsDir}`
+ *   - Fetch request: `path=${settingsDir}settings${version}`
  * 
- * JSON Payload / Response Summary:
- * Returns `{ data: SettingsData, version: number, isFallback: boolean }`
- * or `null`. `data` contains global hardware options:
- * - SPEC / Host: `specHost`, `requireSpecEnable`, `systemName`, `controllerHost`
- * - Limits & Counters: `axisCount`, `taskCount`
- * - Mappings: `axesSettings` array and `signalSettings` array
+ * HTTP Response Summary:
+ * - Discovery (`action=list`): Returns array of available version numbers (`number[]`).
+ * - Fetch: Returns raw `SettingsData` JSON payload containing global hardware options:
+ *   - SPEC / Host: `specHost`, `requireSpecEnable`, `systemName`, `controllerHost`
+ *   - Limits & Counters: `axisCount`, `taskCount`
+ *   - Mappings: `axesSettings` array and `signalSettings` array
+ * 
+ * Function Return Value:
+ * Returns frontend state wrapper `{ data: SettingsData, version: number, isFallback: boolean }`
+ * or `null` if server is unreachable / settings file missing.
  * 
  * Trigger / Call Context:
  * Invoked when loading global settings or switching experiments to bind
  * system-wide hardware constraints to the workspace.
  */
 export const fetchSettingsFromGateway = async (directory: string, version: number | null | undefined): Promise<{ data: any; version: number; isFallback: boolean } | null> => {
-    // Simulate API latency
-    await new Promise((resolve) => setTimeout(resolve, 150));
-
     const settingsDir = getSettingsDir(directory);
     
     // Helper to scan settings folder and find highest version
     const getLatestVersion = async (): Promise<number | null> => {
         try {
-            const listUrl = `/api/settings?action=list&path=${encodeURIComponent(settingsDir)}&type=settings`;
+            const listUrl = `/api/settings?action=list&path=${encodeURIComponent(settingsDir)}`;
             const response = await fetch(listUrl);
             if (response.ok) {
                 const versions: number[] = await response.json();
@@ -303,7 +307,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
         }
     }
 
-    const filePath = `${settingsDir}settings${targetVersion}.json`;
+    const filePath = `${settingsDir}settings${targetVersion}`;
     console.log(`Checking settings file: ${filePath}`);
 
     try {
@@ -315,7 +319,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
             // Target settings version goes missing. Attempt fallback to latest settings version.
             const latest = await getLatestVersion();
             if (latest !== null) {
-                const fallbackResponse = await fetch(`/api/settings?path=${encodeURIComponent(`${settingsDir}settings${latest}.json`)}`);
+                const fallbackResponse = await fetch(`/api/settings?path=${encodeURIComponent(`${settingsDir}settings${latest}`)}`);
                 if (fallbackResponse.ok) {
                     const data = await fallbackResponse.json();
                     return { data, version: latest, isFallback: true }; // caller will notice the mismatch
@@ -332,26 +336,29 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
 
 /**
  * Writes updated global hardware settings into an auto-incremented
- * versioned file (`settings<N>.json`) on the gateway server.
+ * versioned file (`settings<N>`) on the gateway server.
  * 
  * HTTP Details:
  * - Method: POST
  * - Endpoint: /api/settings
- * - Query Parameters: None
+ * - Query Parameters:
+ *   - `path`: URL-encoded target file path
+ *     (e.g., `${settingsDir}settings_auto_increment`)
  * 
- * JSON Payload Summary:
- * Outer Request:
- * {
- *   customFilePath: `${settingsDir}settings_auto_increment`,
- *   data: HardwareSettingsPayload
- * }
- * Returns `{ success: boolean, version: number }` indicating the newly
- * assigned auto-incremented version integer.
+ * JSON Request Payload Summary:
+ * Contains the hardware settings data directly:
+ * - `specHost`, `requireSpecEnable`, `systemName`,
+ *   `controllerHost`, `axisCount`, `taskCount`,
+ *   `axesSettings`, `signalSettings`
+ * 
+ * JSON Response Summary:
+ * Returns `{ version: number }` indicating the newly assigned version integer.
+ * Throws an error on non-2xx HTTP status codes.
  * 
  * Trigger / Call Context:
  * Called when a user explicitly saves changes in the Settings modal / section.
  */
-export const postSettingsToGateway = async (directory: string, settings: any): Promise<{ success: boolean; version: number }> => {
+export const postSettingsToGateway = async (directory: string, settings: any): Promise<{ version: number }> => {
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 150));
 
@@ -369,18 +376,18 @@ export const postSettingsToGateway = async (directory: string, settings: any): P
     };
 
     try {
-        const response = await fetch('/api/settings', {
+        const response = await fetch(`/api/settings?path=${encodeURIComponent(targetFile)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customFilePath: targetFile, data: payload })
+            body: JSON.stringify(payload)
         });
         if (response.ok) {
             const resData = await response.json();
-            return { success: true, version: resData.version };
+            return { version: resData.version };
         }
         throw new Error('Failed to save settings configuration');
     } catch (err) {
         console.warn("Failed to save settings config to gateway. Simulating in-memory success.", err);
-        return { success: true, version: 1 };
+        return { version: 1 };
     }
 };

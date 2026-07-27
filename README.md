@@ -36,7 +36,7 @@ Numeric fields limits are centrally located at `src/config/parameterLimits.ts`. 
 
 ---
 
-## User Feedback Summary — TODO...
+## User Feedback Summary — TODO
 
 ### Future Features & User Wishlist
 
@@ -54,51 +54,97 @@ TODO
 
 ---
 
-## Architecture
+## Architecture — TODO
 
 TODO
+
+### FileTree
+
+```txt
+src/
+├── api/                             # REST API client modules
+├── config/                          
+│   ├── parameterLimits.ts           # (Edit me!) Schema validation bounds (min/max/default)
+│   └── tooltips.ts                  # (Edit me!) UI help tooltips
+├── feature/                         
+│   ├── configuration/               # Configuration & Settings feature code
+│   └── sequence/                    # Test Sequence Builder feature code
+├── store/                           # Zustand global state management
+├── test/                            
+├── layout/                          # App layout shell, sidebar & header menus
+└── components/                      # Shared UI component library
+```
 
 
 ---
 
 ## API Endpoints
 
-### Directory 
+### Directories 
 
 #### GET /api/directory 
 - Query Parameters:
   - `action`: "list"
-  - `path`: URL-encoded relative filesystem path
+  - `path`: Relative filesystem path
   - `type`: Directory tier level
     ('cycle' | 'station' | 'btr' | 'sample' | 'experiment')
 - Response Payload:
   - String array of available directory names (ex. `['sjobs-123', 'tcook-456', 'jternus789']`)
 
 
-### Config
-TODO
+### Configurations
+
+#### POST /api/config
+- Query Parameters:
+  - `path`: Relative filesystem path
+- Request Payload:
+  - Complete [Configuration payload](#configuration-and-settings-payload)
+
+#### GET /api/config
+- Query Parameters:
+  - `path`: Relative filesystem path
+- Response Payload:
+  - if experiment exists: [Configuration payload](#configuration-and-settings-payload)
+  - else: `null`
+
 
 ### Settings
-TODO
+
+#### POST /api/settings
+- Query Parameters:
+  - `path`: Relative filesystem path
+- Request Payload:
+  - Complete [Settings payload](#configuration-and-settings-payload)
+- Response Payload:
+  - `version`: The version number assigned by the backend
+
+#### GET /api/settings
+- Query Parameters:
+  - `path`: Relative filesystem path
+  - `action`: `list` (optional)
+    - Discover and list the settings version at the `path`
+- Response Payload:
+  - if `action` provided: array of version numbers (g.g, `[0,1,3]`)
+  - else: [Settings payload](#configuration-and-settings-payload)
 
 ### Sequence
 
+#### POST /api/mechtest
+- Query Parameters:
+  - `path`: Relative filesystem path
+- Request Payload:
+  - Complete [Sequence Builder Payload](#sequence-builder-payload)
+
 #### GET /api/mechtest
 - Query Parameters:
-  - `path`: URL-encoded file path
-    (e.g., `<path>.json`)
+  - `path`: Relative filesystem path
 - Response Payload:
-  - _Sequence Builder Payload_ (see _Schemas & JSON Payloads_)
-
-#### POST /api/mechtest
-- Request Payload:
-  - A JSON containing the file path and Sequence Object
-    (e.g., `customFilePath: <path>.json, data: <Sequence Payload>`)
+  - Complete [Sequence Builder Payload](#sequence-builder-payload)
 
 
 ---
 
-## Schemas & JSON Payloads
+## Schemas and JSON Payloads
 
 ### Sequence Builder Payload
 
@@ -351,7 +397,7 @@ Example:
 ]
 ```
 
-### Configuration & Settings Payload
+### Configuration and Settings Payload
 
 TODO!
 
