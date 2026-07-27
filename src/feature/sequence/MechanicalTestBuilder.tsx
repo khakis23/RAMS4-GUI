@@ -286,13 +286,17 @@ const MechanicalTestInner = () => {
                 
                 // Only prioritize inner container if the active dragged item is not already inside this exact group
                 if (activeParentContainerId !== innerContainerId) {
-                    const innerCollision = pointerCollisions.find(c => {
-                        const idStr = String(c.id);
-                        return idStr === innerContainerId || (!idStr.startsWith('root-') && idStr !== firstId);
-                    });
+                    const innerContainerObj = args.droppableContainers.find(c => c.id === innerContainerId && !c.disabled);
+                    if (innerContainerObj) {
+                        const innerCollision = pointerCollisions.find(c => {
+                            const idStr = String(c.id);
+                            return idStr === innerContainerId || (!idStr.startsWith('root-') && idStr !== firstId);
+                        });
 
-                    if (innerCollision && String(innerCollision.id) !== firstId) {
-                        return [innerCollision, ...pointerCollisions.filter(c => c.id !== innerCollision.id)];
+                        if (innerCollision) {
+                            return [innerCollision, ...pointerCollisions.filter(c => c.id !== innerCollision.id)];
+                        }
+                        return [{ id: innerContainerId }, ...pointerCollisions];
                     }
                 }
             }

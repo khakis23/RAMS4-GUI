@@ -62,12 +62,13 @@ export const MechTestSortableList = ({
             >
                 {cards.length === 0 ? (
                     isOver ? (
-                        <div className="h-16 border-2 border-dashed border-mauve-400 dark:border-mauve-700 bg-mauve-200/30 dark:bg-mauve-900/30 rounded-md flex items-center justify-center gap-2 text-mauve-700 dark:text-mauve-300 font-semibold text-xs transition-all">
+                        <div className="h-20 border-2 border-dashed border-mauve-400 dark:border-mauve-700 bg-mauve-200/30 dark:bg-mauve-900/30 rounded-md flex items-center justify-center gap-2 text-mauve-700 dark:text-mauve-300 font-semibold text-xs transition-all">
                             <Plus className="h-4 w-4" />
                             <span>{depth === 0 ? "Move Step to Main Sequence" : "Drop Step Into Group"}</span>
                         </div>
                     ) : emptyStateMessage ? (
-                        <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-mauve-250 bg-mauve-50/10 text-mauve-500 rounded-sm text-center">
+                        <div className="flex flex-col items-center justify-center py-8 border-2 border-dashed border-mauve-250 bg-mauve-50/20 dark:bg-black/10 text-mauve-500 rounded-md text-center transition-all">
+                            <Plus className="h-4 w-4 mb-0.5 text-mauve-400" />
                             <p className="text-xs font-semibold">{emptyStateMessage}</p>
                         </div>
                     ) : null
