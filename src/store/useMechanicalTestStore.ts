@@ -17,12 +17,15 @@ interface MechanicalTestState {
     lastLoadedPath: string | null;
     _hasHydrated: boolean;
 
+    expandedGroupIds: Record<string, boolean>;
+    setGroupExpanded: (id: string, expanded: boolean) => void;
     setCards: (cards: MechTestCard[]) => void;
     addCard: (type?: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile', parentId?: string) => void;
     removeCard: (id: string) => void;
     updateCardData: (id: string, data: any) => void;
     updateCardType: (id: string, type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile') => void;
     reorderCards: (startIndex: number, endIndex: number, parentId?: string) => void;
+    moveCardInTree: (cardId: string, targetGroupId: string | null, targetIndex?: number) => MechTestCard[] | null;
     ungroupCard: (id: string) => void;
     loadMechTest: (directory: string, experiment: string) => Promise<void>;
     saveMechTest: (directory: string, experiment: string) => Promise<void>;
@@ -169,6 +172,119 @@ const ungroupCardRecursive = (cards: MechTestCard[], id: string): MechTestCard[]
         }
     }
     return result;
+};
+
+const getSubtreeGroupDepth = (card: MechTestCard): number => {
+    if (card.type !== 'group' || !card.data?.cards || card.data.cards.length === 0) {
+        return 1;
+    }
+    let maxChildDepth = 0;
+    for (const child of card.data.cards) {
+        if (child.type === 'group') {
+            maxChildDepth = Math.max(maxChildDepth, getSubtreeGroupDepth(child));
+        }
+    }
+    return 1 + maxChildDepth;
+};
+
+const findCardDepthAndPath = (
+    cards: MechTestCard[],
+    targetId: string,
+    currentDepth = 1,
+    currentPath: string[] = []
+): { depth: number; path: string[]; card: MechTestCard } | null => {
+    for (const card of cards) {
+        const path = [...currentPath, card.id];
+        if (card.id === targetId) {
+            return { depth: currentDepth, path, card };
+        }
+        if (card.type === 'group' && card.data?.cards) {
+            const found = findCardDepthAndPath(card.data.cards, targetId, currentDepth + 1, path);
+            if (found) return found;
+        }
+    }
+    return null;
+};
+
+const findAndDetachCardRecursive = (
+    cardsList: MechTestCard[],
+    idToFind: string
+): { cards: MechTestCard[]; detached: MechTestCard | null } => {
+    let detachedCard: MechTestCard | null = null;
+    const newCards: MechTestCard[] = [];
+
+    for (const item of cardsList) {
+        if (item.id === idToFind) {
+            detachedCard = item;
+            continue;
+        }
+
+        if (item.type === 'group' && item.data?.cards) {
+            const { cards: childNew, detached } = findAndDetachCardRecursive(item.data.cards, idToFind);
+            if (detached) {
+                detachedCard = detached;
+                newCards.push({
+                    ...item,
+                    data: {
+                        ...item.data,
+                        cards: childNew
+                    }
+                });
+                continue;
+            }
+        }
+
+        newCards.push(item);
+    }
+
+    return { cards: newCards, detached: detachedCard };
+};
+
+const attachCardRecursive = (
+    cardsList: MechTestCard[],
+    targetGroupId: string | null,
+    cardToAttach: MechTestCard,
+    targetIndex?: number
+): MechTestCard[] => {
+    if (targetGroupId === null) {
+        const result = [...cardsList];
+        if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= result.length) {
+            result.splice(targetIndex, 0, cardToAttach);
+        } else {
+            result.push(cardToAttach);
+        }
+        return result;
+    }
+
+    return cardsList.map((item) => {
+        if (item.id === targetGroupId && item.type === 'group') {
+            const groupChildCards = item.data?.cards ? [...item.data.cards] : [];
+            if (targetIndex !== undefined && targetIndex >= 0 && targetIndex <= groupChildCards.length) {
+                groupChildCards.splice(targetIndex, 0, cardToAttach);
+            } else {
+                groupChildCards.push(cardToAttach);
+            }
+            return {
+                ...item,
+                data: {
+                    ...item.data,
+                    cards: groupChildCards
+                }
+            };
+        }
+
+        if (item.type === 'group' && item.data?.cards) {
+            return {
+                ...item,
+                data: {
+                    ...item.data,
+                    cards: attachCardRecursive(item.data.cards, targetGroupId, cardToAttach, targetIndex)
+                }
+            };
+        }
+
+        return item;
+    });
 };
 
 // Serialization Helpers
@@ -318,9 +434,11 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
             isLoading: false,
             error: null,
             lastLoadedPath: null,
+            expandedGroupIds: {},
             validationErrors: [],
-            _hasHydrated: false,
-
+            setGroupExpanded: (id, expanded) => set((state) => ({
+                expandedGroupIds: { ...state.expandedGroupIds, [id]: expanded }
+            })),
             setValidationErrors: (errors) => set({ validationErrors: errors }),
 
             setCards: (cards) => {
@@ -380,6 +498,52 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
                     const isDirty = checkIsDirty(updatedCards, state.savedCards);
                     return { cards: updatedCards, isDirty };
                 });
+            },
+
+            moveCardInTree: (cardId, targetGroupId, targetIndex) => {
+                const currentCards = get().cards;
+                if (!cardId) return null;
+
+                // Validate target depth and circular drops
+                if (targetGroupId !== null) {
+                    // Prevent circular drop onto self
+                    if (cardId === targetGroupId) return null;
+
+                    const targetInfo = findCardDepthAndPath(currentCards, targetGroupId);
+                    if (!targetInfo) return null;
+
+                    // Ensure target is actually a group card
+                    if (targetInfo.card.type !== 'group') {
+                        return null;
+                    }
+
+                    // Prevent circular drop into own descendant
+                    if (targetInfo.path.includes(cardId)) {
+                        return null;
+                    }
+
+                    // Enforce max nesting depth of 2 for group items
+                    const targetDepth = targetInfo.depth;
+                    const { detached } = findAndDetachCardRecursive(currentCards, cardId);
+                    if (!detached) return null;
+
+                    if (detached.type === 'group') {
+                        const cardSubtreeDepth = getSubtreeGroupDepth(detached);
+                        if (targetDepth + cardSubtreeDepth > 2) {
+                            return null;
+                        }
+                    }
+                }
+
+                const { cards: detachedTree, detached } = findAndDetachCardRecursive(currentCards, cardId);
+                if (!detached) return null;
+
+                const updatedCards = attachCardRecursive(detachedTree, targetGroupId, detached, targetIndex);
+                set({
+                    cards: updatedCards,
+                    isDirty: checkIsDirty(updatedCards, get().savedCards)
+                });
+                return updatedCards;
             },
 
             ungroupCard: (id) => {

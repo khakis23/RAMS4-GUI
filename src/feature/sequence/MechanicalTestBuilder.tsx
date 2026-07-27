@@ -4,13 +4,26 @@ import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { useMechanicalTestStore } from '@/store/useMechanicalTestStore';
 import { Button } from '@/components/ui/button';
 import { WarningModal } from '@/components/ui/WarningModal';
-import { Sliders, Plus, Save, FileJson, Check, Group } from 'lucide-react';
+import { Sliders, Plus, Save, FileJson, Check, Group, GripVertical } from 'lucide-react';
 import { useFormAutoSave } from '../configuration/hooks/useFormAutoSave';
 import { MechTestCardItem } from './components/MechTestCardItem';
 import { MechTestGroupItem } from './components/MechTestGroupItem';
+import { MechTestSortableList } from './components/MechTestSortableList';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { mechTestFormSchema } from './profileSchemas/mechTestSchema';
 import { z } from 'zod';
+import { 
+    DndContext, 
+    DragOverlay, 
+    useSensor, 
+    useSensors, 
+    PointerSensor, 
+    KeyboardSensor, 
+    pointerWithin, 
+    rectIntersection, 
+    CollisionDetection 
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
 const getReadableFieldName = (fieldName: string) => {
     if (fieldName === 'profileID') return 'Image Profile';
@@ -75,7 +88,7 @@ const MechanicalTestInner = () => {
         setCards,
         resetStore,
         lastLoadedPath,
-        validationErrors,
+        validationErrors = [],
         setValidationErrors
     } = useMechanicalTestStore();
 
@@ -85,6 +98,9 @@ const MechanicalTestInner = () => {
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [modalErrors, setModalErrors] = useState<string[]>([]);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
+    const [isDraggingActive, setIsDraggingActive] = useState(false);
+    const [draggingSourceId, setDraggingSourceId] = useState<string | null>(null);
 
     // React Hook Form initialization with Zod Resolver
     const { register, control, watch, setValue, reset, formState: { errors } } = useForm({
@@ -163,18 +179,19 @@ const MechanicalTestInner = () => {
 
     // Validate sequence continuously and sync to validation store
     useEffect(() => {
+        const currentErrors = validationErrors || [];
         const result = mechTestFormSchema.safeParse(watchedValues);
         if (!result.success) {
             const errorStrings = compileMechTestErrors(result.error);
             const hasChanged = 
-                validationErrors.length !== errorStrings.length ||
-                errorStrings.some((msg: string, idx: number) => msg !== validationErrors[idx]);
+                currentErrors.length !== errorStrings.length ||
+                errorStrings.some((msg: string, idx: number) => msg !== currentErrors[idx]);
             
             if (hasChanged) {
                 setValidationErrors(errorStrings);
             }
         } else {
-            if (validationErrors.length > 0) {
+            if (currentErrors.length > 0) {
                 setValidationErrors([]);
             }
         }
@@ -211,23 +228,128 @@ const MechanicalTestInner = () => {
         }
     };
 
-    // HTML5 Drag and Drop Handlers
-    const handleDragStart = (index: number, e: React.DragEvent) => {
-        setDraggedIndex(index);
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', String(index));
+    const lastPointerPos = useRef({ x: 0, y: 0 });
+
+    useEffect(() => {
+        const handlePointerMove = (e: PointerEvent) => {
+            lastPointerPos.current = { x: e.clientX, y: e.clientY };
+        };
+        window.addEventListener('pointermove', handlePointerMove, { passive: true });
+        return () => window.removeEventListener('pointermove', handlePointerMove);
+    }, []);
+
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const [activeCard, setActiveCard] = useState<any | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const findCardInTree = (cardsList: any[], id: string): any | null => {
+        for (const card of cardsList) {
+            if (card.id === id) return card;
+            if (card.type === 'group' && card.data?.cards) {
+                const found = findCardInTree(card.data.cards, id);
+                if (found) return found;
+            }
+        }
+        return null;
     };
 
-    const handleDragOver = (index: number, e: React.DragEvent) => {
-        e.preventDefault();
-        if (draggedIndex === null || draggedIndex === index) return;
-        
-        move(draggedIndex, index);
-        setDraggedIndex(index);
+    const findParentContainerId = (cardsList: any[], id: string, parentId: string = 'root-sequence'): string | null => {
+        for (const card of cardsList) {
+            if (card.id === id) return parentId;
+            if (card.type === 'group' && card.data?.cards) {
+                const childParent = findParentContainerId(card.data.cards, id, `group-${card.id}`);
+                if (childParent) return childParent;
+            }
+        }
+        return null;
     };
 
-    const handleDragEnd = () => {
-        setDraggedIndex(null);
+    const activeParentContainerId = activeId ? findParentContainerId(watch('cards') || cards, activeId) : null;
+    const isDraggingFromGroup = Boolean(activeParentContainerId && activeParentContainerId !== 'root-sequence');
+
+    const customCollisionDetection: CollisionDetection = (args) => {
+        const pointerCollisions = pointerWithin(args);
+        if (pointerCollisions.length > 0) {
+            const firstId = String(pointerCollisions[0].id);
+            if (firstId.startsWith('card-group-') || firstId.includes('group')) {
+                const innerContainerId = firstId.startsWith('group-') ? firstId : `group-${firstId}`;
+                
+                // Only prioritize inner container if the active dragged item is not already inside this exact group
+                if (activeParentContainerId !== innerContainerId) {
+                    const innerCollision = pointerCollisions.find(c => {
+                        const idStr = String(c.id);
+                        return idStr === innerContainerId || (!idStr.startsWith('root-') && idStr !== firstId);
+                    });
+
+                    if (innerCollision && String(innerCollision.id) !== firstId) {
+                        return [innerCollision, ...pointerCollisions.filter(c => c.id !== innerCollision.id)];
+                    }
+                }
+            }
+            return pointerCollisions;
+        }
+        return rectIntersection(args);
+    };
+
+    const handleDragStart = (event: any) => {
+        const { active } = event;
+        const currentCards = watch('cards') || cards;
+        const card = findCardInTree(currentCards, String(active.id));
+        setActiveId(String(active.id));
+        setActiveCard(card);
+    };
+
+    const handleDragEnd = (event: any) => {
+        const { active, over } = event;
+        setActiveId(null);
+        setActiveCard(null);
+
+        if (!over) return;
+
+        const activeIdStr = String(active.id);
+        const overIdStr = String(over.id);
+
+        if (activeIdStr === overIdStr) return;
+
+        const currentCards = watch('cards') || cards;
+        setCards(currentCards);
+
+        let targetGroupId: string | null = null;
+        let targetIndex: number | undefined = undefined;
+
+        if (overIdStr === 'root-sequence') {
+            targetGroupId = null;
+            targetIndex = currentCards.length;
+        } else if (overIdStr.startsWith('group-')) {
+            targetGroupId = overIdStr.slice(6);
+        } else {
+            const targetParentContainer = findParentContainerId(currentCards, overIdStr);
+            targetGroupId = targetParentContainer === 'root-sequence' ? null : targetParentContainer ? targetParentContainer.replace(/^group-/, '') : null;
+            
+            if (targetGroupId === null) {
+                targetIndex = currentCards.findIndex((c: any) => c.id === overIdStr);
+            } else {
+                const parentGroup = findCardInTree(currentCards, targetGroupId);
+                if (parentGroup && parentGroup.data?.cards) {
+                    targetIndex = parentGroup.data.cards.findIndex((c: any) => c.id === overIdStr);
+                }
+            }
+        }
+
+        const updatedCards = useMechanicalTestStore.getState().moveCardInTree(activeIdStr, targetGroupId, targetIndex);
+        if (updatedCards) {
+            reset({ cards: updatedCards });
+        }
     };
 
     if (!configDirectory || !experimentNumber) {
@@ -303,74 +425,85 @@ const MechanicalTestInner = () => {
             </div>
 
             {/* Scrollable Cards Container */}
-            <div className="flex-grow overflow-y-auto pt-3 pb-12 min-h-0 overscroll-y-contain">
-                {fields.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center min-h-[300px] border border-mauve-200 rounded-sm p-8 text-center bg-white">
-                        <p className="text-sm text-mauve-500">
-                            No steps added to this test yet.
-                        </p>
-                        <Button
-                            type="button"
-                            variant="link"
-                            onClick={() => append({
-                                id: `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                                type: 'ramp',
-                                data: {}
-                            })}
-                            className="mt-2 text-xs font-semibold text-mauve-650 hover:text-mauve-850 cursor-pointer text-decoration-none"
-                        >
-                            Click here to add a new step.
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-4">
-                        {fields.map((field, index) => {
-                            const namePrefix = `cards.${index}`;
-                            const cardField = field as any;
-                            // const cardId = watch(`${namePrefix}.id` as any) as string;
-                            if (cardField.type === 'group') {
-                                return (
+            <div className="flex-grow pt-3 pb-12 min-h-0">
+                <DndContext 
+                    sensors={sensors} 
+                    collisionDetection={customCollisionDetection} 
+                    onDragStart={handleDragStart} 
+                    onDragEnd={handleDragEnd}
+                >
+                    {fields.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center min-h-[300px] border border-mauve-200 rounded-sm p-8 text-center bg-white">
+                            <p className="text-sm text-mauve-500">
+                                No steps added to this test yet.
+                            </p>
+                            <Button
+                                type="button"
+                                variant="link"
+                                onClick={() => append({
+                                    id: `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                    type: 'ramp',
+                                    data: {}
+                                })}
+                                className="mt-2 text-xs font-semibold text-mauve-650 hover:text-mauve-850 cursor-pointer text-decoration-none"
+                            >
+                                Click here to add a new step.
+                            </Button>
+                        </div>
+                    ) : (
+                        <MechTestSortableList
+                            containerId="root-sequence"
+                            cards={fields}
+                            namePrefix="cards"
+                            depth={0}
+                            register={register}
+                            errors={errors}
+                            control={control}
+                            watch={watch}
+                            setValue={setValue}
+                            reset={reset}
+                            removeCard={remove}
+                            duplicateCard={duplicateCard}
+                            isDraggingFromGroup={isDraggingFromGroup}
+                            className="min-h-[200px] p-1"
+                        />
+                    )}
+                    <DragOverlay dropAnimation={null}>
+                        {activeId && activeCard ? (
+                            <div className="w-full max-w-4xl shadow-2xl rounded-md opacity-95 cursor-grabbing pointer-events-none border border-mauve-300">
+                                {activeCard.type === 'group' ? (
                                     <MechTestGroupItem
-                                        key={field.id}
-                                        index={index}
-                                        namePrefix={namePrefix}
+                                        cardIdProp={activeCard.id}
+                                        index={0}
+                                        namePrefix="overlay"
                                         depth={1}
                                         register={register}
                                         errors={errors}
                                         control={control}
                                         watch={watch}
                                         setValue={setValue}
-                                        removeCard={remove}
-                                        duplicateCard={duplicateCard}
-                                        onDragStart={(e) => handleDragStart(index, e)}
-                                        onDragOver={(e) => handleDragOver(index, e)}
-                                        onDragEnd={handleDragEnd}
-                                        isDragging={draggedIndex === index}
+                                        reset={reset}
+                                        removeCard={() => {}}
+                                        duplicateCard={() => {}}
                                     />
-                                );
-                            } else {
-                                return (
+                                ) : (
                                     <MechTestCardItem
-                                        key={field.id}
-                                        index={index}
-                                        namePrefix={namePrefix}
+                                        cardIdProp={activeCard.id}
+                                        index={0}
+                                        namePrefix="overlay"
                                         register={register}
                                         errors={errors}
                                         control={control}
                                         watch={watch}
                                         setValue={setValue}
-                                        removeCard={remove}
-                                        duplicateCard={duplicateCard}
-                                        onDragStart={(e) => handleDragStart(index, e)}
-                                        onDragOver={(e) => handleDragOver(index, e)}
-                                        onDragEnd={handleDragEnd}
-                                        isDragging={draggedIndex === index}
+                                        removeCard={() => {}}
+                                        duplicateCard={() => {}}
                                     />
-                                );
-                            }
-                        })}
-                    </div>
-                )}
+                                )}
+                            </div>
+                        ) : null}
+                    </DragOverlay>
+                </DndContext>
             </div>
 
             {/* Save Validation Error Modal */}

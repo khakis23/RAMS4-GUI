@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { GripVertical, Trash2, Plus, Copy, Ungroup, TriangleRight, ScanEye, AudioWaveform, Gauge, Group, RefreshCw } from 'lucide-react';
-import { MechTestCardItem } from './MechTestCardItem';
+import { MechTestSortableItem } from './MechTestSortableItem';
+import { MechTestSortableList } from './MechTestSortableList';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
+import { useMechanicalTestStore } from '@/store/useMechanicalTestStore';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { rampSchema, takeSchema, dwellSchema, cycleSchema, takeWhileSchema } from '../profileSchemas/mechTestSchema';
 
 interface MechTestGroupItemProps {
+    cardIdProp?: string;
     index: number;
     namePrefix: string;
     depth: number; // Nesting depth: 1 or 2
@@ -17,15 +20,22 @@ interface MechTestGroupItemProps {
     control: any;
     watch: any;
     setValue: any;
+    reset?: any;
     removeCard: (index: number) => void;
     duplicateCard: (index: number) => void;
-    onDragStart: (e: React.DragEvent) => void;
-    onDragOver: (e: React.DragEvent) => void;
-    onDragEnd: () => void;
-    isDragging: boolean;
+    onDragStart?: (e: React.DragEvent) => void;
+    onDragOver?: (e: React.DragEvent) => void;
+    onDragEnd?: () => void;
+    isDragging?: boolean;
+    draggingSourceId?: string | null;
+    dragOverGroupId?: string | null;
+    setDragOverGroupId?: (id: string | null) => void;
+    provided?: any;
+    snapshot?: any;
 }
 
 export const MechTestGroupItem = ({
+    cardIdProp,
     index,
     namePrefix,
     depth,
@@ -34,15 +44,37 @@ export const MechTestGroupItem = ({
     control,
     watch,
     setValue,
+    reset,
     removeCard,
     duplicateCard,
     onDragStart,
     onDragOver,
     onDragEnd,
-    isDragging
+    isDragging,
+    draggingSourceId,
+    dragOverGroupId,
+    setDragOverGroupId,
+    provided: outerProvided,
+    snapshot: outerSnapshot,
 }: MechTestGroupItemProps) => {
     const { draft } = useConfigurationStore();
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+    // Watch child cards inside this group
+    const childCards = watch(`${namePrefix}.data.cards`) || [];
+
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [lockedMinHeight, setLockedMinHeight] = useState<number | undefined>(undefined);
+
+    // Capture group container height to lock bounds during active dragging
+    useEffect(() => {
+        if (containerRef.current && !isDragging) {
+            const height = containerRef.current.offsetHeight;
+            if (height > 0) {
+                setLockedMinHeight(height);
+            }
+        }
+    }, [childCards.length, isDragging]);
 
     const loopsVal = watch(`${namePrefix}.data.loops`) || 1;
     const [showLoopInput, setShowLoopInput] = useState(loopsVal > 1);
@@ -56,9 +88,6 @@ export const MechTestGroupItem = ({
             setValue(`${namePrefix}.data.loops`, 1, { shouldDirty: true, shouldValidate: true });
         }
     };
-
-    // Watch child cards inside this group
-    const childCards = watch(`${namePrefix}.data.cards`) || [];
 
     const isCardComplete = (card: any, prefix: string): boolean => {
         if (card.type === 'ramp') {
@@ -197,28 +226,22 @@ export const MechTestGroupItem = ({
         );
     };
 
-    // Inner Drag & Drop Handlers for children reordering
-    const handleInnerDragStart = (idx: number, e: React.DragEvent) => {
-        e.stopPropagation();
-        setDraggedIndex(idx);
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', String(idx));
-    };
+    const cardId = cardIdProp || watch(`${namePrefix}.id` as any) as string || `group-${depth}-${index}-${namePrefix.replace(/\./g, '-')}`;
 
-    const handleInnerDragOver = (idx: number, e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (draggedIndex === null || draggedIndex === idx) return;
-        
-        const updatedCards = Array.from(childCards);
-        const [removed] = updatedCards.splice(draggedIndex, 1);
-        updatedCards.splice(idx, 0, removed);
-        setValue(`${namePrefix}.data.cards`, updatedCards, { shouldDirty: true, shouldValidate: true });
-        setDraggedIndex(idx);
-    };
+    const handleMoveChildToParent = (childIdx: number) => {
+        const childToMove = childCards[childIdx];
+        if (!childToMove?.id) return;
 
-    const handleInnerDragEnd = () => {
-        setDraggedIndex(null);
+        let parentGroupId: string | null = null;
+        if (depth > 1) {
+            const parentPrefix = namePrefix.split('.').slice(0, 2).join('.');
+            parentGroupId = watch(`${parentPrefix}.id` as any) || null;
+        }
+
+        const updatedCards = useMechanicalTestStore.getState().moveCardInTree(childToMove.id, parentGroupId, index + 1);
+        if (updatedCards && reset) {
+            reset({ cards: updatedCards });
+        }
     };
 
     const handleAddCard = (type: 'ramp' | 'group') => {
@@ -284,219 +307,203 @@ export const MechTestGroupItem = ({
         ? 'bg-mauve-100 dark:bg-black/15 border-l-2 border-l-mauve-400'
         : 'bg-mauve-200 dark:bg-black/30 border-l-2 border-l-primary/60';
 
-    const cardId = watch(`${namePrefix}.id` as any) as string || `group-${index}`;
+    const expandedGroupIds = useMechanicalTestStore(state => state.expandedGroupIds);
+    const setGroupExpanded = useMechanicalTestStore(state => state.setGroupExpanded);
+
+    const isExpandedInStore = expandedGroupIds[cardId];
+    const accordionValue = isExpandedInStore === false ? '' : cardId;
 
     return (
-        <div 
-            draggable={true}
-            onDragStart={onDragStart}
-            onDragOver={onDragOver}
-            onDragEnd={onDragEnd}
-            className={`flex flex-col border rounded-md transition-all duration-100 ${
-                depth === 1 ? 'bg-mauve-100 dark:bg-black/5' : 'bg-mauve-200 dark:bg-black/15'
-            } ${isDragging ? 'opacity-50 border-dashed border-mauve-400 shadow-lg' : 'border-mauve-200 hover:shadow-sm'}`}
-        >
-            <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value={cardId} className="border-b-0">
-                    {/* Header bar */}
-                    <div className={`flex items-center justify-between p-4 ${shadingBg} gap-3`}>
-                        <div className="flex items-center gap-3 shrink-0">
-                            <div className="text-mauve-300 cursor-grab active:cursor-grabbing hover:text-mauve-500 transition-colors p-1">
-                                <GripVertical className="h-4 w-4 shrink-0" />
-                            </div>
+        <MechTestSortableItem id={cardId}>
+            {({ ref, handleRef, attributes, listeners, style, isDragging: isItemDragging }) => (
+                <div 
+                    ref={ref}
+                    style={style}
+                    className={`flex flex-col border rounded-md transition-all duration-200 ease-out ${
+                        depth === 1 ? 'bg-mauve-100 dark:bg-black/5' : 'bg-mauve-200 dark:bg-black/15'
+                    } ${
+                        isItemDragging 
+                            ? 'opacity-40 border-mauve-400 ring-2 ring-mauve-300' 
+                            : 'border-mauve-200 hover:shadow-sm'
+                    }`}
+                >
+                    <input type="hidden" {...register(`${namePrefix}.id`)} />
+                    <Accordion 
+                        type="single" 
+                        collapsible 
+                        value={accordionValue} 
+                        onValueChange={(val) => setGroupExpanded(cardId, Boolean(val))} 
+                        className="w-full"
+                    >
+                        <AccordionItem value={cardId} className="border-b-0">
+                            {/* Header bar */}
+                            <div className={`flex items-center justify-between p-4 ${shadingBg} gap-3`}>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <div 
+                                        ref={handleRef}
+                                        {...attributes}
+                                        {...listeners}
+                                        className="text-mauve-300 cursor-grab active:cursor-grabbing hover:text-mauve-500 transition-colors p-1 touch-none"
+                                    >
+                                        <GripVertical className="h-4 w-4 shrink-0" />
+                                    </div>
 
-                            <span className="text-xs font-bold text-mauve-500 w-18 shrink-0">
-                                {depth === 1 ? 'Group' : 'Sub-Group'} #{index + 1}
-                            </span>
-                        </div>
-
-                        {/* Title Accordion Trigger */}
-                        <AccordionTrigger className="flex-grow py-1.5 px-4 text-xs font-bold text-mauve-850 hover:no-underline [&>svg]:text-mauve-500 shrink min-w-0">
-                            <span className="flex items-center justify-between select-none w-full pr-4 min-w-0">
-                                <span className="flex items-center gap-2 truncate">
-                                    <span className="truncate">{getGroupHeaderSummary()}</span>
-                                    {!isGroupComplete && (
-                                        <span className="text-[11px] font-semibold text-destructive dark:text-red-400 bg-red-500/10 dark:bg-red-500/20 px-1.5 py-0.5 rounded-sm shrink-0 select-none">
-                                            (incomplete)
-                                        </span>
-                                    )}
-                                </span>
-                                {loopsVal > 1 && (
-                                    <span className="flex items-center gap-1.5 text-mauve-600 dark:text-mauve-600 font-semibold shrink-0">
-                                        <RefreshCw className="h-3.5 w-3.5" />
-                                        <span>{loopsVal}</span>
+                                    <span className="text-xs font-bold text-mauve-500 w-18 shrink-0">
+                                        {depth === 1 ? 'Group' : 'Sub-Group'} #{index + 1}
                                     </span>
-                                )}
-                            </span>
-                        </AccordionTrigger>
+                                </div>
 
-                        {/* Actions group: Ungroup & Delete */}
-                        <div className="shrink-0 flex items-center gap-1.5">
-                            <TooltipProvider>
-                                <Tooltip delayDuration={200}>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={handleUngroup}
-                                            className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-primary hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
-                                        >
-                                            <Ungroup className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs text-xs p-2 bg-popover text-popover-foreground rounded shadow-md border border-mauve-150">
-                                        Ungroup
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                                {/* Title Accordion Trigger */}
+                                <AccordionTrigger className="flex-grow py-1.5 px-4 text-xs font-bold text-mauve-850 hover:no-underline [&>svg]:text-mauve-500 shrink min-w-0">
+                                    <span className="flex items-center justify-between select-none w-full pr-4 min-w-0">
+                                        <span className="flex items-center gap-2 truncate">
+                                            <span className="truncate">{getGroupHeaderSummary()}</span>
+                                            {!isGroupComplete && (
+                                                <span className="text-[11px] font-semibold text-destructive dark:text-red-400 bg-red-500/10 dark:bg-red-500/20 px-1.5 py-0.5 rounded-sm shrink-0 select-none">
+                                                    (incomplete)
+                                                </span>
+                                            )}
+                                        </span>
+                                        {loopsVal > 1 && (
+                                            <span className="flex items-center gap-1.5 text-mauve-600 dark:text-mauve-600 font-semibold shrink-0">
+                                                <RefreshCw className="h-3.5 w-3.5" />
+                                                <span>{loopsVal}</span>
+                                            </span>
+                                        )}
+                                    </span>
+                                </AccordionTrigger>
 
-                            <TooltipProvider>
-                                <Tooltip delayDuration={200}>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => duplicateCard(index)}
-                                            className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-primary hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
-                                        >
-                                            <Copy className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs text-xs p-2 bg-popover text-popover-foreground rounded shadow-md border border-mauve-150">
-                                        Duplicate
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                                {/* Actions group: Ungroup & Delete */}
+                                <div className="shrink-0 flex items-center gap-1.5">
+                                    <TooltipProvider>
+                                        <Tooltip delayDuration={200}>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={handleUngroup}
+                                                    className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-primary hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
+                                                >
+                                                    <Ungroup className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-xs text-xs p-2 bg-popover text-popover-foreground rounded shadow-md border border-mauve-150">
+                                                Ungroup
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
 
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeCard(index)}
-                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg cursor-pointer transition-colors"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
+                                    <TooltipProvider>
+                                        <Tooltip delayDuration={200}>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => duplicateCard(index)}
+                                                    className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-primary hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
+                                                >
+                                                    <Copy className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-xs text-xs p-2 bg-popover text-popover-foreground rounded shadow-md border border-mauve-150">
+                                                Duplicate
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
 
-                    {/* Subsequence Content */}
-                    <AccordionContent className={`p-5 border-t border-mauve-150 pb-5 text-left ${
-                        depth === 1 ? 'bg-mauve-50/40 dark:bg-black/10' : 'bg-mauve-100/50 dark:bg-black/25'
-                    }`}>
-                        {childCards.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-6 border border-dashed border-mauve-200 rounded-sm bg-mauve-50/5 mb-4 text-center">
-                                <p className="text-xs text-mauve-500">No steps in this group.</p>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-4 mb-5">
-                                {childCards.map((card: any, idx: number) => {
-                                    const childPrefix = `${namePrefix}.data.cards.${idx}`;
-                                    if (card.type === 'group') {
-                                        return (
-                                            <MechTestGroupItem
-                                                key={card.id}
-                                                index={idx}
-                                                namePrefix={childPrefix}
-                                                depth={2}
-                                                register={register}
-                                                errors={errors}
-                                                control={control}
-                                                watch={watch}
-                                                setValue={setValue}
-                                                removeCard={() => {
-                                                    const updatedCards = childCards.filter((_: any, i: number) => i !== idx);
-                                                    setValue(`${namePrefix}.data.cards`, updatedCards, { shouldDirty: true, shouldValidate: true });
-                                                }}
-                                                duplicateCard={duplicateChildCard}
-                                                onDragStart={(e) => handleInnerDragStart(idx, e)}
-                                                onDragOver={(e) => handleInnerDragOver(idx, e)}
-                                                onDragEnd={handleInnerDragEnd}
-                                                isDragging={draggedIndex === idx}
-                                            />
-                                        );
-                                    } else {
-                                        return (
-                                            <MechTestCardItem
-                                                key={card.id}
-                                                index={idx}
-                                                namePrefix={childPrefix}
-                                                register={register}
-                                                errors={errors}
-                                                control={control}
-                                                watch={watch}
-                                                setValue={setValue}
-                                                removeCard={() => {
-                                                    const updatedCards = childCards.filter((_: any, i: number) => i !== idx);
-                                                    setValue(`${namePrefix}.data.cards`, updatedCards, { shouldDirty: true, shouldValidate: true });
-                                                }}
-                                                duplicateCard={duplicateChildCard}
-                                                onDragStart={(e) => handleInnerDragStart(idx, e)}
-                                                onDragOver={(e) => handleInnerDragOver(idx, e)}
-                                                onDragEnd={handleInnerDragEnd}
-                                                isDragging={draggedIndex === idx}
-                                            />
-                                        );
-                                    }
-                                })}
-                            </div>
-                        )}
-
-                        {/* Action buttons inside group */}
-                        <div className="flex items-center justify-between w-full mt-3">
-                            <div className="flex items-center gap-3">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => handleAddCard('ramp')}
-                                    className="h-7 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700 flex items-center gap-1 cursor-pointer"
-                                >
-                                    <Plus className="h-3.5 w-3.5" />
-                                    Add Step
-                                </Button>
-
-                                {depth < 2 && (
                                     <Button
                                         type="button"
-                                        variant="secondary"
-                                        onClick={() => handleAddCard('group')}
-                                        className="h-7 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700 flex items-center gap-1 cursor-pointer"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeCard(index)}
+                                        className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg cursor-pointer transition-colors"
                                     >
-                                        <Plus className="h-3.5 w-3.5" />
-                                        <Group className="h-3.5 w-3.5 ml-0.5" />
-                                        Add Group
+                                        <Trash2 className="h-4 w-4" />
                                     </Button>
-                                )}
+                                </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                {showLoopInput && (
-                                    <Input
-                                        type="number"
-                                        min={1}
-                                        {...register(`${namePrefix}.data.loops`, { valueAsNumber: true })}
-                                        className="w-16 h-7 text-xs text-center border border-mauve-250 bg-white rounded-lg px-2 focus-visible:ring-mauve-400"
-                                    />
-                                )}
-                                <Button
-                                    type="button"
-                                    onClick={handleToggleLoop}
-                                    className={`h-7 px-3 text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm transition-all duration-150 ${
-                                        showLoopInput 
-                                            ? 'bg-mauve-600 hover:bg-mauve-700 text-white border border-transparent' 
-                                            : 'bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700'
-                                    }`}
-                                >
-                                    <RefreshCw className="h-3.5 w-3.5" />
-                                    <span>Loop</span>
-                                </Button>
-                            </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
-        </div>
+                            {/* Subsequence Content */}
+                            <AccordionContent className={`p-5 border-t border-mauve-150 pb-5 text-left ${
+                                depth === 1 ? 'bg-mauve-50/40 dark:bg-black/10' : 'bg-mauve-100/50 dark:bg-black/25'
+                            }`}>
+                                <MechTestSortableList
+                                    containerId={`group-${cardId}`}
+                                    cards={childCards}
+                                    namePrefix={`${namePrefix}.data.cards`}
+                                    depth={depth}
+                                    register={register}
+                                    errors={errors}
+                                    control={control}
+                                    watch={watch}
+                                    setValue={setValue}
+                                    reset={reset}
+                                    removeCard={(childIdx) => {
+                                        const updatedCards = childCards.filter((_: any, i: number) => i !== childIdx);
+                                        setValue(`${namePrefix}.data.cards`, updatedCards, { shouldDirty: true, shouldValidate: true });
+                                    }}
+                                    duplicateCard={duplicateChildCard}
+                                    moveOutOfGroup={handleMoveChildToParent}
+                                    emptyStateMessage="No steps in this group. Drag and drop steps here!"
+                                />
+
+                                {/* Action buttons inside group */}
+                                <div className="flex items-center justify-between w-full mt-3 pt-2">
+                                    <div className="flex items-center gap-3">
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            onClick={() => handleAddCard('ramp')}
+                                            className="h-7 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700 flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <Plus className="h-3.5 w-3.5" />
+                                            Add Step
+                                        </Button>
+
+                                        {depth < 2 && (
+                                            <Button
+                                                type="button"
+                                                variant="secondary"
+                                                onClick={() => handleAddCard('group')}
+                                                className="h-7 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700 flex items-center gap-1 cursor-pointer"
+                                            >
+                                                <Plus className="h-3.5 w-3.5" />
+                                                <Group className="h-3.5 w-3.5 ml-0.5" />
+                                                Add Group
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        {showLoopInput && (
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                {...register(`${namePrefix}.data.loops`, { valueAsNumber: true })}
+                                                className="w-16 h-7 text-xs text-center border border-mauve-250 bg-white rounded-lg px-2 focus-visible:ring-mauve-400"
+                                            />
+                                        )}
+                                        <Button
+                                            type="button"
+                                            onClick={handleToggleLoop}
+                                            className={`h-7 px-3 text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm transition-all duration-150 ${
+                                                showLoopInput 
+                                                    ? 'bg-mauve-600 hover:bg-mauve-700 text-white border border-transparent' 
+                                                    : 'bg-white border border-mauve-200 hover:bg-mauve-50 text-mauve-700'
+                                            }`}
+                                        >
+                                            <RefreshCw className="h-3.5 w-3.5" />
+                                            <span>Loop</span>
+                                        </Button>
+                                    </div>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                </div>
+            )}
+        </MechTestSortableItem>
     );
 };
