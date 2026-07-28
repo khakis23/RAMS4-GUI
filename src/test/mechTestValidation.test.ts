@@ -7,6 +7,7 @@ import {
     takeWhileSchema,
     mechTestFormSchema
 } from '../feature/sequence/profileSchemas/mechTestSchema.ts';
+import { dicFormSchema } from '../feature/configuration/profileSchemas/dicSchema.ts';
 
 // Helper runner for grouping test assertions cleanly
 const runTest = (name: string, fn: () => void) => {
@@ -304,6 +305,46 @@ runTest('Group: Triple nested group (depth 3) must exceed nesting limit and fail
     };
     const result = mechTestFormSchema.safeParse(tripleNestedGroup);
     assert.strictEqual(result.success, false, "Triple nested group (depth 3) must fail validation");
+});
+
+// DIC Tab Validation Tests
+runTest('DIC: Disabled state with null parameters is valid', () => {
+    const disabledDic = {
+        dicEnabled: false,
+        dicX: null,
+        dicZ: null,
+        dicAngle: null,
+        dicExposureTime: null,
+        dicStepSize: null
+    };
+    const result = dicFormSchema.safeParse(disabledDic);
+    assert.strictEqual(result.success, true, "Disabled DIC should be valid with null fields");
+});
+
+runTest('DIC: Enabled state with required X, Z, Angle and optional blank fields is valid', () => {
+    const enabledValidDic = {
+        dicEnabled: true,
+        dicX: 12.5,
+        dicZ: 3.0,
+        dicAngle: 90,
+        dicExposureTime: null,
+        dicStepSize: null
+    };
+    const result = dicFormSchema.safeParse(enabledValidDic);
+    assert.strictEqual(result.success, true, "Enabled DIC with X, Z, Angle set should be valid");
+});
+
+runTest('DIC: Enabled state with missing required X Position fails validation', () => {
+    const enabledMissingX = {
+        dicEnabled: true,
+        dicX: null,
+        dicZ: 3.0,
+        dicAngle: 90,
+        dicExposureTime: 1.5,
+        dicStepSize: 0.2
+    };
+    const result = dicFormSchema.safeParse(enabledMissingX);
+    assert.strictEqual(result.success, false, "Enabled DIC missing X Position must fail validation");
 });
 
 console.log("\nAll Mechanical Test Sequence validation rules passed successfully!\n");

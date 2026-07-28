@@ -36,7 +36,7 @@ Numeric fields limits are centrally located at `src/config/parameterLimits.ts`. 
 
 ---
 
-## User Feedback Summary — TODO
+## User Feedback — TODO
 
 ### Future Features & User Wishlist
 
@@ -294,11 +294,11 @@ Example:
 
 | Parameter | Type | Required | Description |
 | :--- | :--- | :---: | :--- |
-| `profileID` | String | Yes | Unique ID of the X-ray Scan Profile to trigger. |
+| `profileID` | String | Yes | Unique ID of the X-ray Scan Profile to trigger or `"dic"`. |
 | `imgMode` | String | `if profileID is (time-series or rotation-series)` | Image modality (`ff` Far-Field, `nf` Near-Field, `tomo` Tomography, `dic` DIC). |
 | `pauseTsDaq` | Boolean | Yes | Default: `false` — Pause time-series DAQ while taking image. |
 
-Example:
+Example X-ray: 
 ```json
 [
   {
@@ -307,7 +307,20 @@ Example:
       "pauseTsDaq": false,
       "imgMode": "nf"
     }
-  },
+  }
+]
+```
+
+Example DIC: 
+
+```json
+[
+  {
+    "take": {
+      "profileID": "dic",
+      "pauseTsDaq": false
+    }
+  }
 ]
 ```
 
@@ -411,7 +424,140 @@ Example:
 
 ### Configuration and Settings Payload
 
-TODO!
+Configuration and settings are stored together in local storage but are separate payloads. Configurations belong to each user and experiment, while settings are expected to be global.
+
+#### Config 
+
+| Parameter | Type | Default / Options | Description |
+| :--- | :--- | :---: | :--- |
+| `cycleNumber` | String | | Cycle identifier string (e.g., `"2026-2"`). |
+| `sampleName` | String | | Sample specimen name (e.g., `"titanium_specimen_02"`). |
+| `userId` | String | | User ID / BTR string (e.g., `"sjobs-123"`). |
+| `experimentNumber` | String | | Experiment number string (e.g., `"1"`). |
+| `configDirectory` | String | | Full filesystem directory path for experiment metadata. |
+| `requiredAxes` | List of Enums | `A`, `B`, `RA`, `RB`, `TENS` | Active hardware axes required for experiment execution. |
+| `daqFrequency` | Number | kHz | Primary DAQ sampling frequency in kHz. |
+| `samplePoints` | Number | points | Buffer sample points captured per DAQ trigger. |
+| `settingsVersion` | Number | | Version integer of the linked hardware settings file. |
+| `handlerProfiles` | List of Objects | `[]` | Array of DAQ Handler Profile JSON objects ([see DAQ Handler Profiles](#daq-handler-profiles)). |
+| `xrayProfiles` | List of Objects | `[]` | Array of X-ray Scan Profile JSON objects ([see X-ray Scan Profiles](#x-ray-scan-profiles)). |
+| `dicEnabled` | Boolean | `false` | Enable DIC acquisition parameters. |
+| `dicX` | Number / null | `null` | DIC X position stage alignment in mm. |
+| `dicZ` | Number / null | `null` | DIC Z position stage alignment in mm. |
+| `dicAngle` | Number / null | `null` | DIC rotation angle in degrees. |
+| `dicExposureTime` | Number / null | `null` | Optional DIC exposure time per image frame in seconds. |
+| `dicStepSize` | Number / null | `null` | Optional DIC step size between exposures in mm. |
+
+Example:
+
+```json
+{
+  "cycleNumber": "2026-2",
+  "userId": "sjobs-123",
+  "sampleName": "titanium_specimen_02",
+  "experimentNumber": "1",
+  "configDirectory": "/nfs/chess/aux/cycles/2026-2/id1a3/sjobs-123/metadata/titanium_specimen_02",
+  "requiredAxes": ["A", "B", "RA"],
+  "daqFrequency": 10,
+  "samplePoints": 500,
+  "settingsVersion": 1,
+  "dicEnabled": true,
+  "dicX": 10.5,
+  "dicZ": -5.0,
+  "dicAngle": 45.0,
+  "dicExposureTime": 0.5,
+  "dicStepSize": 0.1,
+  "handlerProfiles": [
+    {
+      "mode": "time-series",
+      "filename": "ts_specimen_1",
+      "verboseAxis": "-1",
+      "verboseSystem": -1,
+      "verboseTask": "-1",
+      "verboseIO": -1,
+      "verboseAi": ["LoadA"],
+      "frequency": 10,
+      "cycles": []
+    }
+  ],
+  "xrayProfiles": [
+    {
+      "id": "xrayProfile1784806481919",
+      "name": "rot",
+      "mode": "rotation-series",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "ramsx": 1,
+      "layerRanges": [
+        {
+          "omeStart": 0,
+          "omeStop": 180,
+          "numPoints": 180,
+          "layerStart": 0,
+          "layerEnd": 5,
+          "numLayers": 3
+        }
+      ]
+    }
+  ]
+}
+```
+
+
+#### Settings
+
+| Parameter | Type | Default / Options | Description |
+| :--- | :--- | :---: | :--- |
+| `specHost` | String | | SPEC hostname & port string. |
+| `requireSpecEnable` | Boolean | Default: `true` | Require SPEC host connection validation before test execution. |
+| `systemName` | String | | Global system hardware identifier (e.g., `"RAMS4_CHESS"`). |
+| `controllerHost` | String | | Aerotech motion controller IP address (e.g., `"10.0.0.1"`). |
+| `axisCount` | Number | Default: `5` | Total number of configured motor axes. |
+| `taskCount` | Number | Default: `5` | Total number of configured system task slots. |
+| `axesSettings` | List of Objects | | Array of motor axis limit objects containing `{ name, max_velocity, max_acceleration }`. |
+| `signalSettings` | List of Objects | | Array of signal calibration objects containing `{ name, slope, intercept, channel }`. |
+
+Example:
+
+```json
+{
+  "specHost": "id1a3.classe.cornell.edu:spec",
+  "requireSpecEnable": true,
+  "systemName": "RAMS4_CHESS",
+  "controllerHost": "10.0.0.1",
+  "axisCount": 5,
+  "taskCount": 5,
+  "axesSettings": [
+    {
+      "name": "A",
+      "max_velocity": 50,
+      "max_acceleration": 100
+    },
+    {
+      "name": "B",
+      "max_velocity": 50,
+      "max_acceleration": 100
+    }
+  ],
+  "signalSettings": [
+    {
+      "name": "LoadA",
+      "slope": 1.0,
+      "intercept": 0.0,
+      "channel": 0
+    },
+    {
+      "name": "Strain",
+      "slope": 1.0,
+      "intercept": 0.0,
+      "channel": 1
+    }
+  ]
+}
+```
+
 
 ### DAQ Handler Profiles
 
@@ -619,10 +765,6 @@ Main Profile:
 | `start` | Number | Yes | Start position (mm) |
 | `stop` | Number | Yes | Stop position (mm) |
 | `points` | Number | Yes | Number of points along the axis. |
-
-
-
-
 
 Example:
 

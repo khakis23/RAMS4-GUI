@@ -125,5 +125,13 @@ export const tooltips = {
     mechTestCycleManualDispUpper: "Motor displacement limit at the upper cycle bound.",
     mechTestCycleManualDispLower: "Motor displacement limit at the lower cycle bound.",
     mechTestCycleEnableDic: "Triggers continuous optical DIC camera capture during the cycle.",
-    mechTestCycleWait: "Blocks the execution of the next sequence command until the step is fully complete."
+    mechTestCycleWait: "Blocks the execution of the next sequence command until the step is fully complete.",
+
+    // --- DIC CONFIGURATION TOOLTIPS ---
+    dicSectionTitle: "Configure parameters for optical Digital Image Correlation (DIC) camera positioning, exposure, and step sizes.",
+    dicXPosition: "The X-coordinate stage position for DIC camera alignment in mm.",
+    dicZPosition: "The Z-coordinate stage position for DIC camera alignment in mm.",
+    dicAngle: "The rotation angle (degree) for DIC camera orientation.",
+    dicExposureTime: "Optional exposure time per optical image frame in seconds.",
+    dicStepSize: "Optional motor movement step size between optical exposures in mm."
 };

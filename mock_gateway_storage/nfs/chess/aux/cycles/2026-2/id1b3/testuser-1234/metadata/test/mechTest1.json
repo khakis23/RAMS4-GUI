@@ -1,107 +1,37 @@
 [
   {
-    "take": {
-      "profileID": "xrayProfile1784806481919",
-      "pauseTsDaq": false,
-      "imgMode": "nf"
+    "ramp": {
+      "target": 1,
+      "time": 1,
+      "max_displacement": 1,
+      "axis": "A",
+      "mode": "absolute",
+      "control": "displacement",
+      "dispToggle": "time",
+      "enable_dic": false,
+      "skipDICpos": false,
+      "incrementSeg": false,
+      "wait": true,
+      "velocity": null
     }
   },
   {
     "group": {
-      "loops": 5,
+      "loops": 9,
       "steps": [
         {
-          "group": {
-            "loops": 1,
-            "steps": [
-              {
-                "dwell": {
-                  "target": 1,
-                  "velocity": 1,
-                  "time": 1,
-                  "axis": "A",
-                  "control": "load",
-                  "wait": true
-                }
-              },
-              {
-                "ramp": {
-                  "target": 1,
-                  "time": 1,
-                  "max_displacement": 1,
-                  "axis": "A",
-                  "mode": "absolute",
-                  "control": "displacement",
-                  "dispToggle": "time",
-                  "enable_dic": false,
-                  "skipDICpos": false,
-                  "incrementSeg": false,
-                  "wait": true,
-                  "velocity": null
-                }
-              }
-            ]
-          }
-        },
-        {
-          "takeWhile": {
-            "take": {
-              "profileID": "xrayProfile1784678083915",
-              "imgMode": null,
-              "pauseTsDaq": false
-            },
-            "step": {
-              "type": "ramp",
-              "data": {
-                "target": 1,
-                "time": 1,
-                "max_displacement": 1,
-                "axis": "A",
-                "mode": "absolute",
-                "control": "displacement",
-                "dispToggle": "time",
-                "enable_dic": false,
-                "skipDICpos": false,
-                "incrementSeg": false,
-                "wait": true,
-                "velocity": null
-              }
-            }
-          }
-        },
-        {
-          "ramp": {
-            "target": 1,
-            "time": null,
-            "max_displacement": 1,
-            "axis": "RB",
-            "mode": "relative",
-            "control": "load",
-            "dispToggle": null,
-            "enable_dic": false,
-            "skipDICpos": false,
-            "incrementSeg": false,
-            "wait": true,
-            "velocity": 1
-          }
-        },
-        {
-          "ramp": {
-            "target": 1,
-            "time": 1,
-            "max_displacement": 1,
-            "axis": "A",
-            "mode": "absolute",
-            "control": "displacement",
-            "dispToggle": "time",
-            "enable_dic": false,
-            "skipDICpos": false,
-            "incrementSeg": false,
-            "wait": true,
-            "velocity": null
+          "take": {
+            "profileID": "dic",
+            "pauseTsDaq": false
           }
         }
       ]
+    }
+  },
+  {
+    "take": {
+      "profileID": "dic",
+      "pauseTsDaq": false
     }
   }
 ]

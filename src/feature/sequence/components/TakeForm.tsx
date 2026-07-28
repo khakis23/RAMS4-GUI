@@ -33,6 +33,7 @@ const getNestedError = (errors: any, path: string) => {
 export const TakeForm = ({ namePrefix, errors, control, watch, setValue }: TakeFormProps) => {
     const { draft } = useConfigurationStore();
     const xrayProfiles = draft?.xrayProfiles || [];
+    const dicEnabled = draft?.dicEnabled || false;
 
     const selectedProfileID = watch(`${namePrefix}.data.profileID`);
     const imageMode = watch(`${namePrefix}.data.imgMode`);
@@ -43,11 +44,16 @@ export const TakeForm = ({ namePrefix, errors, control, watch, setValue }: TakeF
     // Default configuration mappings
     useEffect(() => {
         const currentProfileID = watch(`${namePrefix}.data.profileID`);
-        if (!currentProfileID && xrayProfiles.length > 0) {
-            setValue(`${namePrefix}.data.profileID`, xrayProfiles[0].id);
-            setValue(`${namePrefix}.data.pauseTsDaq`, false);
+        if (!currentProfileID) {
+            if (dicEnabled) {
+                setValue(`${namePrefix}.data.profileID`, 'dic');
+                setValue(`${namePrefix}.data.pauseTsDaq`, false);
+            } else if (xrayProfiles.length > 0) {
+                setValue(`${namePrefix}.data.profileID`, xrayProfiles[0].id);
+                setValue(`${namePrefix}.data.pauseTsDaq`, false);
+            }
         }
-    }, [namePrefix, setValue, watch, xrayProfiles]);
+    }, [namePrefix, setValue, watch, xrayProfiles, dicEnabled]);
 
     // Handle profile selection changes to set appropriate default image modes
     useEffect(() => {
@@ -100,12 +106,17 @@ export const TakeForm = ({ namePrefix, errors, control, watch, setValue }: TakeF
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value || ''}>
                                 <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select an X-ray profile" />
+                                    <SelectValue placeholder="Select an image profile" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white">
-                                    {xrayProfiles.length === 0 ? (
+                                    {dicEnabled && (
+                                        <SelectItem value="dic" className="text-xs cursor-pointer">
+                                            DIC
+                                        </SelectItem>
+                                    )}
+                                    {xrayProfiles.length === 0 && !dicEnabled ? (
                                         <SelectItem value="none" disabled className="text-xs">
-                                            No xray profiles configured
+                                            No image profiles configured
                                         </SelectItem>
                                     ) : (
                                         xrayProfiles.map((p: any) => (

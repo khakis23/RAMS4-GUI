@@ -130,6 +130,25 @@ const deepEqual = (a: any, b: any): boolean => JSON.stringify(a) === JSON.string
         assert.strictEqual(currentDraft.xrayProfiles[0].id, createdStillsProfileId, "Stills profile ID must match");
     });
 
+    // Step 3.5: DIC Configuration Setup
+    await runTest('User Journey Step 3.5: Enable DIC and configure optical DIC parameters', () => {
+        const dicData = {
+            dicEnabled: true,
+            dicX: 15.0,
+            dicZ: -2.5,
+            dicAngle: 90.0,
+            dicExposureTime: 0.1,
+            dicStepSize: 0.05
+        };
+        configStore.updateDraft(dicData);
+
+        const currentDraft = useConfigurationStore.getState().draft;
+        assert.strictEqual(currentDraft.dicEnabled, true, "DIC must be enabled");
+        assert.strictEqual(currentDraft.dicX, 15.0, "DIC X position must match");
+        assert.strictEqual(currentDraft.dicZ, -2.5, "DIC Z position must match");
+        assert.strictEqual(currentDraft.dicAngle, 90.0, "DIC Angle must match");
+    });
+
     // Step 4: Hardware & System Settings Inspection
     await runTest('User Journey Step 4: System settings, Aerotech controller IP, and signal scaling inspection', () => {
         const settingsData = {
@@ -161,7 +180,7 @@ const deepEqual = (a: any, b: any): boolean => JSON.stringify(a) === JSON.string
     });
 
     // Step 5: Mechanical Test Builder Sequence Construction
-    await runTest('User Journey Step 5: Build mechanical test sequence and link Take step to X-ray profile', () => {
+    await runTest('User Journey Step 5: Build mechanical test sequence and link Take step to DIC profile', () => {
         useMechanicalTestStore.getState().resetStore();
 
         useMechanicalTestStore.getState().setCards([
@@ -199,12 +218,21 @@ const deepEqual = (a: any, b: any): boolean => JSON.stringify(a) === JSON.string
                     imgMode: "nf",
                     pauseTsDaq: false
                 }
+            },
+            {
+                id: "step-take-dic",
+                type: "take",
+                data: {
+                    profileID: "dic",
+                    pauseTsDaq: false
+                }
             }
         ]);
 
         const currentCards = useMechanicalTestStore.getState().cards;
-        assert.strictEqual(currentCards.length, 3, "Sequence cards stack must contain 3 steps");
+        assert.strictEqual(currentCards.length, 4, "Sequence cards stack must contain 4 steps");
         assert.strictEqual(currentCards[2].data.profileID, createdStillsProfileId, "Take step profileID must link to created X-ray profile");
+        assert.strictEqual(currentCards[3].data.profileID, "dic", "Take step profileID must link to DIC");
     });
 
     // Step 6: Configuration Saving & Gateway Serialization
@@ -215,6 +243,14 @@ const deepEqual = (a: any, b: any): boolean => JSON.stringify(a) === JSON.string
         const payload = compileToBackendPayload(currentDraft);
         assert.strictEqual(payload.frequency_kHz, 2000, "Payload frequency must equal draft DAQ frequency");
         assert.strictEqual(payload.newsample, "titanium_specimen_02", "Payload newsample must equal draft sample name");
+        assert.deepStrictEqual(payload.dic, {
+            enabled: true,
+            x: 15.0,
+            z: -2.5,
+            angle: 90.0,
+            exposure_time: 0.1,
+            step_size: 0.05
+        }, "Payload DIC configuration must match draft DIC state");
 
         // Simulate save API requests
         const settingsRes = await postSettingsToGateway(currentDraft.configDirectory, currentDraft);
@@ -227,7 +263,7 @@ const deepEqual = (a: any, b: any): boolean => JSON.stringify(a) === JSON.string
         const deepCopiedSaved = JSON.parse(JSON.stringify(currentDraft));
         configStore.setSavedConfig(deepCopiedSaved);
 
-        const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'settingsVersion'] as const;
+        const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'dicEnabled', 'dicX', 'dicZ', 'dicAngle', 'settingsVersion'] as const;
         const isDirty = keys.some(key => !deepEqual(useConfigurationStore.getState().draft[key], useConfigurationStore.getState().savedConfig![key]));
         assert.strictEqual(isDirty, false, "After saving, configuration state must be clean (isDirty = false)");
     });
@@ -250,12 +286,15 @@ const deepEqual = (a: any, b: any): boolean => JSON.stringify(a) === JSON.string
         assert.strictEqual(reloadedDraft.handlerProfiles.length, 2, "Reloaded handler profiles count must match");
         assert.strictEqual(reloadedDraft.xrayProfiles.length, 2, "Reloaded X-ray profiles count must match");
         assert.strictEqual(reloadedDraft.xrayProfiles[0].id, createdStillsProfileId, "Reloaded Stills profile ID must match");
+        assert.strictEqual(reloadedDraft.dicEnabled, true, "Reloaded DIC enabled state must match");
+        assert.strictEqual(reloadedDraft.dicX, 15.0, "Reloaded DIC X position must match");
         assert.strictEqual(reloadedDraft.specHost, "id1a3.classe.cornell.edu:spec", "Reloaded SPEC host must match");
 
         // Verify mechanical test sequence cards persistence
         const reloadedCards = useMechanicalTestStore.getState().cards;
-        assert.strictEqual(reloadedCards.length, 3, "Reloaded sequence cards count must match");
+        assert.strictEqual(reloadedCards.length, 4, "Reloaded sequence cards count must match");
         assert.strictEqual(reloadedCards[2].data.profileID, createdStillsProfileId, "Reloaded Take step profileID must remain linked");
+        assert.strictEqual(reloadedCards[3].data.profileID, "dic", "Reloaded DIC Take step profileID must remain linked");
     });
 
     console.log("\nAll Phase 4 End-to-End Researcher Journey & Round-Trip Persistence tests passed successfully!\n");

@@ -7,66 +7,23 @@
   "requiredAxes": [
     "A",
     "B",
-    "RT",
+    "RA",
     "RB",
     "TENS"
   ],
   "daqFrequency": 1,
-  "samplePoints": 1000,
+  "samplePoints": 10001,
   "handlerProfiles": [],
-  "xrayProfiles": [
-    {
-      "id": "xrayProfile1784806481919",
-      "name": "rot",
-      "mode": "rotation-series",
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "ramsx": 1,
-      "layerRanges": [
-        {
-          "omeStart": 1,
-          "omeStop": 1,
-          "numPoints": 1,
-          "layerStart": 1,
-          "layerEnd": 1,
-          "numLayers": 1
-        }
-      ]
-    },
-    {
-      "id": "xrayProfile1784678083915",
-      "name": "map",
-      "mode": "mapscan",
-      "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
-      "ramsx": 1,
-      "ramsz": 1,
-      "ome": 1,
-      "mapscanAxes": [
-        {
-          "axisName": "ome",
-          "start": 2,
-          "stop": 1,
-          "points": 1
-        },
-        {
-          "axisName": "ramsz",
-          "start": 1,
-          "stop": 1,
-          "points": 1
-        }
-      ]
-    }
-  ],
-  "settingsVersion": 1,
+  "xrayProfiles": [],
+  "dicEnabled": true,
+  "dicX": 2,
+  "dicZ": 1,
+  "dicAngle": 1,
+  "settingsVersion": 0,
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
   "systemName": "RAMS4_CHESS",
-  "controllerHost": "10.1.16.21",
+  "controllerHost": "10.0.0.1",
   "axisCount": 5,
   "taskCount": 5,
   "axesSettings": [
@@ -81,7 +38,7 @@
       "max_acceleration": 100
     },
     {
-      "name": "RT",
+      "name": "RA",
       "max_velocity": 10,
       "max_acceleration": 20
     },
@@ -97,6 +54,18 @@
     }
   ],
   "signalSettings": [
+    {
+      "name": "LoadA",
+      "slope": 1,
+      "intercept": 0,
+      "channel": 0
+    },
+    {
+      "name": "LoadB",
+      "slope": 1,
+      "intercept": 0,
+      "channel": 1
+    },
     {
       "name": "Torque",
       "slope": 1,

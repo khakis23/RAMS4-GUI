@@ -85,6 +85,14 @@ export interface GlobalConfig {
     // X-ray
     xrayProfiles: XrayProfile[];
 
+    // DIC
+    dicEnabled: boolean;
+    dicX: number | null;
+    dicZ: number | null;
+    dicAngle: number | null;
+    dicExposureTime: number | null;
+    dicStepSize: number | null;
+
     // Settings
     settingsVersion?: number;
     specHost: string;
@@ -141,6 +149,12 @@ const defaultDraftConfig = (): GlobalConfig => ({
     samplePoints: 1000,
     handlerProfiles: [],
     xrayProfiles: [],
+    dicEnabled: false,
+    dicX: null,
+    dicZ: null,
+    dicAngle: null,
+    dicExposureTime: null,
+    dicStepSize: null,
     settingsVersion: 0,
     specHost: "id1a3.classe.cornell.edu:spec",
     requireSpecEnable: true,

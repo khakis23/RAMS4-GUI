@@ -4,6 +4,7 @@ import { Button } from "../../../components/ui/button.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select.tsx";
 import { TabDAQ } from "../TabDAQ.tsx";
 import { TabXray } from "../TabXray.tsx";
+import { TabDIC } from "../TabDIC.tsx";
 import {
     postConfigToGateway,
     fetchDirItems,
@@ -224,7 +225,8 @@ export const ConfigurationManager = () => {
     const isDirty = useMemo(() => {
         if (!savedConfig) return false;
         const keys = [
-            'daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'settingsVersion'
+            'daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'settingsVersion',
+            'dicEnabled', 'dicX', 'dicZ', 'dicAngle', 'dicExposureTime', 'dicStepSize'
         ] as const;
         return keys.some(key => !deepEqual(draft[key], savedConfig[key]));
     }, [draft, savedConfig]);
@@ -444,6 +446,12 @@ export const ConfigurationManager = () => {
                         samplePoints: normalizedFetched.samplePoints ?? 1000,
                         handlerProfiles: normalizedFetched.handlerProfiles || [],
                         xrayProfiles: normalizedFetched.xrayProfiles || [],
+                        dicEnabled: normalizedFetched.dicEnabled ?? false,
+                        dicX: normalizedFetched.dicX ?? null,
+                        dicZ: normalizedFetched.dicZ ?? null,
+                        dicAngle: normalizedFetched.dicAngle ?? null,
+                        dicExposureTime: normalizedFetched.dicExposureTime ?? null,
+                        dicStepSize: normalizedFetched.dicStepSize ?? null,
                         ...settingsToApply,
                         settingsVersion: effectiveSettingsVersion
                     };
@@ -453,6 +461,12 @@ export const ConfigurationManager = () => {
                         samplePoints: mergedSaved.samplePoints,
                         handlerProfiles: mergedSaved.handlerProfiles,
                         xrayProfiles: mergedSaved.xrayProfiles,
+                        dicEnabled: mergedSaved.dicEnabled,
+                        dicX: mergedSaved.dicX,
+                        dicZ: mergedSaved.dicZ,
+                        dicAngle: mergedSaved.dicAngle,
+                        dicExposureTime: mergedSaved.dicExposureTime,
+                        dicStepSize: mergedSaved.dicStepSize,
                         ...settingsToApply,
                         settingsVersion: effectiveSettingsVersion
                     });
@@ -470,6 +484,12 @@ export const ConfigurationManager = () => {
                         samplePoints: draft.samplePoints ?? 1000,
                         handlerProfiles: draft.handlerProfiles || [],
                         xrayProfiles: draft.xrayProfiles || [],
+                        dicEnabled: draft.dicEnabled ?? false,
+                        dicX: draft.dicX ?? null,
+                        dicZ: draft.dicZ ?? null,
+                        dicAngle: draft.dicAngle ?? null,
+                        dicExposureTime: draft.dicExposureTime ?? null,
+                        dicStepSize: draft.dicStepSize ?? null,
                         ...settingsToApply
                     };
                     updateDraft({
@@ -478,6 +498,12 @@ export const ConfigurationManager = () => {
                         samplePoints: draft.samplePoints ?? 1000,
                         handlerProfiles: draft.handlerProfiles || [],
                         xrayProfiles: draft.xrayProfiles || [],
+                        dicEnabled: draft.dicEnabled ?? false,
+                        dicX: draft.dicX ?? null,
+                        dicZ: draft.dicZ ?? null,
+                        dicAngle: draft.dicAngle ?? null,
+                        dicExposureTime: draft.dicExposureTime ?? null,
+                        dicStepSize: draft.dicStepSize ?? null,
                         ...settingsToApply
                     });
                     setSavedConfig(defaults);
@@ -861,7 +887,7 @@ export const ConfigurationManager = () => {
             case 'xray':
                 return <TabXray />;
             case 'dic':
-                return <p className='text-lg font-medium text-mauve-800'>DIC Configuration Not Currently Supported</p>;
+                return <TabDIC />;
             default:
                 return null;
         }

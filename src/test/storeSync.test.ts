@@ -44,22 +44,33 @@ runTest('Store: isDirty evaluates to true when draft diverges from savedConfig',
         requiredAxes: ["A", "B"],
         handlerProfiles: [],
         xrayProfiles: [],
+        dicEnabled: false,
+        dicX: null,
+        dicZ: null,
+        dicAngle: null,
+        dicExposureTime: null,
+        dicStepSize: null,
         settingsVersion: 0
     };
 
     store.setSavedConfig(baselineConfig);
     store.updateDraft(baselineConfig);
 
-    const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'settingsVersion'] as const;
+    const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'dicEnabled', 'dicX', 'dicZ', 'dicAngle', 'dicExposureTime', 'dicStepSize', 'settingsVersion'] as const;
     
     // Baseline state is clean (not dirty)
-    let isDirty = keys.some(key => !deepEqual(useConfigurationStore.getState().draft[key], useConfigurationStore.getState().savedConfig[key]));
+    let isDirty = keys.some(key => !deepEqual(useConfigurationStore.getState().draft[key], useConfigurationStore.getState().savedConfig![key]));
     assert.strictEqual(isDirty, false, "Identical draft and savedConfig must evaluate to isDirty = false");
 
-    // Modify draft field
+    // Modify draft daq field
     store.updateDraft({ daqFrequency: 2500 });
-    isDirty = keys.some(key => !deepEqual(useConfigurationStore.getState().draft[key], useConfigurationStore.getState().savedConfig[key]));
+    isDirty = keys.some(key => !deepEqual(useConfigurationStore.getState().draft[key], useConfigurationStore.getState().savedConfig![key]));
     assert.strictEqual(isDirty, true, "Divergent draft daqFrequency must evaluate to isDirty = true");
+
+    // Reset draft and test DIC field modification
+    store.updateDraft({ daqFrequency: 1000, dicEnabled: true, dicX: 10 });
+    isDirty = keys.some(key => !deepEqual(useConfigurationStore.getState().draft[key], useConfigurationStore.getState().savedConfig![key]));
+    assert.strictEqual(isDirty, true, "Enabling DIC and editing DIC X must evaluate to isDirty = true");
 });
 
 // Settings Fallback Flag Integration Tests

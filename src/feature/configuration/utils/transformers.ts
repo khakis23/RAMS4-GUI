@@ -85,6 +85,23 @@ export const compileToBackendPayload = (
             }
 
             return profilePayload;
-        })
+        }),
+        dic: config.dicEnabled
+            ? {
+                enabled: true,
+                x: config.dicX !== null && config.dicX !== undefined ? Number(config.dicX) : null,
+                z: config.dicZ !== null && config.dicZ !== undefined ? Number(config.dicZ) : null,
+                angle: config.dicAngle !== null && config.dicAngle !== undefined ? Number(config.dicAngle) : null,
+                exposure_time: config.dicExposureTime !== null && config.dicExposureTime !== undefined ? Number(config.dicExposureTime) : null,
+                step_size: config.dicStepSize !== null && config.dicStepSize !== undefined ? Number(config.dicStepSize) : null
+            }
+            : {
+                enabled: false,
+                x: null,
+                z: null,
+                angle: null,
+                exposure_time: null,
+                step_size: null
+            }
     };
 };

@@ -293,8 +293,13 @@ const mockGatewayPlugin = () => {
                                         const cleanPath = payload.customFilePath.replace(/^\//, '');
                                         targetFile = path.join(mockStorageRoot, cleanPath);
                                         dataToWrite = payload.data;
+                                    } else if (queryPath) {
+                                        const fileWithExt = queryPath.endsWith('.json') ? queryPath : `${queryPath}.json`;
+                                        const cleanPath = fileWithExt.replace(/^\//, '');
+                                        targetFile = path.join(mockStorageRoot, cleanPath);
+                                        dataToWrite = payload;
                                     } else {
-                                        const filePath = payload.configDirectory + `config${payload.experimentNumber}.json`;
+                                        const filePath = (payload.configDirectory || '') + `config${payload.experimentNumber || '1'}.json`;
                                         const cleanPath = filePath.replace(/^\//, '');
                                         targetFile = path.join(mockStorageRoot, cleanPath);
                                         dataToWrite = payload;
