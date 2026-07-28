@@ -54,11 +54,23 @@ TODO
 
 ---
 
-## Architecture — TODO
+## Architecture
 
-TODO
+### State Management
+All configurations, settings, and sequences are globally stored in local storage using Zustand. A draft system is utilized that gets updated in real time as the user interacts, then that draft is sent over an HTTP request to save it. 
+
+#### State Workflow
+```
+User Interaction ——>  Zustand Draft  <——>  Backend
+                    (Browser Storage)   (Disk Storage)
+```
+
+#### Change Tracking
+Both stores maintain copies of the disk state, and when a UI change is triggered, the draft gets compared against the disk state—setting the `isDirty` flag. A dirty state can then be saved to disk. On a successful HTTP save request, the flag is reset, and the disk state copy is updated.
+
 
 ### FileTree
+The file organization is based on a feature-base architecture, so each directory within `feature/` contains all of the core functionality for that feature.
 
 ```txt
 src/

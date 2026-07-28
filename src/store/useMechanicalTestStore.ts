@@ -434,6 +434,7 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
             isLoading: false,
             error: null,
             lastLoadedPath: null,
+            _hasHydrated: false,
             expandedGroupIds: {},
             validationErrors: [],
             setGroupExpanded: (id, expanded) => set((state) => ({
