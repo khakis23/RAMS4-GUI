@@ -138,7 +138,7 @@ export const TabSettings = () => {
     return (
         <div className="flex flex-col gap-6 w-full text-left">
             {settingsFallbackActive && (
-                <div className="mt-10 flex px-4 items-center justify-between p-2 bg-amber-500/10 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-700/60 rounded-md text-amber-900 dark:text-amber-200 text-xs font-semibold shrink-0 shadow-sm">
+                <div className="flex px-4 items-center justify-between p-3 bg-amber-500/10 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-700/60 rounded-lg text-amber-900 dark:text-amber-200 text-xs font-semibold shrink-0 shadow-sm">
                     <div>
                         Warning: Expected settings version {settingsFallbackActive.expected} was missing. Loaded version {settingsFallbackActive.loaded} instead.
                     </div>
@@ -154,172 +154,172 @@ export const TabSettings = () => {
             )}
 
             <ConfigTabSection
-            title="System Settings"
-            // titleTooltip={tooltips.settingsSectionTitle}
-            profilesTitle="Axes & Calibrations"
-            profilesTitleTooltip="Define controller boundaries and calibration matrices."
-            profiles={
-                <div className="w-full space-y-8">
-                    {/* Axis limits Mini Section */}
-                    <div className="flex flex-col gap-4">
-                        <div className="flex justify-between items-center">
-                            <span className="font-bold text-sm text-mauve-850">Axis Parameters</span>
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700"
-                                onClick={() => appendAxis({ name: "", max_velocity: 10, max_acceleration: 20 })}
-                            >
-                                <Plus className="h-3.5 w-3.5 mr-1" /> Add Axis
-                            </Button>
+                title="System Settings"
+                profilesTitle="Axes & Calibrations"
+                profilesTitleTooltip="Define controller boundaries and calibration matrices."
+                profiles={
+                    <div className="w-full space-y-8">
+                        {/* Axis limits Mini Section */}
+                        <div className="flex flex-col gap-4">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-sm text-mauve-850">Axis Parameters</span>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white"
+                                    onClick={() => appendAxis({ name: "", max_velocity: 10, max_acceleration: 20 })}
+                                >
+                                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Axis
+                                </Button>
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                {axesFields.map((field, idx) => {
+                                    const takenNames = (watchedValues.axesSettings || [])
+                                        .map((a: any) => a?.name)
+                                        .filter((name: string, i: number) => !!name && i !== idx);
+                                    return (
+                                        <SettingsAxisCard
+                                            key={field.id}
+                                            index={idx}
+                                            control={control as any}
+                                            register={register}
+                                            errors={errors}
+                                            remove={removeAxis}
+                                            showRemove={axesFields.length > 1}
+                                            takenNames={takenNames}
+                                        />
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <div className="flex flex-col gap-3">
-                            {axesFields.map((field, idx) => {
-                                const takenNames = (watchedValues.axesSettings || [])
-                                    .map((a: any) => a?.name)
-                                    .filter((name: string, i: number) => !!name && i !== idx);
-                                return (
-                                    <SettingsAxisCard
-                                        key={field.id}
-                                        index={idx}
-                                        control={control as any}
-                                        register={register}
-                                        errors={errors}
-                                        remove={removeAxis}
-                                        showRemove={axesFields.length > 1}
-                                        takenNames={takenNames}
-                                    />
-                                );
-                            })}
+
+                        {/* Input Calibration Signal Mini Section */}
+                        <div className="flex flex-col gap-4 border-t border-mauve-150 pt-6">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-sm text-mauve-850">Input Signals</span>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white"
+                                    onClick={() => appendSignal({ name: "", slope: 1.0, intercept: 0.0, channel: 0 })}
+                                >
+                                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Signal
+                                </Button>
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                {signalsFields.map((field, idx) => {
+                                    const takenSignalNames = (watchedValues.signalSettings || [])
+                                        .map((s: any) => s?.name)
+                                        .filter((name: string, i: number) => !!name && i !== idx);
+                                    return (
+                                        <SettingsSignalCard 
+                                            key={field.id}
+                                            index={idx}
+                                            control={control as any}
+                                            register={register}
+                                            errors={errors}
+                                            remove={removeSignal}
+                                            showRemove={signalsFields.length > 1}
+                                            takenNames={takenSignalNames}
+                                        />
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
-
-                    {/* Input Calibration Signal Mini Section */}
-                    <div className="flex flex-col gap-4 border-t border-mauve-150 pt-6">
-                        <div className="flex justify-between items-center">
-                            <span className="font-bold text-sm text-mauve-850">Input Signals</span>
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700"
-                                onClick={() => appendSignal({ name: "", slope: 1.0, intercept: 0.0, channel: 0 })}
-                            >
-                                <Plus className="h-3.5 w-3.5 mr-1" /> Add Signal
-                            </Button>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            {signalsFields.map((field, idx) => {
-                                const takenSignalNames = (watchedValues.signalSettings || [])
-                                    .map((s: any) => s?.name)
-                                    .filter((name: string, i: number) => !!name && i !== idx);
-                                return (
-                                    <SettingsSignalCard 
-                                        key={field.id}
-                                        index={idx}
-                                        control={control as any}
-                                        register={register}
-                                        errors={errors}
-                                        remove={removeSignal}
-                                        showRemove={signalsFields.length > 1}
-                                        takenNames={takenSignalNames}
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            }
-        >
-            {/* SPEC configurations card */}
-            <div className="flex flex-col gap-6 w-full">
-                <div className="flex flex-col gap-2">
-                    <FieldLabel text="Setting Version" tooltip={tooltips.settingsVersion} />
-                    <Input 
-                        value={draft.settingsVersion ?? 0}
-                        readOnly
-                        className="bg-mauve-50/80 dark:bg-zinc-800 text-slate-900 dark:text-slate-100 font-medium font-mono border-mauve-200 dark:border-mauve-900 cursor-default select-none focus-visible:ring-0 focus-visible:border-0 dark:focus-visible:border-mauve-800"
-                    />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                    <FieldLabel text="Spec Host" tooltip={tooltips.settingsSpecHost} required={true} />
-                    <Input 
-                        placeholder="e.g. host:spec"
-                        className={errors.specHost ? "border-destructive focus-visible:ring-destructive" : ""}
-                        {...register('specHost')}
-                    />
-                    {errors.specHost && (
-                        <p className="text-xs text-destructive">{errors.specHost.message}</p>
-                    )}
-                </div>
-
-                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-mauve-150 bg-mauve-50/10 h-9 w-full mt-2">
-                    <FieldLabel text="Require SPEC Connection" tooltip={tooltips.settingsRequireSpecEnable} />
-                    <Controller
-                        control={control}
-                        name="requireSpecEnable"
-                        render={({ field }) => (
-                            <Switch checked={!!field.value} onCheckedChange={field.onChange} />
-                        )}
-                    />
-                </div>
-            </div>
-
-            {/* Aerotech Controller parameters card */}
-            <div className="flex flex-col gap-6 w-full">
-                <div className="flex flex-col gap-2">
-                    <FieldLabel text="System Name" tooltip={tooltips.settingsSystemName} required={true} />
-                    <Input 
-                        placeholder="e.g. RAMS4_CHESS"
-                        className={errors.systemName ? "border-destructive focus-visible:ring-destructive" : ""}
-                        {...register('systemName')}
-                    />
-                    {errors.systemName && (
-                        <p className="text-xs text-destructive">{errors.systemName.message}</p>
-                    )}
-                </div>
-
-                <div className="flex flex-col gap-2">
-                    <FieldLabel text="Aerotech Hostname / IP" tooltip={tooltips.settingsHostname} required={true} />
-                    <Input 
-                        placeholder="e.g. 10.0.0.1"
-                        className={errors.controllerHost ? "border-destructive focus-visible:ring-destructive" : ""}
-                        {...register('controllerHost')}
-                    />
-                    {errors.controllerHost && (
-                        <p className="text-xs text-destructive">{errors.controllerHost.message}</p>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                }
+            >
+                {/* SPEC configurations card (Column 1) */}
+                <div className="flex flex-col gap-6 w-full">
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="Axis Count" tooltip={tooltips.settingsAxisCount} required={true} />
+                        <FieldLabel text="Setting Version" tooltip={tooltips.settingsVersion} />
                         <Input 
-                            type="number" 
-                            placeholder="e.g. 5"
-                            className={errors.axisCount ? "border-destructive focus-visible:ring-destructive" : ""}
-                            {...register('axisCount', { valueAsNumber: true })}
+                            value={draft.settingsVersion ?? 0}
+                            readOnly
+                            className="bg-mauve-50/80 dark:bg-zinc-800 text-slate-900 dark:text-slate-100 font-medium font-mono border-mauve-200 dark:border-mauve-900 cursor-default select-none focus-visible:ring-0 focus-visible:border-0 dark:focus-visible:border-mauve-800"
                         />
-                        {errors.axisCount && (
-                            <p className="text-xs text-destructive">{errors.axisCount.message}</p>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <FieldLabel text="Spec Host" tooltip={tooltips.settingsSpecHost} required={true} />
+                        <Input 
+                            placeholder="e.g. host:spec"
+                            className={errors.specHost ? "border-destructive focus-visible:ring-destructive" : ""}
+                            {...register('specHost')}
+                        />
+                        {errors.specHost && (
+                            <p className="text-xs text-destructive">{errors.specHost.message}</p>
+                        )}
+                    </div>
+
+                    <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-mauve-150 bg-mauve-50/10 h-9 w-full mt-2">
+                        <FieldLabel text="Require SPEC Connection" tooltip={tooltips.settingsRequireSpecEnable} />
+                        <Controller
+                            control={control}
+                            name="requireSpecEnable"
+                            render={({ field }) => (
+                                <Switch checked={!!field.value} onCheckedChange={field.onChange} />
+                            )}
+                        />
+                    </div>
+                </div>
+
+                {/* Aerotech Controller parameters card (Column 2) */}
+                <div className="flex flex-col gap-6 w-full">
+                    <div className="flex flex-col gap-2">
+                        <FieldLabel text="System Name" tooltip={tooltips.settingsSystemName} required={true} />
+                        <Input 
+                            placeholder="e.g. RAMS4_CHESS"
+                            className={errors.systemName ? "border-destructive focus-visible:ring-destructive" : ""}
+                            {...register('systemName')}
+                        />
+                        {errors.systemName && (
+                            <p className="text-xs text-destructive">{errors.systemName.message}</p>
                         )}
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <FieldLabel text="Task Count" tooltip={tooltips.settingsTaskCount} required={true} />
+                        <FieldLabel text="Aerotech Hostname / IP" tooltip={tooltips.settingsHostname} required={true} />
                         <Input 
-                            type="number" 
-                            placeholder="e.g. 5"
-                            className={errors.taskCount ? "border-destructive focus-visible:ring-destructive" : ""}
-                            {...register('taskCount', { valueAsNumber: true })}
+                            placeholder="e.g. 10.0.0.1"
+                            className={errors.controllerHost ? "border-destructive focus-visible:ring-destructive" : ""}
+                            {...register('controllerHost')}
                         />
-                        {errors.taskCount && (
-                            <p className="text-xs text-destructive">{errors.taskCount.message}</p>
+                        {errors.controllerHost && (
+                            <p className="text-xs text-destructive">{errors.controllerHost.message}</p>
                         )}
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-2">
+                            <FieldLabel text="Axis Count" tooltip={tooltips.settingsAxisCount} required={true} />
+                            <Input 
+                                type="number" 
+                                placeholder="e.g. 5"
+                                className={errors.axisCount ? "border-destructive focus-visible:ring-destructive" : ""}
+                                {...register('axisCount', { valueAsNumber: true })}
+                            />
+                            {errors.axisCount && (
+                                <p className="text-xs text-destructive">{errors.axisCount.message}</p>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <FieldLabel text="Task Count" tooltip={tooltips.settingsTaskCount} required={true} />
+                            <Input 
+                                type="number" 
+                                placeholder="e.g. 5"
+                                className={errors.taskCount ? "border-destructive focus-visible:ring-destructive" : ""}
+                                {...register('taskCount', { valueAsNumber: true })}
+                            />
+                            {errors.taskCount && (
+                                <p className="text-xs text-destructive">{errors.taskCount.message}</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </ConfigTabSection>
+            </ConfigTabSection>
         </div>
     );
 };
+

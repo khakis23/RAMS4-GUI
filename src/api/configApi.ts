@@ -282,7 +282,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
     // Helper to scan settings folder and find highest version
     const getLatestVersion = async (): Promise<number | null> => {
         try {
-            const listUrl = `/api/settings?action=list&path=${encodeURIComponent(settingsDir)}`;
+            const listUrl = `/api/settings?action=list&type=settings&path=${encodeURIComponent(settingsDir)}`;
             const response = await fetch(listUrl);
             if (response.ok) {
                 const versions: number[] = await response.json();
@@ -363,7 +363,26 @@ export const postSettingsToGateway = async (directory: string, settings: any): P
     await new Promise((resolve) => setTimeout(resolve, 150));
 
     const settingsDir = getSettingsDir(directory);
-    const targetFile = `${settingsDir}settings_auto_increment`;
+    
+    // Scan settings folder to find highest existing version number to guarantee existing files are read-only
+    let nextVersion = 0;
+    try {
+        const listUrl = `/api/settings?action=list&type=settings&path=${encodeURIComponent(settingsDir)}`;
+        const response = await fetch(listUrl);
+        if (response.ok) {
+            const versions: number[] = await response.json();
+            if (versions.length > 0) {
+                nextVersion = Math.max(...versions) + 1;
+            }
+        }
+    } catch (e) {
+        console.warn("Failed to list existing settings versions from gateway", e);
+        const currentVer = typeof settings?.settingsVersion === 'number' ? settings.settingsVersion : 0;
+        nextVersion = currentVer + 1;
+    }
+
+    const targetFile = `${settingsDir}settings${nextVersion}`;
+
     const payload = {
         specHost: settings.specHost,
         requireSpecEnable: settings.requireSpecEnable,
@@ -383,11 +402,11 @@ export const postSettingsToGateway = async (directory: string, settings: any): P
         });
         if (response.ok) {
             const resData = await response.json();
-            return { version: resData.version };
+            return { version: resData.version ?? nextVersion };
         }
         throw new Error('Failed to save settings configuration');
     } catch (err) {
         console.warn("Failed to save settings config to gateway. Simulating in-memory success.", err);
-        return { version: 1 };
+        return { version: nextVersion };
     }
 };

@@ -46,10 +46,19 @@ const pruneConfigForSave = (config: any) => {
 
     // Prune handlerProfiles
     if (cleanConfig.handlerProfiles) {
-        cleanConfig.handlerProfiles = cleanConfig.handlerProfiles.map((hp: any) => {
+        const totalCount = cleanConfig.handlerProfiles.length;
+        cleanConfig.handlerProfiles = cleanConfig.handlerProfiles.map((hp: any, idx: number) => {
+            const daqType = hp.mode === 'time-series' 
+                ? 'timeseries' 
+                : (hp.mode === 'peak-valley' ? 'peakvalley' : 'pso');
+            const sample = (cleanConfig.sampleName || '').trim();
+            const exp = (cleanConfig.experimentNumber || '').trim();
+            const autoName = `${daqType}_${sample}_${exp}-${totalCount - idx}`;
+            const resolvedName = (hp.filename && hp.filename.trim() !== '') ? hp.filename.trim() : autoName;
+
             const cleanHp: any = {
                 mode: hp.mode,
-                filename: hp.filename,
+                filename: resolvedName,
                 verboseAxis: hp.verboseAxis,
                 verboseSystem: hp.verboseSystem,
                 verboseTask: hp.verboseTask,
@@ -199,10 +208,11 @@ export const ConfigurationManager = () => {
     const [isManualPath, setIsManualPath] = useState(false);
     const [dontShowWarningAgain, setDontShowWarningAgain] = useState(false);
     const [showManualWarningModal, setShowManualWarningModal] = useState(false);
+    const [showSettingsFallbackModal, setShowSettingsFallbackModal] = useState(false);
     const { errors: validationErrors } = useValidationStore();
 
     // Baseline configuration state is read from global useConfigurationStore
-    const { draft, updateDraft, lastLoadedPath, setLastLoadedPath, savedConfig, setSavedConfig } = useConfigurationStore();
+    const { draft, updateDraft, lastLoadedPath, setLastLoadedPath, savedConfig, setSavedConfig, settingsFallbackActive } = useConfigurationStore();
     const [selectedStation, setSelectedStation] = useState<string>("");
 
     const lastCycle = useRef(draft.cycleNumber);
@@ -212,6 +222,7 @@ export const ConfigurationManager = () => {
     const lastExp = useRef(draft.experimentNumber);
     const lastManualPath = useRef(draft.configDirectory);
     const lastIsManualPath = useRef(isManualPath);
+    const loadedSettingsRef = useRef<any>(null);
 
     // State for pending path changes
     interface PendingPathChange {
@@ -374,6 +385,7 @@ export const ConfigurationManager = () => {
 
                 let settingsToApply;
                 if (settingsRes) {
+                    loadedSettingsRef.current = settingsRes.data;
                     settingsToApply = {
                         settingsVersion: settingsRes.version,
                         specHost: settingsRes.data.specHost || defaultSettings.specHost,
@@ -392,13 +404,14 @@ export const ConfigurationManager = () => {
                             expected: fetched.settingsVersion,
                             loaded: settingsRes.version
                         });
+                        setShowSettingsFallbackModal(true);
                     } else {
                         useConfigurationStore.getState().setSettingsFallbackActive(null);
                     }
                 } else if (fetched && (fetched.specHost || fetched.axesSettings)) {
                     // Backwards compatibility for legacy configurations containing inline settings
                     settingsToApply = {
-                        settingsVersion: 0,
+                        settingsVersion: fetched.settingsVersion ?? 0,
                         specHost: fetched.specHost || defaultSettings.specHost,
                         requireSpecEnable: fetched.requireSpecEnable ?? defaultSettings.requireSpecEnable,
                         systemName: fetched.systemName || defaultSettings.systemName,
@@ -426,6 +439,7 @@ export const ConfigurationManager = () => {
                             expected: fetched.settingsVersion,
                             loaded: settingsToApply.settingsVersion
                         });
+                        setShowSettingsFallbackModal(true);
                     } else {
                         useConfigurationStore.getState().setSettingsFallbackActive(null);
                     }
@@ -854,7 +868,46 @@ export const ConfigurationManager = () => {
 
     const proceedSave = async () => {
         try {
-            const prunedPayload = pruneConfigForSave(draft);
+            let currentSettingsVersion = draft.settingsVersion ?? 0;
+            const currentSettings = {
+                specHost: draft.specHost,
+                requireSpecEnable: draft.requireSpecEnable,
+                systemName: draft.systemName,
+                controllerHost: draft.controllerHost,
+                axisCount: draft.axisCount,
+                taskCount: draft.taskCount,
+                axesSettings: draft.axesSettings,
+                signalSettings: draft.signalSettings
+            };
+
+            const diskSettings = loadedSettingsRef.current;
+            const isSettingsDirty = !diskSettings || !deepEqual(currentSettings, {
+                specHost: diskSettings.specHost,
+                requireSpecEnable: diskSettings.requireSpecEnable,
+                systemName: diskSettings.systemName,
+                controllerHost: diskSettings.controllerHost,
+                axisCount: diskSettings.axisCount,
+                taskCount: diskSettings.taskCount,
+                axesSettings: diskSettings.axesSettings,
+                signalSettings: diskSettings.signalSettings
+            });
+
+            if (isSettingsDirty) {
+                const settingsPayload = {
+                    ...currentSettings,
+                    settingsVersion: currentSettingsVersion
+                };
+                const settingsRes = await postSettingsToGateway(draft.configDirectory, settingsPayload);
+                if (settingsRes && settingsRes.version !== undefined) {
+                    currentSettingsVersion = settingsRes.version;
+                    loadedSettingsRef.current = currentSettings;
+                    updateDraft({ settingsVersion: currentSettingsVersion });
+                    useConfigurationStore.getState().setSettingsFallbackActive(null);
+                }
+            }
+
+            const activeDraft = { ...useConfigurationStore.getState().draft, settingsVersion: currentSettingsVersion };
+            const prunedPayload = pruneConfigForSave(activeDraft);
             const configFilePath = `${draft.configDirectory}config${draft.experimentNumber.trim()}`;
             await postConfigToGateway(configFilePath, prunedPayload);
             const name = "rams4/" + draft.sampleName.trim() + `/config${draft.experimentNumber.trim()}.json`;
@@ -862,7 +915,7 @@ export const ConfigurationManager = () => {
             alert(`Configuration successfully saved to: ${name}`);
             
             // Sync is baseline clean
-            setSavedConfig(JSON.parse(JSON.stringify(draft)));
+            setSavedConfig(JSON.parse(JSON.stringify(activeDraft)));
             commitPathRefs();
         } catch (error) {
             console.error('Failed to sync configuration to backend gateway', error);
@@ -1123,6 +1176,24 @@ export const ConfigurationManager = () => {
                 cancelText="Keep Changes"
                 onConfirm={handleConfirmDiscard}
                 onCancel={handleCancelDiscard}
+            />
+
+            {/* Settings Version Mismatch Warning Dialog */}
+            <WarningModal
+                isOpen={showSettingsFallbackModal && !!settingsFallbackActive}
+                title="Settings Version Mismatch"
+                description={
+                    settingsFallbackActive
+                        ? `This configuration specifies settings version ${settingsFallbackActive.expected}, but settings${settingsFallbackActive.expected}.json was not found on disk. Loaded settings version ${settingsFallbackActive.loaded} instead.`
+                        : ""
+                }
+                confirmText="Open Settings"
+                cancelText="Dismiss"
+                onConfirm={() => {
+                    setShowSettingsFallbackModal(false);
+                    setIsSettingsOpen(true);
+                }}
+                onCancel={() => setShowSettingsFallbackModal(false)}
             />
 
             {/* Advanced Manual Path Warning Dialog */}

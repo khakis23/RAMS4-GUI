@@ -3,9 +3,10 @@ import { Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip.tsx';
 
 interface ConfigTabSectionProps {
-    title: string;
+    title?: string;
     titleTooltip?: string;
     description?: string;
+    topContent?: React.ReactNode;
     children?: React.ReactNode;
     profiles?: React.ReactNode;
     profilesTitle?: string;
@@ -29,6 +30,7 @@ export const ConfigTabSection = ({
     title,
     titleTooltip,
     description,
+    topContent,
     children,
     profiles,
     profilesTitle,
@@ -37,37 +39,46 @@ export const ConfigTabSection = ({
     profilesAction
 }: ConfigTabSectionProps) => {
     return (
-        <div className="flex flex-col gap-8 w-full">
-            {/* Header section with title and description */}
-            <div className="flex justify-between items-start text-left w-full">
-                <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5">
-                        <h2 className="text-xl font-bold text-mauve-850">{title}</h2>
-                        {titleTooltip && (
-                            <TooltipProvider>
-                                <Tooltip delayDuration={200}>
-                                    <TooltipTrigger asChild>
-                                        <Info className="h-4 w-4 text-mauve-600 hover:text-mauve-800 cursor-pointer transition-colors" />
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs text-xs p-2">
-                                        {titleTooltip}
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
-                    </div>
-                    {description && <p className="text-sm text-mauve-600 font-medium mt-1">{description}</p>}
+        <div className="flex flex-col gap-6 w-full text-left">
+            {/* Top Content (e.g. Advanced DAQ Config Accordion in TabDAQ) */}
+            {topContent && (
+                <div className="w-full">
+                    {topContent}
                 </div>
-                {headerAction && (
-                    <div className="shrink-0 pt-1">
-                        {headerAction}
-                    </div>
-                )}
-            </div>
+            )}
 
-            {/* Children components */}
+            {/* Header section with title and description */}
+            {title && (
+                <div className="flex justify-between items-start text-left w-full">
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5">
+                            <h2 className="text-xl font-bold text-mauve-850">{title}</h2>
+                            {titleTooltip && (
+                                <TooltipProvider>
+                                    <Tooltip delayDuration={200}>
+                                        <TooltipTrigger asChild>
+                                            <Info className="h-4 w-4 text-mauve-600 hover:text-mauve-800 cursor-pointer transition-colors" />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-xs text-xs p-2">
+                                            {titleTooltip}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            )}
+                        </div>
+                        {description && <p className="text-sm text-mauve-500 font-medium mt-1">{description}</p>}
+                    </div>
+                    {headerAction && (
+                        <div className="shrink-0 pt-0.5">
+                            {headerAction}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Children components (e.g. SPEC & Aerotech cards side-by-side) */}
             {hasChildren(children) && (
-                <div className="grid grid-cols-2 gap-x-12 gap-y-6 text-left">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6 text-left">
                     {children}
                 </div>
             )}
@@ -78,7 +89,7 @@ export const ConfigTabSection = ({
                     {profilesTitle && (
                         <div className="flex justify-between items-center mb-4">
                             <div className="flex items-center gap-1.5">
-                                <h4 className="text-md font-bold">{profilesTitle}</h4>
+                                <h4 className="text-md font-bold text-mauve-850">{profilesTitle}</h4>
                                 {profilesTitleTooltip && (
                                     <TooltipProvider>
                                         <Tooltip delayDuration={200}>
@@ -105,3 +116,6 @@ export const ConfigTabSection = ({
         </div>
     );
 };
+
+
+

@@ -98,7 +98,6 @@ export const TabDIC = () => {
     return (
         <ConfigTabSection
             title="DIC Configuration"
-            titleTooltip={tooltips.dicSectionTitle}
             description="Configure parameters for Digital Image Correlation (DIC)."
             headerAction={
                 dicEnabled ? (
@@ -106,30 +105,38 @@ export const TabDIC = () => {
                         type="button"
                         variant="outline"
                         onClick={handleDisableDic}
-                        className="h-8 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-300 text-mauve-700 hover:text-destructive hover:border-destructive hover:bg-destructive/10 dark:bg-mauve-900 dark:border-mauve-700 dark:text-mauve-200 dark:hover:text-red-400 dark:hover:border-red-500/50 dark:hover:bg-red-500/20 cursor-pointer transition-colors"
+                        className="h-8 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-300 text-mauve-800 hover:text-destructive hover:border-destructive hover:bg-destructive/10 cursor-pointer transition-colors shadow-sm"
                     >
                         Disable DIC
                     </Button>
-                ) : null
+                ) : (
+                    <Button
+                        type="button"
+                        onClick={() => setValue('dicEnabled', true)}
+                        className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
+                    >
+                        Enable DIC
+                    </Button>
+                )
             }
         >
             <div className="col-span-2 w-full">
                 {!dicEnabled ? (
-                    <div className="flex flex-col items-center justify-center min-h-[102px] border border-mauve-200 rounded-lg p-5 text-center bg-white dark:bg-mauve-900 dark:border-mauve-700">
-                        <p className="text-sm text-mauve-500 dark:text-mauve-400 whitespace-pre-line">
+                    <div className="flex flex-col items-center justify-center min-h-[120px] border border-mauve-200 rounded-lg p-6 text-center bg-white">
+                        <p className="text-sm text-mauve-500 whitespace-pre-line">
                             {"DIC not enabled yet."}
                         </p>
                         <Button
                             type="button"
                             variant="link"
                             onClick={() => setValue('dicEnabled', true)}
-                            className="mt-1 text-xs font-semibold text-mauve-650 hover:text-mauve-850 dark:text-mauve-300 dark:hover:text-white cursor-pointer text-decoration-none"
+                            className="mt-1 text-xs font-semibold text-mauve-650 hover:text-mauve-850 cursor-pointer text-decoration-none"
                         >
                             Click here to enable DIC.
                         </Button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5 border border-mauve-200 rounded-lg bg-white dark:bg-mauve-900 dark:border-mauve-700">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5 border border-mauve-200 rounded-lg bg-white">
                         <div className="flex flex-col gap-2">
                             <FieldLabel text="X Position (mm)" tooltip={tooltips.dicXPosition} required={true} />
                             <Input

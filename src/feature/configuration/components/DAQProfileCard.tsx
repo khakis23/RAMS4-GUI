@@ -51,7 +51,7 @@ const CyclesFieldArray = ({ control, register, profileIndex }: CyclesFieldArrayP
     });
 
     return (
-        <div className="flex flex-col gap-4 text-left border-t border-mauve-250/30 pt-4 mt-2">
+        <div className="flex flex-col gap-4 text-left border-t border-mauve-250/30 py-4 my-2">
             <FieldLabel text="Cycles Configuration" tooltip={tooltips.daqProfileCycles} />
             
             {fields.length === 0 ? (
@@ -148,6 +148,85 @@ export const DAQProfileCard = ({
         name: `handlersProfile.${index}.filename`
     });
 
+    const frequency = useWatch({
+        control,
+        name: `handlersProfile.${index}.frequency`
+    });
+
+    const cycles = useWatch({
+        control,
+        name: `handlersProfile.${index}.cycles`
+    });
+
+    const signalAxis = useWatch({
+        control,
+        name: `handlersProfile.${index}.signalAxis`
+    });
+
+    const rawSignalItem = useWatch({
+        control,
+        name: `handlersProfile.${index}.signalItem`
+    });
+
+    const signalProminence = useWatch({
+        control,
+        name: `handlersProfile.${index}.signalProminence`
+    });
+
+    const psoAxis = useWatch({
+        control,
+        name: `handlersProfile.${index}.psoAxis`
+    });
+
+    // Normalize Feedback Signal item value
+    const normalizedSignalItem = useMemo(() => {
+        if (!rawSignalItem) return "Position";
+        if (rawSignalItem === "PositionFeedback" || rawSignalItem === "Position") return "Position";
+        if (rawSignalItem === "VelocityFeedback" || rawSignalItem === "Velocity") return "Velocity";
+        if (rawSignalItem === "AccelerationFeedback" || rawSignalItem === "Acceleration") return "Acceleration";
+        return rawSignalItem;
+    }, [rawSignalItem]);
+
+    // Compute dynamic Prominence field label text
+    const prominenceLabel = useMemo(() => {
+        if (normalizedSignalItem === "Velocity") return "Prominence (mm/s)";
+        if (normalizedSignalItem === "Acceleration") return "Prominence (mm/s²)";
+        return "Prominence (mm)";
+    }, [normalizedSignalItem]);
+
+    // Compute card title summary string
+    const cardTitleSummary = useMemo(() => {
+        let summary = "";
+        if (currentMode === "time-series") {
+            const freqText = frequency ? `${frequency} Hz` : "1000 Hz";
+            const cyclesCount = Array.isArray(cycles) ? cycles.length : 0;
+            const cycleText = cyclesCount > 0 ? `${cyclesCount} ${cyclesCount === 1 ? 'Cycle' : 'Cycles'}` : "Full Range";
+            summary = `${freqText}, ${cycleText}`;
+        } else if (currentMode === "pso") {
+            summary = `Axis ${psoAxis || 'RT'}`;
+        } else if (currentMode === "peak-valley") {
+            const axisText = signalAxis ? `Axis ${signalAxis}` : "Unconfigured";
+            let unit = "mm";
+            let itemLabel = "Position";
+            if (normalizedSignalItem === "Velocity") {
+                unit = "mm/s";
+                itemLabel = "Velocity";
+            } else if (normalizedSignalItem === "Acceleration") {
+                unit = "mm/s²";
+                itemLabel = "Accel";
+            }
+            const prominenceText = (signalProminence !== undefined && signalProminence !== null && !isNaN(Number(signalProminence))) 
+                ? `${signalProminence} ${unit}` 
+                : `? ${unit}`;
+            summary = `${axisText}, ${itemLabel}, ${prominenceText}`;
+        }
+
+        if (filename && filename.trim() !== "") {
+            return `${filename.trim()} (${summary})`;
+        }
+        return summary;
+    }, [currentMode, frequency, cycles, psoAxis, signalAxis, normalizedSignalItem, signalProminence, filename]);
+
     const isComplete = useMemo(() => {
         if (!profileValues) return false;
         return handlerProfileSchema.safeParse(profileValues).success;
@@ -156,7 +235,7 @@ export const DAQProfileCard = ({
     return (
         <ProfileCardLayout
             index={index}
-            name={filename}
+            name={cardTitleSummary}
             isComplete={isComplete}
             onRemove={() => remove(index)}
             modeSelector={
@@ -180,12 +259,12 @@ export const DAQProfileCard = ({
         >
             {/* Time Series Mode */}
             {currentMode === "time-series" && (
-                <div className="flex flex-col gap-5">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-5 mb-5">
+                <div className="flex flex-col gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-5">
                         <div className="flex flex-col gap-2 md:col-span-3">
-                            <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={true} />
+                            <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={false} />
                             <Input 
-                                placeholder="Enter file name"
+                                placeholder="Optional"
                                 className="h-8 bg-white border-mauve-250 focus-visible:ring-mauve-300"
                                 {...register(`handlersProfile.${index}.filename`)}
                             />
@@ -203,7 +282,7 @@ export const DAQProfileCard = ({
                         </div>
                     </div>
 
-                    <div className="bg-xray-shading py-5 px-5 flex flex-col gap-5">
+                    <div className="px-5 flex flex-col gap-3">
                         <CyclesFieldArray 
                             control={control} 
                             register={register} 
@@ -215,12 +294,12 @@ export const DAQProfileCard = ({
 
             {/* Peak Valley Mode */}
             {currentMode === "peak-valley" && (
-                <div className="px-5 flex flex-col gap-2 mb-5">
+                <div className="px-5 flex flex-col gap-2 mb-4">
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div className="flex flex-col gap-2 md:col-span-2">
-                            <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={true} />
+                            <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={false} />
                             <Input 
-                                placeholder="Enter file name"
+                                placeholder="Optional"
                                 className="h-8 bg-white border-mauve-250 focus-visible:ring-mauve-300"
                                 {...register(`handlersProfile.${index}.filename`)}
                             />
@@ -253,19 +332,22 @@ export const DAQProfileCard = ({
                         </div>
 
                         <div className="flex flex-col gap-2 md:col-span-1">
-                            <FieldLabel text="Signal Item" tooltip={tooltips.daqProfileSignalItem} required={true} />
+                            <FieldLabel text="Feedback Signal" tooltip={tooltips.daqProfileSignalItem} required={true} />
                             <Controller
                                 control={control}
                                 name={`handlersProfile.${index}.signalItem`}
                                 render={({ field }) => (
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                    <Select 
+                                        onValueChange={field.onChange} 
+                                        value={normalizedSignalItem}
+                                    >
                                         <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
-                                            <SelectValue placeholder="Select item" />
+                                            <SelectValue placeholder="Select signal" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-white">
-                                            <SelectItem value="PositionFeedback" className="text-xs cursor-pointer">PositionFeedback</SelectItem>
-                                            <SelectItem value="VelocityFeedback" className="text-xs cursor-pointer">VelocityFeedback</SelectItem>
-                                            <SelectItem value="AccelerationFeedback" className="text-xs cursor-pointer">AccelerationFeedback</SelectItem>
+                                            <SelectItem value="Position" className="text-xs cursor-pointer">Position</SelectItem>
+                                            <SelectItem value="Velocity" className="text-xs cursor-pointer">Velocity</SelectItem>
+                                            <SelectItem value="Acceleration" className="text-xs cursor-pointer">Acceleration</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 )}
@@ -276,7 +358,7 @@ export const DAQProfileCard = ({
                         </div>
 
                         <div className="flex flex-col gap-2 md:col-span-1">
-                            <FieldLabel text="Prominence" tooltip={tooltips.daqProfileProminence} required={true} />
+                            <FieldLabel text={prominenceLabel} tooltip={tooltips.daqProfileProminence} required={true} />
                             <Input 
                                 type="number" 
                                 step="any"
@@ -293,12 +375,12 @@ export const DAQProfileCard = ({
 
             {/* PSO Mode */}
             {currentMode === "pso" && (
-                <div className="px-5 flex flex-col gap-2 mb-5">
+                <div className="px-5 flex flex-col gap-2 mb-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="flex flex-col gap-2 md:col-span-3">
-                            <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={true} />
+                            <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={false} />
                             <Input 
-                                placeholder="Enter file name"
+                                placeholder="Optional"
                                 className="h-8 bg-white border-mauve-250 focus-visible:ring-mauve-300"
                                 {...register(`handlersProfile.${index}.filename`)}
                             />
@@ -334,138 +416,141 @@ export const DAQProfileCard = ({
             )}
 
             {/* Advanced Logging Details Collapsible Accordion */}
-            <Accordion type="single" collapsible className="w-full border-t border-mauve-150">
-                <AccordionItem value="advanced-logging" className="border-b-0 border-transparent">
-                    <AccordionTrigger className="py-3 px-5 text-xs font-bold text-mauve-800 hover:no-underline [&>svg]:text-mauve-500 select-none">
-                        Advanced Logging Details
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-5 px-5 bg-mauve-50/30 border-t border-mauve-150/30 pt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                            {/* Axis Logging Level */}
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Axis Logging Level" tooltip={tooltips.daqProfileAxisLevel} />
-                                <Controller
-                                    control={control}
-                                    name={`handlersProfile.${index}.verboseAxis`}
-                                    render={({ field: axisField }) => (
-                                        <Select onValueChange={axisField.onChange} value={axisField.value}>
-                                            <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
-                                                <SelectValue placeholder="Select level" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white">
-                                                {verboseAxisOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={String(opt.value)} className="text-xs cursor-pointer">{opt.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
-                            </div>
-
-                            {/* Task Logging Level */}
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="Task Logging Level" tooltip={tooltips.daqProfileTaskLevel} />
-                                <Controller
-                                    control={control}
-                                    name={`handlersProfile.${index}.verboseTask`}
-                                    render={({ field: taskField }) => (
-                                        <Select onValueChange={taskField.onChange} value={taskField.value}>
-                                            <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
-                                                <SelectValue placeholder="Select level" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white">
-                                                {verboseTaskOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={String(opt.value)} className="text-xs cursor-pointer">{opt.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
-                            </div>
-
-                            {/* System Logging Level */}
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="System Logging Level" tooltip={tooltips.daqProfileSystemLevel} />
-                                <Controller
-                                    control={control}
-                                    name={`handlersProfile.${index}.verboseSystem`}
-                                    render={({ field: systemField }) => (
-                                        <Select 
-                                            onValueChange={(val) => systemField.onChange(Number(val))} 
-                                            value={systemField.value !== undefined ? String(systemField.value) : undefined}
-                                        >
-                                            <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
-                                                <SelectValue placeholder="Select level" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white">
-                                                {verboseSystemOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={String(opt.value)} className="text-xs cursor-pointer">{opt.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
-                            </div>
-
-                            {/* I/O Logging Level */}
-                            <div className="flex flex-col gap-2">
-                                <FieldLabel text="I/O Logging Level" tooltip={tooltips.daqProfileIOLevel} />
-                                <Controller
-                                    control={control}
-                                    name={`handlersProfile.${index}.verboseIO`}
-                                    render={({ field: ioField }) => (
-                                        <Select 
-                                            onValueChange={(val) => ioField.onChange(Number(val))} 
-                                            value={ioField.value !== undefined ? String(ioField.value) : undefined}
-                                        >
-                                            <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
-                                                <SelectValue placeholder="Select level" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white">
-                                                {verboseIOOptions.map(opt => (
-                                                    <SelectItem key={opt.value} value={String(opt.value)} className="text-xs cursor-pointer">{opt.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Analog Inputs Checkboxes */}
-                        <div className="border-t border-mauve-250/30 pt-4 mt-2">
-                            <FieldLabel text="Analog Inputs" tooltip={tooltips.daqProfileAnalogInputs} />
-                            
-                            <div className="flex items-center gap-6 mt-3">
-                                <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        className="rounded border-mauve-300 text-mauve-600 focus:ring-mauve-500 h-4 w-4"
-                                        {...register(`handlersProfile.${index}.loadA`)}
+            <div className="px-5 pt-3 pb-5">
+                <Accordion type="single" collapsible className="border border-mauve-200 rounded-xl overflow-hidden bg-mauve-50/50 shadow-sm w-full">
+                    <AccordionItem value="advanced-logging" className="border-b-0">
+                        <AccordionTrigger className="px-4 py-3 bg-mauve-50/50 hover:bg-mauve-100/50 transition-colors text-xs font-bold text-mauve-850 hover:no-underline [&>svg]:text-mauve-500 select-none">
+                            Advanced Logging Details
+                        </AccordionTrigger>
+                        <AccordionContent className="p-4 flex flex-col gap-5 border-t border-mauve-200 bg-mauve-50/50">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                {/* Axis Logging Level */}
+                                <div className="flex flex-col gap-2">
+                                    <FieldLabel text="Axis Logging Level" tooltip={tooltips.daqProfileAxisLevel} />
+                                    <Controller
+                                        control={control}
+                                        name={`handlersProfile.${index}.verboseAxis`}
+                                        render={({ field: axisField }) => (
+                                            <Select onValueChange={axisField.onChange} value={axisField.value}>
+                                                <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                    <SelectValue placeholder="Select level" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white">
+                                                    {verboseAxisOptions.map(opt => (
+                                                        <SelectItem key={opt.value} value={String(opt.value)} className="text-xs cursor-pointer">{opt.label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
                                     />
-                                    Primary Load Cell
-                                </label>
-                                <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        className="rounded border-mauve-300 text-mauve-600 focus:ring-mauve-500 h-4 w-4"
-                                        {...register(`handlersProfile.${index}.strain`)}
+                                </div>
+
+                                {/* Task Logging Level */}
+                                <div className="flex flex-col gap-2">
+                                    <FieldLabel text="Task Logging Level" tooltip={tooltips.daqProfileTaskLevel} />
+                                    <Controller
+                                        control={control}
+                                        name={`handlersProfile.${index}.verboseTask`}
+                                        render={({ field: taskField }) => (
+                                            <Select onValueChange={taskField.onChange} value={taskField.value}>
+                                                <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                    <SelectValue placeholder="Select level" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white">
+                                                    {verboseTaskOptions.map(opt => (
+                                                        <SelectItem key={opt.value} value={String(opt.value)} className="text-xs cursor-pointer">{opt.label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
                                     />
-                                    Strain
-                                </label>
-                                <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        className="rounded border-mauve-300 text-mauve-600 focus:ring-mauve-500 h-4 w-4"
-                                        {...register(`handlersProfile.${index}.specLoadFrameComm`)}
+                                </div>
+
+                                {/* System Logging Level */}
+                                <div className="flex flex-col gap-2">
+                                    <FieldLabel text="System Logging Level" tooltip={tooltips.daqProfileSystemLevel} />
+                                    <Controller
+                                        control={control}
+                                        name={`handlersProfile.${index}.verboseSystem`}
+                                        render={({ field: systemField }) => (
+                                            <Select 
+                                                onValueChange={(val) => systemField.onChange(Number(val))} 
+                                                value={systemField.value !== undefined ? String(systemField.value) : undefined}
+                                            >
+                                                <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                    <SelectValue placeholder="Select level" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white">
+                                                    {verboseSystemOptions.map(opt => (
+                                                        <SelectItem key={opt.value} value={String(opt.value)} className="text-xs cursor-pointer">{opt.label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
                                     />
-                                    Spec Communication
-                                </label>
+                                </div>
+
+                                {/* I/O Logging Level */}
+                                <div className="flex flex-col gap-2">
+                                    <FieldLabel text="I/O Logging Level" tooltip={tooltips.daqProfileIOLevel} />
+                                    <Controller
+                                        control={control}
+                                        name={`handlersProfile.${index}.verboseIO`}
+                                        render={({ field: ioField }) => (
+                                            <Select 
+                                                onValueChange={(val) => ioField.onChange(Number(val))} 
+                                                value={ioField.value !== undefined ? String(ioField.value) : undefined}
+                                            >
+                                                <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                    <SelectValue placeholder="Select level" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-white">
+                                                    {verboseIOOptions.map(opt => (
+                                                        <SelectItem key={opt.value} value={String(opt.value)} className="text-xs cursor-pointer">{opt.label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
+
+                            {/* Analog Inputs Checkboxes */}
+                            <div className="border-t border-mauve-250/30 pt-4 mt-2">
+                                <FieldLabel text="Analog Inputs" tooltip={tooltips.daqProfileAnalogInputs} />
+                                
+                                <div className="flex items-center gap-6 mt-3">
+                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            className="rounded border-mauve-300 text-mauve-600 focus:ring-mauve-500 h-4 w-4"
+                                            {...register(`handlersProfile.${index}.loadA`)}
+                                        />
+                                        Primary Load Cell
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            className="rounded border-mauve-300 text-mauve-600 focus:ring-mauve-500 h-4 w-4"
+                                            {...register(`handlersProfile.${index}.strain`)}
+                                        />
+                                        Strain
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            className="rounded border-mauve-300 text-mauve-600 focus:ring-mauve-500 h-4 w-4"
+                                            {...register(`handlersProfile.${index}.specLoadFrameComm`)}
+                                        />
+                                        Spec Communication
+                                    </label>
+                                </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+            </div>
         </ProfileCardLayout>
     );
 };
+

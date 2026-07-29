@@ -42,7 +42,8 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
                 axisCount: draft.axisCount,
                 taskCount: draft.taskCount,
                 axesSettings: draft.axesSettings,
-                signalSettings: draft.signalSettings
+                signalSettings: draft.signalSettings,
+                settingsVersion: draft.settingsVersion ?? 0
             };
             const res = await postSettingsToGateway(draft.configDirectory, payload);
             if (res && res.version !== undefined) {

@@ -69,7 +69,7 @@ export const TabXray = () => {
 
     const {
         fields,
-        prepend,
+        append,
         remove
     } = useFieldArray({
         control,
@@ -77,6 +77,28 @@ export const TabXray = () => {
     });
 
     const watchedValues = watch();
+    const profilesEndRef = useRef<HTMLDivElement>(null);
+
+    const handleAddProfile = () => {
+        append({
+            id: `xrayProfile${Date.now()}`,
+            name: "",
+            mode: "rotation-series",
+            ramsx: null,
+            ramsz: null,
+            ome: null,
+            ctime: null,
+            beamHeight: null,
+            beamWidth: null,
+            atten: null,
+            stillPoints: [],
+            mapscanAxes: [],
+            layerRanges: []
+        });
+        setTimeout(() => {
+            profilesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+    };
 
     // Sync form values to the store draft on every change — including partial/invalid state
     useFormAutoSave({
@@ -113,27 +135,12 @@ export const TabXray = () => {
 
     return (
         <ConfigTabSection
-            title="X-ray Scan Profiles"
-            titleTooltip={tooltips.xraySectionTitle}
-            description="Configure parameters for X-ray scan sweeps, layers, and grids."
+            profilesTitle="X-ray Profiles"
+            profilesDescription="Configure parameters for X-ray scan sweeps, layers, and grids."
             headerAction={
                 <Button 
                     type="button" 
-                    onClick={() => prepend({ 
-                        id: `xrayProfile${Date.now()}`,
-                        name: "",
-                        mode: "rotation-series",
-                        ramsx: null,
-                        ramsz: null,
-                        ome: null,
-                        ctime: null,
-                        beamHeight: null,
-                        beamWidth: null,
-                        atten: null,
-                        stillPoints: [],
-                        mapscanAxes: [],
-                        layerRanges: []
-                    })}
+                    onClick={handleAddProfile}
                     className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
                 >
                     <Plus className="h-3.5 w-3.5" /> Add X-ray Profile
@@ -141,19 +148,37 @@ export const TabXray = () => {
             }
             profiles={
                 <div className="w-full space-y-6 pb-12">
-                    {/* Render active scan profiles list */}
-                    {fields.map((field, index) => (
-                        <XrayProfileCard
-                            key={field.id}
-                            index={index}
-                            register={register}
-                            errors={errors}
-                            control={control}
-                            removeProfile={remove}
-                        />
-                    ))}
+                    {fields.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center min-h-[120px] border border-mauve-200 rounded-lg p-6 text-center bg-white">
+                            <p className="text-sm text-mauve-500 whitespace-pre-line">
+                                No X-ray profiles added yet.
+                            </p>
+                            <Button
+                                type="button"
+                                variant="link"
+                                onClick={handleAddProfile}
+                                className="mt-1 text-xs font-semibold text-mauve-650 hover:text-mauve-850 cursor-pointer text-decoration-none"
+                            >
+                                Click here to add a profile.
+                            </Button>
+                        </div>
+                    ) : (
+                        fields.map((field, index) => (
+                            <XrayProfileCard
+                                key={field.id}
+                                index={index}
+                                register={register}
+                                errors={errors}
+                                control={control}
+                                removeProfile={remove}
+                            />
+                        ))
+                    )}
+                    <div ref={profilesEndRef} />
                 </div>
             }
+
         />
     );
 };
+
