@@ -133,5 +133,12 @@ export const tooltips = {
     dicZPosition: "The Z-coordinate stage position for DIC camera alignment in mm.",
     dicAngle: "The rotation angle (degree) for DIC camera orientation.",
     dicExposureTime: "Optional exposure time per optical image frame in seconds.",
-    dicStepSize: "Optional motor movement step size between optical exposures in mm."
+    dicStepSize: "Optional motor movement step size between optical exposures in mm.",
+
+    // --- CUSTOM STEP TOOLTIPS ---
+    mechTestCustomCommandName: "The custom command or procedure name (e.g. 'Trigger Laser Pulse').",
+    mechTestCustomParameters: "Custom key-value parameters passed to this command.",
+    mechTestCustomParamKey: "Parameter key identifier name.",
+    mechTestCustomParamType: "Data type of the custom parameter (Bool, Number, or String).",
+    mechTestCustomParamValue: "Parameter value matching the selected data type."
 };

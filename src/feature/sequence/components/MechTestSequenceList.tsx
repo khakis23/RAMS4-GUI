@@ -49,7 +49,7 @@ export const MechTestSequenceList = ({
                 <div
                     ref={droppableProvided.innerRef}
                     {...droppableProvided.droppableProps}
-                    className={`flex flex-col gap-4 min-h-[80px] p-3 rounded-md transition-colors ${className}`}
+                    className={`flex flex-col gap-4 min-h-[80px] p-3 ${depth === 0 ? 'pb-20' : 'pb-4'} rounded-md transition-colors ${className}`}
                 >
                     {cards.length === 0 && !droppableSnapshot.isDraggingOver && emptyStateMessage ? (
                         <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-mauve-250 bg-mauve-50/10 text-mauve-500 rounded-sm text-center">

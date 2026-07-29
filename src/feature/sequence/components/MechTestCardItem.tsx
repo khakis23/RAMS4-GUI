@@ -1,17 +1,18 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GripVertical, Trash2, Copy, TriangleRight, ScanEye, AudioWaveform, Gauge, LogOut } from 'lucide-react';
+import { GripVertical, Trash2, Copy, TriangleRight, ScanEye, AudioWaveform, Gauge, LogOut, PaintbrushVertical } from 'lucide-react';
 import { MechTestSortableItem } from './MechTestSortableItem';
 import { RampForm } from './RampForm';
 import { TakeForm } from './TakeForm';
 import { DwellForm } from './DwellForm';
 import { CycleForm } from './CycleForm';
 import { TakeWhileForm } from './TakeWhileForm';
+import { CustomForm } from './CustomForm';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { rampSchema, takeSchema, dwellSchema, cycleSchema, takeWhileSchema } from '../profileSchemas/mechTestSchema';
+import { rampSchema, takeSchema, dwellSchema, cycleSchema, takeWhileSchema, customSchema } from '../profileSchemas/mechTestSchema';
 
 interface MechTestCardItemProps {
     cardIdProp?: string;
@@ -74,9 +75,15 @@ export const MechTestCardItem = ({
         ? dwellSchema.safeParse(cardData).success
         : type === 'cycle'
         ? cycleSchema.safeParse(cardData).success
-        : takeWhileSchema.safeParse(cardData).success;
+        : type === 'takeWhile'
+        ? takeWhileSchema.safeParse(cardData).success
+        : customSchema.safeParse(cardData).success;
 
     const renderCardHeaderSummary = (): React.ReactNode => {
+        if (type === 'custom') {
+            const cmdName = cardData.commandName;
+            return (cmdName && String(cmdName).trim() !== '') ? String(cmdName).trim() : 'Custom Command';
+        }
         if (type === 'ramp') {
             if (!axis || !controlMode) return 'Unconfigured Step';
             
@@ -180,7 +187,9 @@ export const MechTestCardItem = ({
                     ref={ref}
                     style={style}
                     className={`flex flex-col border rounded-md transition-all duration-200 ease-out ${
-                        type === 'takeWhile' 
+                        type === 'custom'
+                            ? 'bg-amber-500/10 dark:bg-amber-950/20 border-amber-400/20 dark:border-amber-500/20 shadow-sm'
+                            : type === 'takeWhile' 
                             ? 'bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700 border-slate-200 shadow-sm' 
                             : 'bg-white border-mauve-200 hover:shadow-sm'
                     } ${isDragging ? 'opacity-40 border-mauve-400 ring-2 ring-mauve-300' : ''}`}
@@ -190,7 +199,11 @@ export const MechTestCardItem = ({
                         <AccordionItem value={cardId} className="border-b-0">
                             {/* Header section (Non-scrolling details) */}
                             <div className={`flex items-center justify-between py-2.5 px-3.5 gap-3 ${
-                                type === 'takeWhile' ? 'bg-slate-100/50 dark:bg-zinc-800/30' : 'bg-mauve-50/20'
+                                type === 'custom' 
+                                    ? 'bg-amber-200/5 dark:bg-amber-900/10' 
+                                    : type === 'takeWhile' 
+                                    ? 'bg-slate-100/50 dark:bg-zinc-800/30' 
+                                    : 'bg-mauve-50/20'
                             }`}>
                                 {/* Left Drag & Type Selectors */}
                                 <div className="flex items-center gap-3 shrink-0">
@@ -216,7 +229,8 @@ export const MechTestCardItem = ({
                                                 ramp: TriangleRight,
                                                 take: ScanEye,
                                                 dwell: Gauge,
-                                                cycle: AudioWaveform
+                                                cycle: AudioWaveform,
+                                                custom: PaintbrushVertical
                                             };
                                             const IconComp = TYPE_ICONS[type as keyof typeof TYPE_ICONS];
                                             return IconComp ? (
@@ -226,9 +240,9 @@ export const MechTestCardItem = ({
                                         <div className="w-28 shrink-0">
                                             <Select
                                                 value={type}
-                                                onValueChange={(val: 'ramp' | 'take' | 'dwell' | 'cycle' | 'takeWhile') => {
+                                                onValueChange={(val: 'ramp' | 'take' | 'dwell' | 'cycle' | 'takeWhile' | 'custom') => {
                                                     setValue(`${namePrefix}.type`, val);
-                                                    setValue(`${namePrefix}.data`, {});
+                                                    setValue(`${namePrefix}.data`, val === 'custom' ? { commandName: '', parameters: [] } : {});
                                                 }}
                                             >
                                                 <SelectTrigger className="h-7 text-xs font-semibold rounded-lg border-mauve-200 focus:ring-mauve-300 bg-white shadow-sm">
@@ -240,6 +254,7 @@ export const MechTestCardItem = ({
                                                     <SelectItem value="dwell" className="text-xs cursor-pointer">Dwell</SelectItem>
                                                     <SelectItem value="cycle" className="text-xs cursor-pointer">Cycle</SelectItem>
                                                     <SelectItem value="takeWhile" className="text-xs cursor-pointer">Take While</SelectItem>
+                                                    <SelectItem value="custom" className="text-xs cursor-pointer">Custom</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -356,6 +371,16 @@ export const MechTestCardItem = ({
                                 )}
                                 {type === 'takeWhile' && (
                                     <TakeWhileForm
+                                        namePrefix={namePrefix}
+                                        register={register}
+                                        errors={errors}
+                                        control={control}
+                                        watch={watch}
+                                        setValue={setValue}
+                                    />
+                                )}
+                                {type === 'custom' && (
+                                    <CustomForm
                                         namePrefix={namePrefix}
                                         register={register}
                                         errors={errors}

@@ -429,7 +429,7 @@ const MechanicalTestInner = () => {
             </div>
 
             {/* Scrollable Cards Container */}
-            <div className="flex-grow pt-3 pb-12 min-h-0">
+            <div className="flex-grow pt-3 pb-24 min-h-0">
                 <DndContext 
                     sensors={sensors} 
                     collisionDetection={customCollisionDetection} 

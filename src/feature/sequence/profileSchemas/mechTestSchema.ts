@@ -158,16 +158,27 @@ export const takeWhileSchema = z.object({
     })
 });
 
+export const customParamSchema = z.object({
+    key: z.string(),
+    type: z.enum(['Bool', 'Number', 'String']),
+    value: z.any()
+});
+
+export const customSchema = z.object({
+    commandName: z.string().optional().nullable(),
+    parameters: z.array(customParamSchema).default([])
+});
+
 export interface MechTestCardData {
     id: string;
-    type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile';
+    type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom';
     data: any;
 }
 
 export const mechTestCardSchema: z.ZodType<MechTestCardData> = z.lazy(() =>
     z.object({
         id: z.string(),
-        type: z.enum(['ramp', 'take', 'dwell', 'cycle', 'group', 'takeWhile']),
+        type: z.enum(['ramp', 'take', 'dwell', 'cycle', 'group', 'takeWhile', 'custom']),
         data: z.any()
     }).superRefine((card, ctx) => {
         if (card.type === 'ramp') {
@@ -212,6 +223,16 @@ export const mechTestCardSchema: z.ZodType<MechTestCardData> = z.lazy(() =>
             }
         } else if (card.type === 'takeWhile') {
             const res = takeWhileSchema.safeParse(card.data);
+            if (!res.success) {
+                res.error.issues.forEach(issue => {
+                    ctx.addIssue({
+                        ...issue,
+                        path: ['data', ...issue.path]
+                    });
+                });
+            }
+        } else if (card.type === 'custom') {
+            const res = customSchema.safeParse(card.data);
             if (!res.success) {
                 res.error.issues.forEach(issue => {
                     ctx.addIssue({

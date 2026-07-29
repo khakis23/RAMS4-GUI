@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GripVertical, Trash2, Plus, Copy, Ungroup, TriangleRight, ScanEye, AudioWaveform, Gauge, Group, RefreshCw } from 'lucide-react';
+import { GripVertical, Trash2, Plus, Copy, Ungroup, TriangleRight, ScanEye, AudioWaveform, Gauge, Group, RefreshCw, PaintbrushVertical } from 'lucide-react';
 import { MechTestSortableItem } from './MechTestSortableItem';
 import { MechTestSortableList } from './MechTestSortableList';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { useMechanicalTestStore } from '@/store/useMechanicalTestStore';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { rampSchema, takeSchema, dwellSchema, cycleSchema, takeWhileSchema } from '../profileSchemas/mechTestSchema';
+import { rampSchema, takeSchema, dwellSchema, cycleSchema, takeWhileSchema, customSchema } from '../profileSchemas/mechTestSchema';
 
 interface MechTestGroupItemProps {
     cardIdProp?: string;
@@ -105,6 +105,9 @@ export const MechTestGroupItem = ({
         } else if (card.type === 'takeWhile') {
             const data = watch(`${prefix}.data`) || {};
             return takeWhileSchema.safeParse(data).success;
+        } else if (card.type === 'custom') {
+            const data = watch(`${prefix}.data`) || {};
+            return customSchema.safeParse(data).success;
         } else if (card.type === 'group') {
             const innerCards = watch(`${prefix}.data.cards`) || [];
             if (innerCards.length === 0) return false;
@@ -120,7 +123,16 @@ export const MechTestGroupItem = ({
     );
 
     const renderCardHeaderSummary = (card: any, prefix: string): React.ReactNode => {
-        if (card.type === 'ramp') {
+        if (card.type === 'custom') {
+            const commandName = watch(`${prefix}.data.commandName`);
+            const content = (commandName && String(commandName).trim() !== '') ? String(commandName).trim() : 'Custom';
+            return (
+                <span className="inline-flex items-center gap-1">
+                    <PaintbrushVertical className="h-3.5 w-3.5 text-mauve-500 dark:text-mauve-600 shrink-0 inline align-middle" />
+                    <span className="align-middle">[{content}]</span>
+                </span>
+            );
+        } else if (card.type === 'ramp') {
             const axis = watch(`${prefix}.data.axis`);
             const controlMode = watch(`${prefix}.data.control`);
             const content = (axis && controlMode) ? `${axis}, ${controlMode}` : 'Unconfigured';

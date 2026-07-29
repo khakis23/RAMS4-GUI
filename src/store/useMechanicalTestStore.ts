@@ -4,7 +4,7 @@ import { fetchMechTestFromGateway, postMechTestToGateway } from '../api/mechanic
 
 export interface MechTestCard {
     id: string;
-    type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile';
+    type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom';
     data: any;
 }
 
@@ -20,10 +20,10 @@ interface MechanicalTestState {
     expandedGroupIds: Record<string, boolean>;
     setGroupExpanded: (id: string, expanded: boolean) => void;
     setCards: (cards: MechTestCard[]) => void;
-    addCard: (type?: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile', parentId?: string) => void;
+    addCard: (type?: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom', parentId?: string) => void;
     removeCard: (id: string) => void;
     updateCardData: (id: string, data: any) => void;
-    updateCardType: (id: string, type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile') => void;
+    updateCardType: (id: string, type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom') => void;
     reorderCards: (startIndex: number, endIndex: number, parentId?: string) => void;
     moveCardInTree: (cardId: string, targetGroupId: string | null, targetIndex?: number) => MechTestCard[] | null;
     ungroupCard: (id: string) => void;
@@ -93,10 +93,16 @@ const updateCardDataRecursive = (cards: MechTestCard[], id: string, data: any): 
     });
 };
 
-const updateCardTypeRecursive = (cards: MechTestCard[], id: string, type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile'): MechTestCard[] => {
+const updateCardTypeRecursive = (cards: MechTestCard[], id: string, type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom'): MechTestCard[] => {
     return cards.map(card => {
         if (card.id === id) {
-            return { ...card, type, data: type === 'group' ? { cards: [], loops: 1 } : {} };
+            return {
+                ...card,
+                type,
+                data: type === 'group'
+                    ? { cards: [], loops: 1 }
+                    : (type === 'custom' ? { commandName: '', parameters: [] } : {})
+            };
         }
         if (card.type === 'group' && card.data?.cards) {
             return {
@@ -377,6 +383,31 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
                 }
             };
         }
+        if (card.type === 'custom') {
+            const customPayload: Record<string, any> = {};
+            if (card.data?.commandName) {
+                customPayload.commandName = card.data.commandName;
+            }
+            if (Array.isArray(card.data?.parameters)) {
+                card.data.parameters.forEach((param: any) => {
+                    if (param && param.key && String(param.key).trim() !== '') {
+                        const k = String(param.key).trim();
+                        let parsedVal: any = param.value;
+                        if (param.type === 'Bool') {
+                            parsedVal = String(param.value) === 'true' || param.value === true;
+                        } else if (param.type === 'Number') {
+                            parsedVal = typeof param.value === 'number' ? param.value : (Number(param.value) || 0);
+                        } else {
+                            parsedVal = String(param.value ?? '');
+                        }
+                        customPayload[k] = parsedVal;
+                    }
+                });
+            }
+            return {
+                custom: customPayload
+            };
+        }
         return {
             [card.type]: pruneStepData(card.type, card.data)
         };
@@ -385,7 +416,7 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
 
 const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
     return items.map((item, idx) => {
-        const type = Object.keys(item)[0] as 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile';
+        const type = Object.keys(item)[0] as 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom';
         if (type === 'group') {
             const groupObj = item.group;
             const isOldFormat = Array.isArray(groupObj);
@@ -414,6 +445,30 @@ const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
                         type: stepType,
                         data: defaultStepData(stepType, step?.data)
                     }
+                }
+            };
+        }
+        if (type === 'custom') {
+            const customObj = item.custom || {};
+            const commandName = customObj.commandName || customObj.name || '';
+            const parameters: Array<{ key: string; type: 'Bool' | 'Number' | 'String'; value: any }> = [];
+            Object.entries(customObj).forEach(([k, v]) => {
+                if (k !== 'commandName' && k !== 'name') {
+                    let valType: 'Bool' | 'Number' | 'String' = 'String';
+                    if (typeof v === 'boolean') {
+                        valType = 'Bool';
+                    } else if (typeof v === 'number') {
+                        valType = 'Number';
+                    }
+                    parameters.push({ key: k, type: valType, value: v });
+                }
+            });
+            return {
+                id: `card-loaded-step-${depth}-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                type: 'custom',
+                data: {
+                    commandName,
+                    parameters
                 }
             };
         }

@@ -5,6 +5,7 @@ import {
     cycleSchema,
     takeSchema,
     takeWhileSchema,
+    customSchema,
     mechTestFormSchema
 } from '../feature/sequence/profileSchemas/mechTestSchema.ts';
 import { dicFormSchema } from '../feature/configuration/profileSchemas/dicSchema.ts';
@@ -199,6 +200,20 @@ runTest('Take-While: Valid concurrent image and motion step', () => {
     };
     const result = takeWhileSchema.safeParse(validTakeWhile);
     assert.strictEqual(result.success, true, "TakeWhile step should be valid");
+});
+
+// Custom Step Tests
+runTest('Custom: Valid custom step with typed parameters', () => {
+    const validCustom = {
+        commandName: "Laser Trigger",
+        parameters: [
+            { key: "power", type: "Number", value: 100 },
+            { key: "enabled", type: "Bool", value: true },
+            { key: "label", type: "String", value: "high-power" }
+        ]
+    };
+    const result = customSchema.safeParse(validCustom);
+    assert.strictEqual(result.success, true, "Custom step with typed parameters should be valid");
 });
 
 // Group Nesting Limit Tests
