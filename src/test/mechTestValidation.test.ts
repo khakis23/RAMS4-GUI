@@ -9,6 +9,7 @@ import {
     mechTestFormSchema
 } from '../feature/sequence/profileSchemas/mechTestSchema.ts';
 import { dicFormSchema } from '../feature/configuration/profileSchemas/dicSchema.ts';
+import { formatCardsForBackend, parseCardsFromBackend } from '../store/useMechanicalTestStore.ts';
 
 // Helper runner for grouping test assertions cleanly
 const runTest = (name: string, fn: () => void) => {
@@ -214,6 +215,76 @@ runTest('Custom: Valid custom step with typed parameters', () => {
     };
     const result = customSchema.safeParse(validCustom);
     assert.strictEqual(result.success, true, "Custom step with typed parameters should be valid");
+});
+
+runTest('Custom: Serializes custom step with nested args schema', () => {
+    const customCard: any = {
+        id: "card-custom-1",
+        type: "custom",
+        data: {
+            commandName: "my_cmd",
+            parameters: [
+                { key: "some_key", type: "String", value: "some_value" },
+                { key: "some_bool", type: "Bool", value: true },
+                { key: "some_num", type: "Number", value: 123 }
+            ]
+        }
+    };
+    const formatted = formatCardsForBackend([customCard]);
+    assert.deepStrictEqual(formatted, [
+        {
+            custom: {
+                commandName: "my_cmd",
+                args: {
+                    some_key: "some_value",
+                    some_bool: true,
+                    some_num: 123
+                }
+            }
+        }
+    ], "Formatted custom step should place parameter key-values under args object");
+});
+
+runTest('Custom: Parses custom step with nested args schema from backend', () => {
+    const backendPayload = [
+        {
+            custom: {
+                commandName: "my_cmd",
+                args: {
+                    some_key: "some_value",
+                    some_bool: true,
+                    some_num: 123
+                }
+            }
+        }
+    ];
+    const parsed = parseCardsFromBackend(backendPayload);
+    assert.strictEqual(parsed.length, 1);
+    assert.strictEqual(parsed[0].type, 'custom');
+    assert.strictEqual(parsed[0].data.commandName, 'my_cmd');
+    assert.deepStrictEqual(parsed[0].data.parameters, [
+        { key: "some_key", type: "String", value: "some_value" },
+        { key: "some_bool", type: "Bool", value: true },
+        { key: "some_num", type: "Number", value: 123 }
+    ], "Parsed custom step should extract parameter array from args object");
+});
+
+runTest('Custom: Backward compatibility for legacy flat custom step payload', () => {
+    const legacyPayload = [
+        {
+            custom: {
+                commandName: "legacy_cmd",
+                legacy_key: "legacy_val",
+                legacy_flag: false
+            }
+        }
+    ];
+    const parsed = parseCardsFromBackend(legacyPayload);
+    assert.strictEqual(parsed[0].data.commandName, 'legacy_cmd');
+    assert.deepStrictEqual(parsed[0].data.parameters, [
+        { key: "legacy_key", type: "String", value: "legacy_val" },
+        { key: "legacy_flag", type: "Bool", value: false }
+    ], "Parsed legacy custom step should extract parameters directly from root payload");
 });
 
 // Group Nesting Limit Tests

@@ -32,8 +32,9 @@ export const TabDAQ = () => {
         mode: "onChange",
         defaultValues: {
             requiredAxes: availableAxes,
-            daqFrequency: draft.daqFrequency,
-            samplePoints: draft.samplePoints,
+            daqFrequency: draft.daqFrequency ?? 1,
+            samplePoints: draft.samplePoints ?? 1000,
+            handlersProfile: draft.handlerProfiles || [],
         },
     });
 
@@ -43,11 +44,12 @@ export const TabDAQ = () => {
             loadedPathRef.current = lastLoadedPath;
             reset({
                 requiredAxes: availableAxes,
-                daqFrequency: draft.daqFrequency,
-                samplePoints: draft.samplePoints,
+                daqFrequency: draft.daqFrequency ?? 1,
+                samplePoints: draft.samplePoints ?? 1000,
+                handlersProfile: draft.handlerProfiles || [],
             });
         }
-    }, [lastLoadedPath, reset, draft]);
+    }, [lastLoadedPath, reset, draft.daqFrequency, draft.samplePoints, draft.handlerProfiles, availableAxes]);
 
     const {
         fields,

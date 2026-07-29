@@ -361,7 +361,7 @@ const defaultStepData = (type: string, data: any): any => {
     return defaulted;
 };
 
-const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
+export const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
     return cards.map(card => {
         if (card.type === 'group') {
             return {
@@ -384,10 +384,7 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
             };
         }
         if (card.type === 'custom') {
-            const customPayload: Record<string, any> = {};
-            if (card.data?.commandName) {
-                customPayload.commandName = card.data.commandName;
-            }
+            const argsPayload: Record<string, any> = {};
             if (Array.isArray(card.data?.parameters)) {
                 card.data.parameters.forEach((param: any) => {
                     if (param && param.key && String(param.key).trim() !== '') {
@@ -400,12 +397,15 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
                         } else {
                             parsedVal = String(param.value ?? '');
                         }
-                        customPayload[k] = parsedVal;
+                        argsPayload[k] = parsedVal;
                     }
                 });
             }
             return {
-                custom: customPayload
+                custom: {
+                    commandName: card.data?.commandName || '',
+                    args: argsPayload
+                }
             };
         }
         return {
@@ -414,7 +414,7 @@ const formatCardsForBackend = (cards: MechTestCard[]): any[] => {
     });
 };
 
-const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
+export const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
     return items.map((item, idx) => {
         const type = Object.keys(item)[0] as 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom';
         if (type === 'group') {
@@ -452,8 +452,12 @@ const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] => {
             const customObj = item.custom || {};
             const commandName = customObj.commandName || customObj.name || '';
             const parameters: Array<{ key: string; type: 'Bool' | 'Number' | 'String'; value: any }> = [];
-            Object.entries(customObj).forEach(([k, v]) => {
-                if (k !== 'commandName' && k !== 'name') {
+            const argsObj = (customObj.args && typeof customObj.args === 'object' && !Array.isArray(customObj.args)) 
+                ? customObj.args 
+                : customObj;
+
+            Object.entries(argsObj).forEach(([k, v]) => {
+                if (k !== 'commandName' && k !== 'name' && k !== 'args') {
                     let valType: 'Bool' | 'Number' | 'String' = 'String';
                     if (typeof v === 'boolean') {
                         valType = 'Bool';
