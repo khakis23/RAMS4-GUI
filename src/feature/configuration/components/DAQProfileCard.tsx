@@ -46,11 +46,33 @@ const CycleVisualization = ({ cycles }: CycleVisualizationProps) => {
     const cleanCycles = useMemo(() => {
         if (!Array.isArray(cycles) || cycles.length === 0) return [];
         return cycles.map(c => {
-            const start = typeof c.start === 'number' && !isNaN(c.start) ? Math.max(1, c.start) : 1;
-            const isInf = c.stop === 'inf' || c.stop === 'Inf' || c.stop === 'INF' || (c.stop as any) === '∞';
-            const stop = isInf ? 'inf' : (typeof c.stop === 'number' && !isNaN(c.stop) ? Math.max(start, c.stop) : start + 9);
-            const step = typeof c.step === 'number' && !isNaN(c.step) && c.step > 0 ? c.step : 1;
-            return { start, stop, step, isInf };
+            const rawStart = c.start;
+            const start = (typeof rawStart === 'number' && !isNaN(rawStart)) 
+                ? Math.max(1, rawStart) 
+                : (typeof rawStart === 'string' && rawStart.trim() !== '' && !isNaN(Number(rawStart)) 
+                    ? Math.max(1, Number(rawStart)) 
+                    : 1);
+            
+            const rawStop = c.stop;
+            const isInf = rawStop === 'inf' || rawStop === 'Inf' || rawStop === 'INF' || (rawStop as any) === '∞';
+            
+            let stop: number | 'inf';
+            if (isInf) {
+                stop = 'inf';
+            } else if (rawStop !== undefined && rawStop !== null && String(rawStop).trim() !== '' && !isNaN(Number(rawStop))) {
+                stop = Math.max(start, Number(rawStop));
+            } else {
+                stop = 'inf';
+            }
+
+            const rawStep = c.step;
+            const step = (typeof rawStep === 'number' && !isNaN(rawStep) && rawStep > 0)
+                ? rawStep
+                : (typeof rawStep === 'string' && rawStep.trim() !== '' && !isNaN(Number(rawStep)) && Number(rawStep) > 0 
+                    ? Number(rawStep) 
+                    : 1);
+
+            return { start, stop, step, isInf: stop === 'inf' };
         });
     }, [cycles]);
 
@@ -98,7 +120,7 @@ const CycleVisualization = ({ cycles }: CycleVisualizationProps) => {
             const endStop = lastCycle.stop;
             if (!seen.has(endStop)) {
                 seen.add(endStop);
-                const pct = Math.max(0, Math.min(100, ((endStop - minVal) / totalRange) * 100));
+                const pct = Math.max(0, Math.min(100, ((endStop + 1 - minVal) / totalRange) * 100));
                 ticks.push({ val: endStop, pct });
             }
         }
