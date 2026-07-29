@@ -435,6 +435,7 @@ const MechanicalTestInner = () => {
                     collisionDetection={customCollisionDetection} 
                     onDragStart={handleDragStart} 
                     onDragEnd={handleDragEnd}
+                    autoScroll={{ layoutShiftCompensation: false }}
                 >
                     {fields.length === 0 ? (
                         <div className="flex flex-col items-center justify-center min-h-[300px] border border-mauve-200 rounded-sm p-8 text-center bg-white">

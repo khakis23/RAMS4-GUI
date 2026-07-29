@@ -1,4 +1,3 @@
-import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GripVertical, Trash2, Copy, TriangleRight, ScanEye, AudioWaveform, Gauge, LogOut, PaintbrushVertical } from 'lucide-react';
@@ -46,8 +45,6 @@ export const MechTestCardItem = ({
     removeCard,
     duplicateCard,
     moveOutOfGroup,
-    provided: outerProvided,
-    snapshot: outerSnapshot,
 }: MechTestCardItemProps) => {
     const { draft } = useConfigurationStore();
 

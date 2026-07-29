@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 import { Input } from '../../components/ui/input';
@@ -28,32 +27,13 @@ export const TabDAQ = () => {
         control,
         watch,
         reset,
-        setValue,
         formState: { errors },
     } = useForm<z.infer<typeof daqSchema>>({
-        resolver: zodResolver(daqSchema),
         mode: "onChange",
         defaultValues: {
             requiredAxes: availableAxes,
             daqFrequency: draft.daqFrequency,
             samplePoints: draft.samplePoints,
-            handlersProfile: (draft.handlerProfiles || []).map(profile => {
-                const rawAi = Array.isArray(profile.verboseAi) 
-                    ? profile.verboseAi 
-                    : (profile.verboseAi ? (profile.verboseAi as string).split(',').map(s => s.trim()) : []);
-                return {
-                    ...profile,
-                    verboseAxis: profile.verboseAxis || "-1",
-                    verboseTask: profile.verboseTask || "-1",
-                    verboseSystem: profile.verboseSystem ?? -1,
-                    verboseIO: profile.verboseIO ?? -1,
-                    verboseAi: rawAi,
-                    loadA: rawAi.includes("LoadA"),
-                    strain: rawAi.includes("Strain"),
-                    specLoadFrameComm: rawAi.includes("SpecComm"),
-                    cycles: profile.cycles || [],
-                };
-            }),
         },
     });
 
@@ -65,23 +45,6 @@ export const TabDAQ = () => {
                 requiredAxes: availableAxes,
                 daqFrequency: draft.daqFrequency,
                 samplePoints: draft.samplePoints,
-                handlersProfile: (draft.handlerProfiles || []).map(profile => {
-                    const rawAi = Array.isArray(profile.verboseAi) 
-                        ? profile.verboseAi 
-                        : (profile.verboseAi ? (profile.verboseAi as string).split(',').map(s => s.trim()) : []);
-                    return {
-                        ...profile,
-                        verboseAxis: profile.verboseAxis || "-1",
-                        verboseTask: profile.verboseTask || "-1",
-                        verboseSystem: profile.verboseSystem ?? -1,
-                        verboseIO: profile.verboseIO ?? -1,
-                        verboseAi: rawAi,
-                        loadA: rawAi.includes("LoadA"),
-                        strain: rawAi.includes("Strain"),
-                        specLoadFrameComm: rawAi.includes("SpecComm"),
-                        cycles: profile.cycles || [],
-                    };
-                }),
             });
         }
     }, [lastLoadedPath, reset, draft]);

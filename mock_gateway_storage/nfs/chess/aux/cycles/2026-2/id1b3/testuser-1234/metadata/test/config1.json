@@ -16,17 +16,6 @@
   "handlerProfiles": [
     {
       "mode": "time-series",
-      "filename": "test_timeseries_1-2",
-      "verboseAxis": "-1",
-      "verboseSystem": -1,
-      "verboseTask": "-1",
-      "verboseIO": -1,
-      "verboseAi": [],
-      "frequency": 1000,
-      "cycles": []
-    },
-    {
-      "mode": "time-series",
       "filename": "test_timeseries_1-1",
       "verboseAxis": "-1",
       "verboseSystem": -1,
@@ -34,13 +23,44 @@
       "verboseIO": -1,
       "verboseAi": [],
       "frequency": 1000,
-      "cycles": []
+      "cycles": [
+        {
+          "start": 1,
+          "stop": 10,
+          "step": 1
+        },
+        {
+          "start": 20,
+          "stop": "inf",
+          "step": 2
+        }
+      ]
     }
   ],
   "xrayProfiles": [
     {
       "id": "xrayProfile1785343081392",
       "name": "rot_test",
+      "mode": "rotation-series",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "ramsx": 1,
+      "layerRanges": [
+        {
+          "omeStart": 1,
+          "omeStop": 1,
+          "numPoints": 1,
+          "layerStart": 1,
+          "layerEnd": 1,
+          "numLayers": 1
+        }
+      ]
+    },
+    {
+      "id": "xrayProfile1785357021268",
+      "name": "mapscan test",
       "mode": "mapscan",
       "ctime": 1,
       "beamHeight": 1,
@@ -51,11 +71,14 @@
       "ome": 1
     }
   ],
-  "dicEnabled": false,
-  "settingsVersion": 2,
+  "dicEnabled": true,
+  "dicX": 1,
+  "dicZ": 1,
+  "dicAngle": 1,
+  "settingsVersion": 3,
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "Version2Settings",
+  "systemName": "Version3Settings",
   "controllerHost": "10.0.0.1",
   "axisCount": 5,
   "taskCount": 5,

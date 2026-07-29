@@ -705,11 +705,16 @@ export const ConfigurationManager = () => {
     };
 
     const executeManualDirectoryChange = (val: string) => {
-        updateDraft({ configDirectory: val });
+        const updates: any = { configDirectory: val };
+        if (!draft.experimentNumber) {
+            updates.experimentNumber = '1';
+        }
+        updateDraft(updates);
         const parsed = parseDirectoryPath(val);
         if (parsed) {
             setSelectedStation(parsed.station);
             updateDraft({
+                ...updates,
                 cycleNumber: parsed.cycle,
                 userId: parsed.btr,
                 sampleName: parsed.sample
@@ -807,21 +812,11 @@ export const ConfigurationManager = () => {
     };
 
     const handleManualDirectoryChange = (val: string) => {
-        if (isAnyDirty) {
-            setPendingPathChange({ type: 'manual', val });
-            setShowDiscardModal(true);
-        } else {
-            executeManualDirectoryChange(val);
-        }
+        executeManualDirectoryChange(val);
     };
 
     const handleManualToggleClick = () => {
-        if (isAnyDirty) {
-            setPendingPathChange({ type: 'manualToggle', val: null });
-            setShowDiscardModal(true);
-        } else {
-            executeManualToggleClick();
-        }
+        executeManualToggleClick();
     };
 
     const handleConfirmDiscard = async () => {
@@ -988,6 +983,13 @@ export const ConfigurationManager = () => {
                                     onChange={(e: any) => handleManualDirectoryChange(e.target.value)}
                                     placeholder="/nfs/chess/aux/cycles/..."
                                     className="h-7 w-full bg-white border-mauve-200 rounded-lg text-xs px-2.5 shadow-sm focus-visible:ring-mauve-400"
+                                />
+                                <span className="shrink-0 text-xs text-mauve-850 font-semibold ml-1">Exp:</span>
+                                <Input
+                                    value={draft.experimentNumber || ''}
+                                    onChange={(e: any) => updateDraft({ experimentNumber: e.target.value })}
+                                    placeholder="1"
+                                    className="h-7 w-16 bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm focus-visible:ring-mauve-400"
                                 />
                             </div>
                         ) : (

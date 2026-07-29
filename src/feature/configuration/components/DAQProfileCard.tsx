@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Control, Controller, FieldErrors, UseFormRegister, useFieldArray, useWatch } from 'react-hook-form';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Input } from '../../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { Button } from '../../../components/ui/button';
@@ -39,7 +39,7 @@ const verboseIOOptions = [
 ];
 
 interface CycleVisualizationProps {
-    cycles: Array<{ start: number; stop: number | 'inf'; step: number }>;
+    cycles: Array<{ start: any; stop: any; step: any }>;
 }
 
 const CycleVisualization = ({ cycles }: CycleVisualizationProps) => {
@@ -49,12 +49,12 @@ const CycleVisualization = ({ cycles }: CycleVisualizationProps) => {
             const rawStart = c.start;
             const start = (typeof rawStart === 'number' && !isNaN(rawStart)) 
                 ? Math.max(1, rawStart) 
-                : (typeof rawStart === 'string' && rawStart.trim() !== '' && !isNaN(Number(rawStart)) 
+                : (typeof rawStart === 'string' && String(rawStart).trim() !== '' && !isNaN(Number(rawStart))
                     ? Math.max(1, Number(rawStart)) 
                     : 1);
             
             const rawStop = c.stop;
-            const isInf = rawStop === 'inf' || rawStop === 'Inf' || rawStop === 'INF' || (rawStop as any) === '∞';
+            const isInf = rawStop === 'inf' || (rawStop as any) === '∞';
             
             let stop: number | 'inf';
             if (isInf) {
@@ -68,7 +68,7 @@ const CycleVisualization = ({ cycles }: CycleVisualizationProps) => {
             const rawStep = c.step;
             const step = (typeof rawStep === 'number' && !isNaN(rawStep) && rawStep > 0)
                 ? rawStep
-                : (typeof rawStep === 'string' && rawStep.trim() !== '' && !isNaN(Number(rawStep)) && Number(rawStep) > 0 
+                : (typeof rawStep === 'string' && String(rawStep).trim() !== '' && !isNaN(Number(rawStep)) && Number(rawStep) > 0 
                     ? Number(rawStep) 
                     : 1);
 
@@ -362,7 +362,6 @@ export const DAQProfileCard = ({
     errors,
     remove,
     currentMode,
-    requiredAxes
 }: DAQProfileCardProps) => {
     const availableAxes = useAvailableAxes();
     const axesOptions = availableAxes;
@@ -451,7 +450,7 @@ export const DAQProfileCard = ({
             summary = `${axisText}, ${itemLabel}, ${prominenceText}`;
         }
 
-        if (filename && filename.trim() !== "") {
+        if (filename && typeof filename === 'string' && filename.trim() !== "") {
             return `${filename.trim()} (${summary})`;
         }
         return summary;
