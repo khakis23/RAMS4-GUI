@@ -107,7 +107,7 @@ export interface GlobalConfig {
 
 export interface HandlerProfileCycle {
     start: number;
-    stop: number;
+    stop: number | 'inf';
     step: number;
 }
 

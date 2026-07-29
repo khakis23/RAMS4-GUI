@@ -38,6 +38,168 @@ const verboseIOOptions = [
     { label: "Analog Outputs", value: 2 },
 ];
 
+interface CycleVisualizationProps {
+    cycles: Array<{ start: number; stop: number | 'inf'; step: number }>;
+}
+
+const CycleVisualization = ({ cycles }: CycleVisualizationProps) => {
+    const cleanCycles = useMemo(() => {
+        if (!Array.isArray(cycles) || cycles.length === 0) return [];
+        return cycles.map(c => {
+            const start = typeof c.start === 'number' && !isNaN(c.start) ? Math.max(1, c.start) : 1;
+            const isInf = c.stop === 'inf' || c.stop === 'Inf' || c.stop === 'INF' || (c.stop as any) === '∞';
+            const stop = isInf ? 'inf' : (typeof c.stop === 'number' && !isNaN(c.stop) ? Math.max(start, c.stop) : start + 9);
+            const step = typeof c.step === 'number' && !isNaN(c.step) && c.step > 0 ? c.step : 1;
+            return { start, stop, step, isInf };
+        });
+    }, [cycles]);
+
+    const { domainMin, domainMax, scaleTicks } = useMemo(() => {
+        if (cleanCycles.length === 0) {
+            return { domainMin: 1, domainMax: 10, scaleTicks: { ticks: [{ val: 1, pct: 0 }], hasInf: false } };
+        }
+
+        let minVal = Math.min(...cleanCycles.map(c => c.start));
+        if (minVal < 1 || isNaN(minVal)) minVal = 1;
+
+        let maxFiniteEnd = minVal;
+        let infFound = false;
+
+        cleanCycles.forEach(c => {
+            if (c.isInf) {
+                infFound = true;
+                if (c.start > maxFiniteEnd) maxFiniteEnd = c.start;
+            } else if (typeof c.stop === 'number') {
+                if (c.stop + 1 > maxFiniteEnd) maxFiniteEnd = c.stop + 1;
+            }
+        });
+
+        let maxVal = maxFiniteEnd;
+        if (infFound) {
+            maxVal = maxFiniteEnd + Math.max(10, Math.round((maxFiniteEnd - minVal) * 0.25) || 10);
+        }
+        if (maxVal <= minVal) maxVal = minVal + 10;
+
+        const totalRange = maxVal - minVal || 1;
+
+        const ticks: Array<{ val: number; pct: number }> = [];
+        const seen = new Set<number>();
+
+        cleanCycles.forEach(c => {
+            if (!seen.has(c.start)) {
+                seen.add(c.start);
+                const pct = Math.max(0, Math.min(100, ((c.start - minVal) / totalRange) * 100));
+                ticks.push({ val: c.start, pct });
+            }
+        });
+
+        const lastCycle = cleanCycles[cleanCycles.length - 1];
+        if (!lastCycle.isInf && typeof lastCycle.stop === 'number') {
+            const endStop = lastCycle.stop;
+            if (!seen.has(endStop)) {
+                seen.add(endStop);
+                const pct = Math.max(0, Math.min(100, ((endStop - minVal) / totalRange) * 100));
+                ticks.push({ val: endStop, pct });
+            }
+        }
+
+        return {
+            domainMin: minVal,
+            domainMax: maxVal,
+            scaleTicks: { ticks, hasInf: lastCycle.isInf }
+        };
+    }, [cleanCycles]);
+
+    const totalSpan = domainMax - domainMin || 1;
+
+    const blocksToRender = useMemo(() => {
+        const blocks: Array<{ key: string; leftPct: number; widthPct: number }> = [];
+
+        cleanCycles.forEach((c, cycleIdx) => {
+            if (c.isInf) {
+                if (c.step === 1) {
+                    const leftPct = Math.max(0, Math.min(100, ((c.start - domainMin) / totalSpan) * 100));
+                    blocks.push({ key: `inf-${cycleIdx}`, leftPct, widthPct: 100 - leftPct });
+                } else {
+                    for (let cy = c.start; cy < domainMax; cy += c.step) {
+                        const leftPct = Math.max(0, Math.min(100, ((cy - domainMin) / totalSpan) * 100));
+                        const unitWidth = Math.max(0.5, (1 / totalSpan) * 100);
+                        blocks.push({ key: `inf-${cycleIdx}-${cy}`, leftPct, widthPct: unitWidth });
+                    }
+                }
+            } else if (typeof c.stop === 'number') {
+                if (c.step === 1) {
+                    const leftPct = Math.max(0, Math.min(100, ((c.start - domainMin) / totalSpan) * 100));
+                    const rightPct = Math.max(0, Math.min(100, ((c.stop + 1 - domainMin) / totalSpan) * 100));
+                    blocks.push({ key: `finite-${cycleIdx}`, leftPct, widthPct: Math.max(0.5, rightPct - leftPct) });
+                } else {
+                    for (let cy = c.start; cy <= c.stop; cy += c.step) {
+                        const leftPct = Math.max(0, Math.min(100, ((cy - domainMin) / totalSpan) * 100));
+                        const unitWidth = Math.max(0.5, (1 / totalSpan) * 100);
+                        blocks.push({ key: `step-${cycleIdx}-${cy}`, leftPct, widthPct: unitWidth });
+                    }
+                }
+            }
+        });
+
+        return blocks;
+    }, [cleanCycles, domainMin, domainMax, totalSpan]);
+
+    return (
+        <div className="bg-mauve-50/50 border border-mauve-200/80 rounded-xl p-4 flex flex-col justify-between gap-3 h-full min-h-[120px]">
+            {/* Track Graph Area */}
+            <div className="relative w-full h-11 bg-mauve-100/70 dark:bg-mauve-900/40 rounded-lg border border-mauve-200/60 overflow-hidden flex items-center">
+                {cleanCycles.length === 0 ? (
+                    <div className="w-full h-7 bg-mauve-600/30 rounded flex items-center justify-center text-xs font-semibold text-mauve-800 dark:text-mauve-850">
+                        Full Test Range
+                    </div>
+                ) : (
+                    blocksToRender.map((b) => (
+                        <div
+                            key={b.key}
+                            className="absolute h-7 bg-mauve-600 rounded-sm shadow-sm"
+                            style={{
+                                left: `${b.leftPct}%`,
+                                width: `calc(${b.widthPct}% - 1px)`,
+                                minWidth: '3px'
+                            }}
+                        />
+                    ))
+                )}
+            </div>
+
+            {/* X-Axis Scale Labels */}
+            <div className="relative w-full h-4 text-mauve-700 dark:text-mauve-800 font-mono text-xs select-none">
+                {cleanCycles.length === 0 ? (
+                    <div className="flex justify-between px-1">
+                        <span>1</span>
+                        <span>...</span>
+                    </div>
+                ) : (
+                    <>
+                        {scaleTicks.ticks.map((tick) => (
+                            <div
+                                key={tick.val}
+                                className="absolute -translate-x-1/2 top-0 flex flex-col items-center"
+                                style={{ left: `${tick.pct}%` }}
+                            >
+                                <div className="w-[1px] h-1.5 bg-mauve-300 dark:bg-mauve-500 mb-0.5"></div>
+                                <span>{tick.val}</span>
+                            </div>
+                        ))}
+                        {scaleTicks.hasInf && (
+                            <div className="absolute right-0 top-0 flex flex-col items-end">
+                                <div className="w-[1px] h-1.5 bg-mauve-300 dark:bg-mauve-500 mb-0.5"></div>
+                                <span className="font-bold">...</span>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
 interface CyclesFieldArrayProps {
     control: Control<any>;
     register: UseFormRegister<any>;
@@ -50,67 +212,113 @@ const CyclesFieldArray = ({ control, register, profileIndex }: CyclesFieldArrayP
         name: `handlersProfile.${profileIndex}.cycles`
     });
 
+    const watchedCycles = useWatch({
+        control,
+        name: `handlersProfile.${profileIndex}.cycles`
+    }) || fields;
+
+    const handleAddCycleRange = () => {
+        if (fields.length === 0) {
+            append({ start: 1, stop: 'inf', step: 1 });
+        } else {
+            const lastCycle = watchedCycles[watchedCycles.length - 1] || fields[fields.length - 1];
+            let nextStart = 1;
+            if (lastCycle) {
+                const rawStop = lastCycle.stop;
+                if (typeof rawStop === 'number' && !isNaN(rawStop)) {
+                    nextStart = rawStop + 1;
+                } else if (typeof lastCycle.start === 'number' && !isNaN(lastCycle.start)) {
+                    nextStart = lastCycle.start + 10;
+                }
+            }
+            append({ start: nextStart, stop: 'inf', step: 1 });
+        }
+    };
+
     return (
         <div className="flex flex-col gap-4 text-left border-t border-mauve-250/30 py-4 my-2">
-            <FieldLabel text="Cycles Configuration" tooltip={tooltips.daqProfileCycles} />
-            
-            {fields.length === 0 ? (
-                <div className="bg-mauve-50/50 border border-mauve-200 text-mauve-700 rounded-lg p-5 text-sm mb-3">
-                    No cycles defined yet. This profile will log data continuously for the entire test.
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {fields.map((field, cycleIndex) => (
-                        <div key={field.id} className="flex items-end gap-4 w-full">
-                            <div className="w-24">
-                                <label className="text-xs font-medium text-muted-foreground">Start</label>
-                                <Input 
-                                    type="number" 
-                                    placeholder="Start"
-                                    className="h-8 bg-white border-mauve-200"
-                                    {...register(`handlersProfile.${profileIndex}.cycles.${cycleIndex}.start`, { valueAsNumber: true })}
-                                />
-                            </div>
-                            <div className="w-24">
-                                <label className="text-xs font-medium text-muted-foreground">Stop</label>
-                                <Input 
-                                    type="number" 
-                                    placeholder="Stop"
-                                    className="h-8 bg-white border-mauve-200"
-                                    {...register(`handlersProfile.${profileIndex}.cycles.${cycleIndex}.stop`, { valueAsNumber: true })}
-                                />
-                            </div>
-                            <div className="w-20">
-                                <label className="text-xs font-medium text-muted-foreground">Step</label>
-                                <Input 
-                                    type="number" 
-                                    placeholder="Step"
-                                    className="h-8 bg-white border-mauve-200"
-                                    {...register(`handlersProfile.${profileIndex}.cycles.${cycleIndex}.step`, { valueAsNumber: true })}
-                                />
-                            </div>
-                            <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="icon"
-                                className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg cursor-pointer transition-colors"
-                                onClick={() => remove(cycleIndex)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ))}
-                </div>
-            )}
+            <FieldLabel text="Cycles" tooltip={tooltips.daqProfileCycles} />
 
-            <Button 
-                type="button" 
-                variant="secondary" 
-                className="w-fit border border-mauve-300 hover:bg-mauve-50 text-mauve-700 h-9 rounded-lg"
-                onClick={() => append({ start: 1, stop: 10, step: 1 })}
-            >
-                <Plus className="h-4 w-4 mr-2" /> Add Cycle Range
-            </Button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full items-start">
+                {/* Left Column: Interactive Form Controls (1/3 width) */}
+                <div className="lg:col-span-1 flex flex-col gap-4">
+                    {fields.length > 0 && (
+                        <div className="space-y-3">
+                            {fields.map((field, cycleIndex) => (
+                                <div key={field.id} className="flex items-end gap-2 w-full bg-white dark:bg-mauve-950/40 p-2.5 rounded-lg border border-mauve-200 shadow-sm">
+                                    <div className="flex-1 min-w-0">
+                                        <label className="text-[11px] font-medium text-muted-foreground block mb-1">Start</label>
+                                        <Input 
+                                            type="number" 
+                                            placeholder="Start"
+                                            className="h-8 text-xs bg-white border-mauve-200"
+                                            {...register(`handlersProfile.${profileIndex}.cycles.${cycleIndex}.start`, { valueAsNumber: true })}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <label className="text-[11px] font-medium text-muted-foreground block mb-1">Stop</label>
+                                        <Controller
+                                            control={control}
+                                            name={`handlersProfile.${profileIndex}.cycles.${cycleIndex}.stop`}
+                                            render={({ field: stopField }) => (
+                                                <Input 
+                                                    type="text" 
+                                                    placeholder="Stop"
+                                                    className="h-8 text-xs bg-white border-mauve-200 font-mono"
+                                                    value={stopField.value === 'inf' || stopField.value === 'Inf' || stopField.value === 'INF' || stopField.value === '∞' ? 'inf' : (stopField.value ?? '')}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.trim();
+                                                        if (val.toLowerCase() === 'inf' || val === '∞') {
+                                                            stopField.onChange('inf');
+                                                        } else if (val === '') {
+                                                            stopField.onChange('');
+                                                        } else {
+                                                            const num = Number(val);
+                                                            stopField.onChange(isNaN(num) ? val : num);
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                    </div>
+                                    <div className="w-16 min-w-0">
+                                        <label className="text-[11px] font-medium text-muted-foreground block mb-1">Step</label>
+                                        <Input 
+                                            type="number" 
+                                            placeholder="Step"
+                                            className="h-8 text-xs bg-white border-mauve-200"
+                                            {...register(`handlersProfile.${profileIndex}.cycles.${cycleIndex}.step`, { valueAsNumber: true })}
+                                        />
+                                    </div>
+                                    <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="h-8 w-8 shrink-0 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg cursor-pointer transition-colors"
+                                        onClick={() => remove(cycleIndex)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <Button 
+                        type="button" 
+                        variant="secondary" 
+                        className="w-fit border border-mauve-300 hover:bg-mauve-50 text-mauve-700 h-9 rounded-lg cursor-pointer"
+                        onClick={handleAddCycleRange}
+                    >
+                        <Plus className="h-4 w-4 mr-2" /> Add Cycle Range
+                    </Button>
+                </div>
+
+                {/* Right Column: Visualization Graph (2/3 width) */}
+                <div className="lg:col-span-2">
+                    <CycleVisualization cycles={watchedCycles} />
+                </div>
+            </div>
         </div>
     );
 };

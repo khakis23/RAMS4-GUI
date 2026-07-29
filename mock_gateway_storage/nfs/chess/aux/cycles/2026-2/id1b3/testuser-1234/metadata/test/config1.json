@@ -39,10 +39,10 @@
   ],
   "xrayProfiles": [
     {
-      "id": "xrayProfile1785342434516",
-      "name": "test",
+      "id": "xrayProfile1785343081392",
+      "name": "rot_test",
       "mode": "mapscan",
-      "ctime": 11,
+      "ctime": 1,
       "beamHeight": 1,
       "beamWidth": 1,
       "atten": 1,

@@ -60,6 +60,10 @@ runTest('DAQ: Cycle range start, stop, and step bounds', () => {
     const validResult = cycleRangeSchema.safeParse(validRange);
     assert.strictEqual(validResult.success, true, "Valid cycle range should pass");
 
+    const validInfRange = { start: 0, stop: "inf", step: 1 };
+    const validInfResult = cycleRangeSchema.safeParse(validInfRange);
+    assert.strictEqual(validInfResult.success, true, "Cycle range with stop 'inf' should pass validation");
+
     const invalidStep = { start: 0, stop: 500, step: 0 };
     const invalidResult = cycleRangeSchema.safeParse(invalidStep);
     assert.strictEqual(invalidResult.success, false, "Cycle step of 0 must fail validation");

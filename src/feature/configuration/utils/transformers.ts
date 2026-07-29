@@ -63,9 +63,10 @@ export const compileToBackendPayload = (
                      : null;
                 profilePayload.cycles = p.cycles && p.cycles.length > 0
                     ? p.cycles.map(c => {
-                        if (c.start === c.stop) return c.start;
-                        if (c.step === 1) return [c.start, c.stop];
-                        return [c.start, c.stop, c.step];
+                        const stopVal = c.stop === 'inf' || c.stop === 'Inf' || c.stop === 'INF' || (c.stop as any) === '∞' ? 'inf' : c.stop;
+                        if (c.start === stopVal) return c.start;
+                        if (c.step === 1) return [c.start, stopVal];
+                        return [c.start, stopVal, c.step];
                     })
                     : null;
             }

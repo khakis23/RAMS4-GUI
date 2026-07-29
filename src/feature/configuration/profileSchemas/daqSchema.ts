@@ -5,9 +5,15 @@ export const cycleRangeSchema = z.object({
     start: z.number()
         .min(PARAMETER_LIMITS.daq.cycleRange.start.min, "Must be positive.")
         .max(PARAMETER_LIMITS.daq.cycleRange.start.max, `Cannot exceed ${PARAMETER_LIMITS.daq.cycleRange.start.max}.`),
-    stop: z.number()
-        .min(PARAMETER_LIMITS.daq.cycleRange.stop.min, "Must be positive.")
-        .max(PARAMETER_LIMITS.daq.cycleRange.stop.max, `Cannot exceed ${PARAMETER_LIMITS.daq.cycleRange.stop.max}.`),
+    stop: z.preprocess(
+        (val) => (val === "inf" || val === "Inf" || val === "INF" || val === "∞" ? "inf" : (typeof val === "string" && val.trim() !== "" && !isNaN(Number(val)) ? Number(val) : val)),
+        z.union([
+            z.number()
+                .min(PARAMETER_LIMITS.daq.cycleRange.stop.min, "Must be positive.")
+                .max(PARAMETER_LIMITS.daq.cycleRange.stop.max, `Cannot exceed ${PARAMETER_LIMITS.daq.cycleRange.stop.max}.`),
+            z.literal("inf")
+        ])
+    ),
     step: z.number()
         .min(PARAMETER_LIMITS.daq.cycleRange.step.min, `Must be at least ${PARAMETER_LIMITS.daq.cycleRange.step.min}.`)
         .max(PARAMETER_LIMITS.daq.cycleRange.step.max, `Cannot exceed ${PARAMETER_LIMITS.daq.cycleRange.step.max}.`),
