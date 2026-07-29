@@ -1,7 +1,7 @@
 {
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "Version1Settings",
+  "systemName": "Version2Settings",
   "controllerHost": "10.0.0.1",
   "axisCount": 5,
   "taskCount": 5,

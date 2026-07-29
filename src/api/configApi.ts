@@ -330,7 +330,7 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
         console.warn("Backend mock server unavailable or settings file not found. Resolving in-memory mock configuration presets.", err);
     }
 
-    // Standardized fallback configuration if mock backend server is unavailable
+    // Standardized fallback configuration if mock backend server is unavailable or settings file missing
     return null;
 };
 
@@ -358,27 +358,33 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
  * Trigger / Call Context:
  * Called when a user explicitly saves changes in the Settings modal / section.
  */
-export const postSettingsToGateway = async (directory: string, settings: any): Promise<{ version: number }> => {
+export const postSettingsToGateway = async (directory: string, settings: any, targetVersionOverride?: number): Promise<{ version: number }> => {
     // Simulate API latency
     await new Promise((resolve) => setTimeout(resolve, 150));
 
     const settingsDir = getSettingsDir(directory);
     
-    // Scan settings folder to find highest existing version number to guarantee existing files are read-only
-    let nextVersion = 0;
-    try {
-        const listUrl = `/api/settings?action=list&type=settings&path=${encodeURIComponent(settingsDir)}`;
-        const response = await fetch(listUrl);
-        if (response.ok) {
-            const versions: number[] = await response.json();
-            if (versions.length > 0) {
-                nextVersion = Math.max(...versions) + 1;
+    let nextVersion = 1;
+    if (typeof targetVersionOverride === 'number') {
+        nextVersion = targetVersionOverride;
+    } else {
+        // Scan settings folder to find highest existing version number to guarantee existing files are read-only
+        try {
+            const listUrl = `/api/settings?action=list&type=settings&path=${encodeURIComponent(settingsDir)}`;
+            const response = await fetch(listUrl);
+            if (response.ok) {
+                const versions: number[] = await response.json();
+                if (versions.length > 0) {
+                    nextVersion = Math.max(...versions) + 1;
+                } else {
+                    nextVersion = 1;
+                }
             }
+        } catch (e) {
+            console.warn("Failed to list existing settings versions from gateway", e);
+            const currentVer = typeof settings?.settingsVersion === 'number' ? settings.settingsVersion : 0;
+            nextVersion = currentVer > 0 ? currentVer + 1 : 1;
         }
-    } catch (e) {
-        console.warn("Failed to list existing settings versions from gateway", e);
-        const currentVer = typeof settings?.settingsVersion === 'number' ? settings.settingsVersion : 0;
-        nextVersion = currentVer + 1;
     }
 
     const targetFile = `${settingsDir}settings${nextVersion}`;

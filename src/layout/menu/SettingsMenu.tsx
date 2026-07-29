@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import { X } from 'lucide-react';
-import { TabSettings } from '../../feature/configuration/TabSettings.tsx';
+import { SettingsFormContent } from '../../feature/configuration/components/SettingsFormContent.tsx';
 import { useConfigurationStore, useValidationStore } from '../../store/useConfigurationStore.ts';
-import { postSettingsToGateway } from '../../api/configApi.ts';
+import { postSettingsToGateway, postConfigToGateway } from '../../api/configApi.ts';
+import { pruneConfigForSave } from '../../feature/configuration/components/ConfigurationManager.tsx';
 import { WarningModal } from '../../components/ui/WarningModal.tsx';
 
 interface SettingsMenuProps {
@@ -10,7 +11,7 @@ interface SettingsMenuProps {
 }
 
 export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
-    const { draft, updateDraft, savedConfig, setSavedConfig } = useConfigurationStore();
+    const { draft, updateDraft, savedConfig, setSavedConfig, settingsFallbackActive, setSettingsFallbackActive } = useConfigurationStore();
     const { errors: validationErrors } = useValidationStore();
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -18,12 +19,13 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
     const hasErrors = (validationErrors['settings'] || []).length > 0;
 
     const isDirty = useMemo(() => {
+        if (settingsFallbackActive !== null) return true;
         if (!savedConfig) return false;
         const keys = [
             'specHost', 'requireSpecEnable', 'systemName', 'controllerHost', 'axisCount', 'taskCount', 'axesSettings', 'signalSettings'
         ] as const;
         return keys.some(key => JSON.stringify(draft[key]) !== JSON.stringify(savedConfig[key]));
-    }, [draft, savedConfig]);
+    }, [draft, savedConfig, settingsFallbackActive]);
 
     const performSave = async () => {
         if (!draft.configDirectory) {
@@ -45,18 +47,32 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
                 signalSettings: draft.signalSettings,
                 settingsVersion: draft.settingsVersion ?? 0
             };
-            const res = await postSettingsToGateway(draft.configDirectory, payload);
+            const targetOverride = settingsFallbackActive ? settingsFallbackActive.expected : undefined;
+            const res = await postSettingsToGateway(draft.configDirectory, payload, targetOverride);
             if (res && res.version !== undefined) {
-                updateDraft({
-                    settingsVersion: res.version,
-                    ...payload
-                });
-                setSavedConfig({
-                    ...savedConfig,
+                const updatedFields = {
                     ...payload,
                     settingsVersion: res.version
+                };
+                updateDraft(updatedFields);
+                setSavedConfig({
+                    ...savedConfig,
+                    ...updatedFields
                 } as any);
-                useConfigurationStore.getState().setSettingsFallbackActive(null);
+                setSettingsFallbackActive(null);
+
+                // Immediately update configuration file on backend to reflect newly assigned settingsVersion
+                if (draft.configDirectory && draft.experimentNumber) {
+                    const activeDraft = {
+                        ...useConfigurationStore.getState().draft,
+                        ...updatedFields,
+                        settingsVersion: res.version
+                    };
+                    const prunedConfig = pruneConfigForSave(activeDraft);
+                    const configFilePath = `${draft.configDirectory}config${draft.experimentNumber.trim()}`;
+                    await postConfigToGateway(configFilePath, prunedConfig);
+                    setSavedConfig(JSON.parse(JSON.stringify(activeDraft)));
+                }
             }
         } catch (err) {
             console.error("Failed to save settings on close", err);
@@ -130,7 +146,7 @@ export const SettingsMenu = ({ onClose }: SettingsMenuProps) => {
 
                 {/* Form Content Scrollable Area */}
                 <div className="flex-1 overflow-y-auto pr-3 mr-[-12px] sleek-scrollbar">
-                    <TabSettings />
+                    <SettingsFormContent />
                 </div>
             </div>
 

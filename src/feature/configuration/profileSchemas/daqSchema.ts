@@ -25,7 +25,7 @@ const safeRequiredNumber = z.preprocess(
 
 export const handlerProfileSchema = z.object({
     mode: z.string().min(1, "Mode is required."),
-    filename: z.string().min(1, "Name is required."),
+    filename: z.string().optional().or(z.literal("")),
     verboseAxis: z.string(),
     verboseSystem: safeRequiredNumber,
     verboseTask: z.string(),

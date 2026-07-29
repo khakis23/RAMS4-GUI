@@ -245,7 +245,7 @@ export const TabDAQ = () => {
                                                 onValueChange={(val) => field.onChange(Number(val))} 
                                                 value={field.value ? String(field.value) : undefined}
                                             >
-                                                <SelectTrigger className="bg-white border-mauve-200 h-9 w-full">
+                                                <SelectTrigger className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300 w-full">
                                                     <SelectValue placeholder="Select frequency" />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-white">
@@ -268,7 +268,7 @@ export const TabDAQ = () => {
                                     <Input 
                                         type="number" 
                                         placeholder="Enter points (min 100)" 
-                                        className="bg-white border-mauve-250 focus-visible:ring-mauve-300 h-9"
+                                        className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300"
                                         {...register('samplePoints', { valueAsNumber: true })}
                                     />
                                     {errors.samplePoints && (

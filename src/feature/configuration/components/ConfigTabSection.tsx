@@ -11,6 +11,7 @@ interface ConfigTabSectionProps {
     profiles?: React.ReactNode;
     profilesTitle?: string;
     profilesTitleTooltip?: string;
+    profilesDescription?: string;
     headerAction?: React.ReactNode;
     profilesAction?: React.ReactNode;
 }
@@ -27,15 +28,12 @@ const hasChildren = (children: React.ReactNode): boolean => {
 };
 
 export const ConfigTabSection = ({
-    title,
-    titleTooltip,
-    description,
     topContent,
     children,
     profiles,
     profilesTitle,
     profilesTitleTooltip,
-    headerAction,
+    profilesDescription,
     profilesAction
 }: ConfigTabSectionProps) => {
     return (
@@ -44,35 +42,6 @@ export const ConfigTabSection = ({
             {topContent && (
                 <div className="w-full">
                     {topContent}
-                </div>
-            )}
-
-            {/* Header section with title and description */}
-            {title && (
-                <div className="flex justify-between items-start text-left w-full">
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-1.5">
-                            <h2 className="text-xl font-bold text-mauve-850">{title}</h2>
-                            {titleTooltip && (
-                                <TooltipProvider>
-                                    <Tooltip delayDuration={200}>
-                                        <TooltipTrigger asChild>
-                                            <Info className="h-4 w-4 text-mauve-600 hover:text-mauve-800 cursor-pointer transition-colors" />
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-xs text-xs p-2">
-                                            {titleTooltip}
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            )}
-                        </div>
-                        {description && <p className="text-sm text-mauve-500 font-medium mt-1">{description}</p>}
-                    </div>
-                    {headerAction && (
-                        <div className="shrink-0 pt-0.5">
-                            {headerAction}
-                        </div>
-                    )}
                 </div>
             )}
 
@@ -87,24 +56,29 @@ export const ConfigTabSection = ({
             {profiles && (
                 <div className="w-full text-left mt-2">
                     {profilesTitle && (
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="flex items-center gap-1.5">
-                                <h4 className="text-md font-bold text-mauve-850">{profilesTitle}</h4>
-                                {profilesTitleTooltip && (
-                                    <TooltipProvider>
-                                        <Tooltip delayDuration={200}>
-                                            <TooltipTrigger asChild>
-                                                <Info className="h-3.5 w-3.5 text-mauve-600 hover:text-mauve-800 cursor-pointer transition-colors" />
-                                            </TooltipTrigger>
-                                            <TooltipContent className="max-w-xs text-xs p-2">
-                                                {profilesTitleTooltip}
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-1.5">
+                                    <h4 className="text-md font-bold text-mauve-850">{profilesTitle}</h4>
+                                    {profilesTitleTooltip && (
+                                        <TooltipProvider>
+                                            <Tooltip delayDuration={200}>
+                                                <TooltipTrigger asChild>
+                                                    <Info className="h-3.5 w-3.5 text-mauve-600 hover:text-mauve-800 cursor-pointer transition-colors" />
+                                                </TooltipTrigger>
+                                                <TooltipContent className="max-w-xs text-xs p-2">
+                                                    {profilesTitleTooltip}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    )}
+                                </div>
+                                {profilesDescription && (
+                                    <p className="text-xs text-mauve-500 font-medium mt-0.5">{profilesDescription}</p>
                                 )}
                             </div>
                             {profilesAction && (
-                                <div className="shrink-0">
+                                <div className="shrink-0 pt-0.5">
                                     {profilesAction}
                                 </div>
                             )}

@@ -1,7 +1,7 @@
 {
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "RAMS4_CHESSsss",
+  "systemName": "RAMS4_CHESS",
   "controllerHost": "10.0.0.1",
   "axisCount": 5,
   "taskCount": 5,

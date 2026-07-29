@@ -41,7 +41,7 @@ const removeNulls = (obj: any): any => {
     return obj;
 };
 
-const pruneConfigForSave = (config: any) => {
+export const pruneConfigForSave = (config: any) => {
     const cleanConfig = JSON.parse(JSON.stringify(config));
 
     // Prune handlerProfiles
@@ -53,7 +53,7 @@ const pruneConfigForSave = (config: any) => {
                 : (hp.mode === 'peak-valley' ? 'peakvalley' : 'pso');
             const sample = (cleanConfig.sampleName || '').trim();
             const exp = (cleanConfig.experimentNumber || '').trim();
-            const autoName = `${daqType}_${sample}_${exp}-${totalCount - idx}`;
+            const autoName = `${sample}_${daqType}_${exp}-${totalCount - idx}`;
             const resolvedName = (hp.filename && hp.filename.trim() !== '') ? hp.filename.trim() : autoName;
 
             const cleanHp: any = {
@@ -208,7 +208,6 @@ export const ConfigurationManager = () => {
     const [isManualPath, setIsManualPath] = useState(false);
     const [dontShowWarningAgain, setDontShowWarningAgain] = useState(false);
     const [showManualWarningModal, setShowManualWarningModal] = useState(false);
-    const [showSettingsFallbackModal, setShowSettingsFallbackModal] = useState(false);
     const { errors: validationErrors } = useValidationStore();
 
     // Baseline configuration state is read from global useConfigurationStore
@@ -380,12 +379,19 @@ export const ConfigurationManager = () => {
                     ]
                 };
 
+                // Determine expected version from config file
+                const expectedVersion = typeof fetched?.settingsVersion === 'number' ? fetched.settingsVersion : null;
+
                 // Fetch settings for the specific version attached to this experiment configuration
-                const settingsRes = await fetchSettingsFromGateway(dir, fetched?.settingsVersion);
+                const settingsRes = await fetchSettingsFromGateway(dir, expectedVersion);
 
                 let settingsToApply;
-                if (settingsRes) {
+                let loadedDiskVersion: number | null = null;
+
+                if (settingsRes && !settingsRes.isFallback) {
+                    // Exact expected settings file exists on disk
                     loadedSettingsRef.current = settingsRes.data;
+                    loadedDiskVersion = settingsRes.version;
                     settingsToApply = {
                         settingsVersion: settingsRes.version,
                         specHost: settingsRes.data.specHost || defaultSettings.specHost,
@@ -397,49 +403,59 @@ export const ConfigurationManager = () => {
                         axesSettings: settingsRes.data.axesSettings || defaultSettings.axesSettings,
                         signalSettings: settingsRes.data.signalSettings || defaultSettings.signalSettings
                     };
-
-                    // Check if a fallback happened due to a missing version file
-                    if (fetched && fetched.settingsVersion !== undefined && fetched.settingsVersion !== null && fetched.settingsVersion !== settingsRes.version) {
-                        useConfigurationStore.getState().setSettingsFallbackActive({
-                            expected: fetched.settingsVersion,
-                            loaded: settingsRes.version
-                        });
-                        setShowSettingsFallbackModal(true);
-                    } else {
-                        useConfigurationStore.getState().setSettingsFallbackActive(null);
-                    }
-                } else if (fetched && (fetched.specHost || fetched.axesSettings)) {
-                    // Backwards compatibility for legacy configurations containing inline settings
-                    settingsToApply = {
-                        settingsVersion: fetched.settingsVersion ?? 0,
-                        specHost: fetched.specHost || defaultSettings.specHost,
-                        requireSpecEnable: fetched.requireSpecEnable ?? defaultSettings.requireSpecEnable,
-                        systemName: fetched.systemName || defaultSettings.systemName,
-                        controllerHost: fetched.controllerHost || defaultSettings.controllerHost,
-                        axisCount: fetched.axisCount ?? defaultSettings.axisCount,
-                        taskCount: fetched.taskCount ?? defaultSettings.taskCount,
-                        axesSettings: fetched.axesSettings || defaultSettings.axesSettings,
-                        signalSettings: fetched.signalSettings || defaultSettings.signalSettings
-                    };
                     useConfigurationStore.getState().setSettingsFallbackActive(null);
                 } else {
-                    // If no settings exist on server disk, auto-create settings0.json and post immediately
-                    settingsToApply = { ...defaultSettings };
-                    try {
-                        const postRes = await postSettingsToGateway(dir, defaultSettings);
-                        if (postRes && postRes.version !== undefined) {
-                            settingsToApply.settingsVersion = postRes.version;
+                    // Requested settings file DOES NOT exist on disk!
+                    let fallbackData = defaultSettings;
+
+                    if (settingsRes && settingsRes.isFallback) {
+                        fallbackData = {
+                            specHost: settingsRes.data.specHost || defaultSettings.specHost,
+                            requireSpecEnable: settingsRes.data.requireSpecEnable ?? defaultSettings.requireSpecEnable,
+                            systemName: settingsRes.data.systemName || defaultSettings.systemName,
+                            controllerHost: settingsRes.data.controllerHost || defaultSettings.controllerHost,
+                            axisCount: settingsRes.data.axisCount ?? defaultSettings.axisCount,
+                            taskCount: settingsRes.data.taskCount ?? defaultSettings.taskCount,
+                            axesSettings: settingsRes.data.axesSettings || defaultSettings.axesSettings,
+                            signalSettings: settingsRes.data.signalSettings || defaultSettings.signalSettings
+                        };
+                        loadedDiskVersion = settingsRes.version;
+                    } else if (fetched && (fetched.specHost || fetched.axesSettings)) {
+                        fallbackData = {
+                            specHost: fetched.specHost || defaultSettings.specHost,
+                            requireSpecEnable: fetched.requireSpecEnable ?? defaultSettings.requireSpecEnable,
+                            systemName: fetched.systemName || defaultSettings.systemName,
+                            controllerHost: fetched.controllerHost || defaultSettings.controllerHost,
+                            axisCount: fetched.axisCount ?? defaultSettings.axisCount,
+                            taskCount: fetched.taskCount ?? defaultSettings.taskCount,
+                            axesSettings: fetched.axesSettings || defaultSettings.axesSettings,
+                            signalSettings: fetched.signalSettings || defaultSettings.signalSettings
+                        };
+                    } else {
+                        // Brand new path with no settings file on server disk. Auto-create default settings0.json (Rule 1)
+                        try {
+                            const postRes = await postSettingsToGateway(dir, defaultSettings, 0);
+                            if (postRes && postRes.version !== undefined) {
+                                loadedDiskVersion = postRes.version;
+                            }
+                        } catch (err) {
+                            console.warn("Failed to auto-create missing settings file on server", err);
                         }
-                    } catch (err) {
-                        console.warn("Failed to auto-create missing settings file on server", err);
                     }
 
-                    if (fetched && fetched.settingsVersion !== undefined && fetched.settingsVersion !== null && fetched.settingsVersion !== settingsToApply.settingsVersion) {
+                    const targetVersion = expectedVersion !== null ? expectedVersion : (loadedDiskVersion ?? 0);
+
+                    settingsToApply = {
+                        ...fallbackData,
+                        settingsVersion: targetVersion
+                    };
+                    loadedSettingsRef.current = fallbackData;
+
+                    if (expectedVersion !== null && expectedVersion !== loadedDiskVersion) {
                         useConfigurationStore.getState().setSettingsFallbackActive({
-                            expected: fetched.settingsVersion,
-                            loaded: settingsToApply.settingsVersion
+                            expected: expectedVersion,
+                            loaded: loadedDiskVersion ?? 'missing'
                         });
-                        setShowSettingsFallbackModal(true);
                     } else {
                         useConfigurationStore.getState().setSettingsFallbackActive(null);
                     }
@@ -449,9 +465,7 @@ export const ConfigurationManager = () => {
 
                 if (normalizedFetched) {
                     // Loaded existing JSON configuration
-                    const effectiveSettingsVersion = (settingsRes && !settingsRes.isFallback)
-                        ? (normalizedFetched.settingsVersion ?? settingsToApply.settingsVersion)
-                        : settingsToApply.settingsVersion;
+                    const effectiveSettingsVersion = settingsToApply.settingsVersion;
 
                     const mergedSaved = {
                         ...normalizedFetched,
@@ -880,24 +894,28 @@ export const ConfigurationManager = () => {
                 signalSettings: draft.signalSettings
             };
 
-            const diskSettings = loadedSettingsRef.current;
-            const isSettingsDirty = !diskSettings || !deepEqual(currentSettings, {
-                specHost: diskSettings.specHost,
-                requireSpecEnable: diskSettings.requireSpecEnable,
-                systemName: diskSettings.systemName,
-                controllerHost: diskSettings.controllerHost,
-                axisCount: diskSettings.axisCount,
-                taskCount: diskSettings.taskCount,
-                axesSettings: diskSettings.axesSettings,
-                signalSettings: diskSettings.signalSettings
-            });
+            const savedState = useConfigurationStore.getState().savedConfig;
+            const diskSettings = savedState && (savedState.specHost || savedState.axesSettings) ? {
+                specHost: savedState.specHost,
+                requireSpecEnable: savedState.requireSpecEnable,
+                systemName: savedState.systemName,
+                controllerHost: savedState.controllerHost,
+                axisCount: savedState.axisCount,
+                taskCount: savedState.taskCount,
+                axesSettings: savedState.axesSettings,
+                signalSettings: savedState.signalSettings
+            } : loadedSettingsRef.current;
+
+            const activeFallback = useConfigurationStore.getState().settingsFallbackActive;
+            const targetOverride = activeFallback ? activeFallback.expected : undefined;
+            const isSettingsDirty = !!activeFallback || !diskSettings || !deepEqual(currentSettings, diskSettings);
 
             if (isSettingsDirty) {
                 const settingsPayload = {
                     ...currentSettings,
-                    settingsVersion: currentSettingsVersion
+                    settingsVersion: targetOverride ?? currentSettingsVersion
                 };
-                const settingsRes = await postSettingsToGateway(draft.configDirectory, settingsPayload);
+                const settingsRes = await postSettingsToGateway(draft.configDirectory, settingsPayload, targetOverride);
                 if (settingsRes && settingsRes.version !== undefined) {
                     currentSettingsVersion = settingsRes.version;
                     loadedSettingsRef.current = currentSettings;
@@ -1178,23 +1196,7 @@ export const ConfigurationManager = () => {
                 onCancel={handleCancelDiscard}
             />
 
-            {/* Settings Version Mismatch Warning Dialog */}
-            <WarningModal
-                isOpen={showSettingsFallbackModal && !!settingsFallbackActive}
-                title="Settings Version Mismatch"
-                description={
-                    settingsFallbackActive
-                        ? `This configuration specifies settings version ${settingsFallbackActive.expected}, but settings${settingsFallbackActive.expected}.json was not found on disk. Loaded settings version ${settingsFallbackActive.loaded} instead.`
-                        : ""
-                }
-                confirmText="Open Settings"
-                cancelText="Dismiss"
-                onConfirm={() => {
-                    setShowSettingsFallbackModal(false);
-                    setIsSettingsOpen(true);
-                }}
-                onCancel={() => setShowSettingsFallbackModal(false)}
-            />
+
 
             {/* Advanced Manual Path Warning Dialog */}
             <WarningModal

@@ -66,6 +66,21 @@ runTest('DAQ: Cycle range start, stop, and step bounds', () => {
 });
 
 // Handler Profile Mode-Specific Validations
+runTest('DAQ Handler: Filename is optional', () => {
+    const optionalFilenameProfile = {
+        mode: "time-series",
+        filename: "", // Optional empty string
+        verboseAxis: "1",
+        verboseSystem: 1,
+        verboseTask: "1",
+        verboseIO: 1,
+        verboseAi: [],
+        frequency: 100
+    };
+    const result = handlerProfileSchema.safeParse(optionalFilenameProfile);
+    assert.strictEqual(result.success, true, "Time-series profile with empty filename should pass validation");
+});
+
 runTest('DAQ Handler: Time-series mode requires frequency', () => {
     const missingFreqTimeSeries = {
         mode: "time-series",

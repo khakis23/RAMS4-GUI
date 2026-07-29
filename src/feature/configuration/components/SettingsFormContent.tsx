@@ -2,21 +2,21 @@ import { useEffect, useRef } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from "../../components/ui/button.tsx";
-import { Input } from "../../components/ui/input.tsx";
-import { Switch } from "../../components/ui/switch.tsx";
-import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
-import { FieldLabel } from "../../components/ui/FieldLabel.tsx";
+import { Button } from "../../../components/ui/button.tsx";
+import { Input } from "../../../components/ui/input.tsx";
+import { Switch } from "../../../components/ui/switch.tsx";
+import { FieldLabel } from "../../../components/ui/FieldLabel.tsx";
 import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
-import { compileZodErrors } from "./utils/validationUtils.ts";
-import { settingsSchema } from "./profileSchemas/settingsSchema.ts";
-import { SettingsAxisCard } from "./components/SettingsAxisCard.tsx";
-import { SettingsSignalCard } from "./components/SettingsSignalCard.tsx";
-import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
+import { compileZodErrors } from "../utils/validationUtils.ts";
+import { settingsSchema } from "../profileSchemas/settingsSchema.ts";
+import { SettingsAxisCard } from "./SettingsAxisCard.tsx";
+import { SettingsSignalCard } from "./SettingsSignalCard.tsx";
+import { useFormAutoSave } from "../hooks/useFormAutoSave.ts";
 import { tooltips } from "@/config/tooltips.ts";
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip.tsx";
 
-export const TabSettings = () => {
+export const SettingsFormContent = () => {
     const { draft, updateDraft, lastLoadedPath, settingsFallbackActive, setSettingsFallbackActive } = useConfigurationStore();
     const loadedPathRef = useRef<string>("");
 
@@ -137,6 +137,7 @@ export const TabSettings = () => {
 
     return (
         <div className="flex flex-col gap-6 w-full text-left">
+            {/* Fallback Warning Banner */}
             {settingsFallbackActive && (
                 <div className="flex px-4 items-center justify-between p-3 bg-amber-500/10 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-700/60 rounded-lg text-amber-900 dark:text-amber-200 text-xs font-semibold shrink-0 shadow-sm">
                     <div>
@@ -153,82 +154,13 @@ export const TabSettings = () => {
                 </div>
             )}
 
-            <ConfigTabSection
-                title="System Settings"
-                profilesTitle="Axes & Calibrations"
-                profilesTitleTooltip="Define controller boundaries and calibration matrices."
-                profiles={
-                    <div className="w-full space-y-8">
-                        {/* Axis limits Mini Section */}
-                        <div className="flex flex-col gap-4">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-sm text-mauve-850">Axis Parameters</span>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white"
-                                    onClick={() => appendAxis({ name: "", max_velocity: 10, max_acceleration: 20 })}
-                                >
-                                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Axis
-                                </Button>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                {axesFields.map((field, idx) => {
-                                    const takenNames = (watchedValues.axesSettings || [])
-                                        .map((a: any) => a?.name)
-                                        .filter((name: string, i: number) => !!name && i !== idx);
-                                    return (
-                                        <SettingsAxisCard
-                                            key={field.id}
-                                            index={idx}
-                                            control={control as any}
-                                            register={register}
-                                            errors={errors}
-                                            remove={removeAxis}
-                                            showRemove={axesFields.length > 1}
-                                            takenNames={takenNames}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        </div>
+            {/* Title Header */}
+            <div className="flex flex-col">
+                <h2 className="text-lg font-bold text-mauve-850">System Settings</h2>
+            </div>
 
-                        {/* Input Calibration Signal Mini Section */}
-                        <div className="flex flex-col gap-4 border-t border-mauve-150 pt-6">
-                            <div className="flex justify-between items-center">
-                                <span className="font-bold text-sm text-mauve-850">Input Signals</span>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white"
-                                    onClick={() => appendSignal({ name: "", slope: 1.0, intercept: 0.0, channel: 0 })}
-                                >
-                                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Signal
-                                </Button>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                {signalsFields.map((field, idx) => {
-                                    const takenSignalNames = (watchedValues.signalSettings || [])
-                                        .map((s: any) => s?.name)
-                                        .filter((name: string, i: number) => !!name && i !== idx);
-                                    return (
-                                        <SettingsSignalCard 
-                                            key={field.id}
-                                            index={idx}
-                                            control={control as any}
-                                            register={register}
-                                            errors={errors}
-                                            remove={removeSignal}
-                                            showRemove={signalsFields.length > 1}
-                                            takenNames={takenSignalNames}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                }
-            >
+            {/* Core System Settings Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6 text-left">
                 {/* SPEC configurations card (Column 1) */}
                 <div className="flex flex-col gap-6 w-full">
                     <div className="flex flex-col gap-2">
@@ -318,8 +250,99 @@ export const TabSettings = () => {
                         </div>
                     </div>
                 </div>
-            </ConfigTabSection>
+            </div>
+
+            {/* Axes & Calibrations Section */}
+            <div className="w-full text-left mt-2">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5">
+                            <h4 className="text-md font-bold text-mauve-850">Axes & Calibrations</h4>
+                            <TooltipProvider>
+                                <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                        <Info className="h-3.5 w-3.5 text-mauve-600 hover:text-mauve-800 cursor-pointer transition-colors" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs text-xs p-2">
+                                        Define controller boundaries and calibration matrices.
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                        <p className="text-xs text-mauve-500 font-medium mt-0.5">Define controller boundaries and calibration matrices.</p>
+                    </div>
+                </div>
+
+                <div className="w-full space-y-8">
+                    {/* Axis limits Mini Section */}
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm text-mauve-850">Axis Parameters</span>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white"
+                                onClick={() => appendAxis({ name: "", max_velocity: 10, max_acceleration: 20 })}
+                            >
+                                <Plus className="h-3.5 w-3.5 mr-1" /> Add Axis
+                            </Button>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            {axesFields.map((field, idx) => {
+                                const takenNames = (watchedValues.axesSettings || [])
+                                    .map((a: any) => a?.name)
+                                    .filter((name: string, i: number) => !!name && i !== idx);
+                                return (
+                                    <SettingsAxisCard
+                                        key={field.id}
+                                        index={idx}
+                                        control={control as any}
+                                        register={register}
+                                        errors={errors}
+                                        remove={removeAxis}
+                                        showRemove={axesFields.length > 1}
+                                        takenNames={takenNames}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Input Calibration Signal Mini Section */}
+                    <div className="flex flex-col gap-4 border-t border-mauve-150 pt-6">
+                        <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm text-mauve-850">Input Signals</span>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white"
+                                onClick={() => appendSignal({ name: "", slope: 1.0, intercept: 0.0, channel: 0 })}
+                            >
+                                <Plus className="h-3.5 w-3.5 mr-1" /> Add Signal
+                            </Button>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            {signalsFields.map((field, idx) => {
+                                const takenSignalNames = (watchedValues.signalSettings || [])
+                                    .map((s: any) => s?.name)
+                                    .filter((name: string, i: number) => !!name && i !== idx);
+                                return (
+                                    <SettingsSignalCard 
+                                        key={field.id}
+                                        index={idx}
+                                        control={control as any}
+                                        register={register}
+                                        errors={errors}
+                                        remove={removeSignal}
+                                        showRemove={signalsFields.length > 1}
+                                        takenNames={takenSignalNames}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
-

@@ -88,13 +88,6 @@ export const xrayProfileSchema = z.object({
         if (data.ome === undefined || data.ome === null) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference Angle is required.", path: ["ome"] });
         }
-        if (!data.mapscanAxes || data.mapscanAxes.length === 0) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Mapscan profile must contain at least one axis.",
-                path: ["mapscanAxes"]
-            });
-        }
     } else if (data.mode === 'rotation-series') {
         if (data.ramsx === undefined || data.ramsx === null) {
             ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Reference X is required.", path: ["ramsx"] });

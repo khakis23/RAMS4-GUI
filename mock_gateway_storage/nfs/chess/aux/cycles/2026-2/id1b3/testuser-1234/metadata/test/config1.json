@@ -16,7 +16,18 @@
   "handlerProfiles": [
     {
       "mode": "time-series",
-      "filename": "",
+      "filename": "test_timeseries_1-2",
+      "verboseAxis": "-1",
+      "verboseSystem": -1,
+      "verboseTask": "-1",
+      "verboseIO": -1,
+      "verboseAi": [],
+      "frequency": 1000,
+      "cycles": []
+    },
+    {
+      "mode": "time-series",
+      "filename": "test_timeseries_1-1",
       "verboseAxis": "-1",
       "verboseSystem": -1,
       "verboseTask": "-1",
@@ -26,12 +37,25 @@
       "cycles": []
     }
   ],
-  "xrayProfiles": [],
+  "xrayProfiles": [
+    {
+      "id": "xrayProfile1785342434516",
+      "name": "test",
+      "mode": "mapscan",
+      "ctime": 11,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "ramsx": 1,
+      "ramsz": 1,
+      "ome": 1
+    }
+  ],
   "dicEnabled": false,
-  "settingsVersion": 0,
+  "settingsVersion": 2,
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "RAMS4_CHESSsss",
+  "systemName": "Version2Settings",
   "controllerHost": "10.0.0.1",
   "axisCount": 5,
   "taskCount": 5,

@@ -109,6 +109,24 @@ runTest('Mapscan: Valid 2-axis grid mesh mapscan profile', () => {
     assert.strictEqual(result.success, true, "Mapscan with 2 moving axes should be valid");
 });
 
+runTest('Mapscan: Valid 0-axis mapscan profile', () => {
+    const zeroAxisMapscan = {
+        id: "xray-4b",
+        name: "0D Mapscan",
+        mode: "mapscan",
+        ctime: 0.5,
+        atten: 0,
+        beamHeight: 1.0,
+        beamWidth: 1.0,
+        ramsx: 0,
+        ramsz: 0,
+        ome: 0,
+        mapscanAxes: []
+    };
+    const result = xrayProfileSchema.safeParse(zeroAxisMapscan);
+    assert.strictEqual(result.success, true, "Mapscan with 0 moving axes should be valid");
+});
+
 runTest('Mapscan: Invalid mapscan profile with 3 moving axes (must fail hard limit of 2)', () => {
     const invalid3AxisMapscan = {
         id: "xray-5",

@@ -96,31 +96,34 @@ export const TabDIC = () => {
     };
 
     return (
-        <ConfigTabSection
-            title="DIC Configuration"
-            description="Configure parameters for Digital Image Correlation (DIC)."
-            headerAction={
-                dicEnabled ? (
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleDisableDic}
-                        className="h-8 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-300 text-mauve-800 hover:text-destructive hover:border-destructive hover:bg-destructive/10 cursor-pointer transition-colors shadow-sm"
-                    >
-                        Disable DIC
-                    </Button>
-                ) : (
-                    <Button
-                        type="button"
-                        onClick={() => setValue('dicEnabled', true)}
-                        className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
-                    >
-                        Enable DIC
-                    </Button>
-                )
-            }
-        >
+        <ConfigTabSection>
             <div className="col-span-2 w-full">
+                <div className="flex justify-between items-start text-left w-full mb-4">
+                    <div className="flex flex-col">
+                        <h3 className="text-md font-bold text-mauve-850">DIC Configuration</h3>
+                        <p className="text-xs text-mauve-500 font-medium mt-0.5">Configure parameters for Digital Image Correlation (DIC).</p>
+                    </div>
+                    <div className="shrink-0 pt-0.5">
+                        {dicEnabled ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleDisableDic}
+                                className="h-8 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-300 text-mauve-800 hover:text-destructive hover:border-destructive hover:bg-destructive/10 cursor-pointer transition-colors shadow-sm"
+                            >
+                                Disable DIC
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
+                                onClick={() => setValue('dicEnabled', true)}
+                                className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
+                            >
+                                Enable DIC
+                            </Button>
+                        )}
+                    </div>
+                </div>
                 {!dicEnabled ? (
                     <div className="flex flex-col items-center justify-center min-h-[120px] border border-mauve-200 rounded-lg p-6 text-center bg-white">
                         <p className="text-sm text-mauve-500 whitespace-pre-line">

@@ -38,6 +38,21 @@ Numeric fields limits are centrally located at `src/config/parameterLimits.ts`. 
 
 ## User Feedback — TODO
 
+### Essential Existing Features
+
+#### Manual Path Configuration
+TODO
+
+#### Sequence Grouping & Looping
+TODO
+
+#### Custom Sequence Step
+TODO
+
+#### Sequence Builder Workflow
+TODO
+
+
 ### Future Features & User Wishlist
 
 #### Test Sequence Visual Verification
@@ -46,9 +61,10 @@ A viewable plot or visualization displaying the steps of the entire test sequenc
 - more user friendly
 - requested by several users
 
+#### Status Bar
+TODO
 
-### Essential Existing Features
-
+#### Streamline Settings for Advanced Users
 TODO
 
 

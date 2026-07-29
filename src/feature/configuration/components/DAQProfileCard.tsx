@@ -244,7 +244,7 @@ export const DAQProfileCard = ({
                     name={`handlersProfile.${index}.mode`}
                     render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger className="h-7 text-xs font-semibold rounded-lg border-mauve-200 focus:ring-mauve-300 bg-white shadow-sm w-full">
+                            <SelectTrigger className="h-7 text-xs font-semibold rounded-lg border-mauve-200 focus:ring-mauve-300 bg-white shadow-sm">
                                 <SelectValue placeholder="Select scan mode" />
                             </SelectTrigger>
                             <SelectContent className="bg-white">
@@ -265,7 +265,7 @@ export const DAQProfileCard = ({
                             <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={false} />
                             <Input 
                                 placeholder="Optional"
-                                className="h-8 bg-white border-mauve-250 focus-visible:ring-mauve-300"
+                                className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300"
                                 {...register(`handlersProfile.${index}.filename`)}
                             />
                         </div>
@@ -273,7 +273,7 @@ export const DAQProfileCard = ({
                             <FieldLabel text="Frequency (Hz)" tooltip={tooltips.daqProfileFrequency} required={true} />
                             <Input 
                                 type="number" 
-                                className={`h-8 bg-white border-mauve-250 ${profileErrors?.frequency ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                className={`h-8 text-xs bg-input/50 border-transparent ${profileErrors?.frequency ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                 {...register(`handlersProfile.${index}.frequency`, { valueAsNumber: true })} 
                             />
                             {profileErrors?.frequency && (
@@ -300,7 +300,7 @@ export const DAQProfileCard = ({
                             <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={false} />
                             <Input 
                                 placeholder="Optional"
-                                className="h-8 bg-white border-mauve-250 focus-visible:ring-mauve-300"
+                                className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300"
                                 {...register(`handlersProfile.${index}.filename`)}
                             />
                         </div>
@@ -314,7 +314,7 @@ export const DAQProfileCard = ({
                                     const selectValue = (field.value && axesOptions.includes(field.value)) ? field.value : undefined;
                                     return (
                                         <Select onValueChange={field.onChange} value={selectValue}>
-                                            <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                            <SelectTrigger className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300 w-full">
                                                 <SelectValue placeholder="Select axis" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white">
@@ -341,7 +341,7 @@ export const DAQProfileCard = ({
                                         onValueChange={field.onChange} 
                                         value={normalizedSignalItem}
                                     >
-                                        <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                        <SelectTrigger className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300 w-full">
                                             <SelectValue placeholder="Select signal" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-white">
@@ -362,7 +362,7 @@ export const DAQProfileCard = ({
                             <Input 
                                 type="number" 
                                 step="any"
-                                className={`h-8 bg-white border-mauve-250 ${profileErrors?.signalProminence ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                                className={`h-8 text-xs bg-input/50 border-transparent ${profileErrors?.signalProminence ? "border-destructive focus-visible:ring-destructive" : ""}`}
                                 {...register(`handlersProfile.${index}.signalProminence`, { valueAsNumber: true })} 
                             />
                             {profileErrors?.signalProminence && (
@@ -381,7 +381,7 @@ export const DAQProfileCard = ({
                             <FieldLabel text="File Name" tooltip={tooltips.daqProfileFilename} required={false} />
                             <Input 
                                 placeholder="Optional"
-                                className="h-8 bg-white border-mauve-250 focus-visible:ring-mauve-300"
+                                className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300"
                                 {...register(`handlersProfile.${index}.filename`)}
                             />
                         </div>
@@ -395,7 +395,7 @@ export const DAQProfileCard = ({
                                     const selectValue = (field.value && axesOptions.includes(field.value)) ? field.value : undefined;
                                     return (
                                         <Select onValueChange={field.onChange} value={selectValue}>
-                                            <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                            <SelectTrigger className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300 w-full">
                                                 <SelectValue placeholder="Select axis" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white">
@@ -432,7 +432,7 @@ export const DAQProfileCard = ({
                                         name={`handlersProfile.${index}.verboseAxis`}
                                         render={({ field: axisField }) => (
                                             <Select onValueChange={axisField.onChange} value={axisField.value}>
-                                                <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                <SelectTrigger className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300 w-full">
                                                     <SelectValue placeholder="Select level" />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-white">
@@ -453,7 +453,7 @@ export const DAQProfileCard = ({
                                         name={`handlersProfile.${index}.verboseTask`}
                                         render={({ field: taskField }) => (
                                             <Select onValueChange={taskField.onChange} value={taskField.value}>
-                                                <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                <SelectTrigger className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300 w-full">
                                                     <SelectValue placeholder="Select level" />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-white">
@@ -477,7 +477,7 @@ export const DAQProfileCard = ({
                                                 onValueChange={(val) => systemField.onChange(Number(val))} 
                                                 value={systemField.value !== undefined ? String(systemField.value) : undefined}
                                             >
-                                                <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                <SelectTrigger className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300 w-full">
                                                     <SelectValue placeholder="Select level" />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-white">
@@ -501,7 +501,7 @@ export const DAQProfileCard = ({
                                                 onValueChange={(val) => ioField.onChange(Number(val))} 
                                                 value={ioField.value !== undefined ? String(ioField.value) : undefined}
                                             >
-                                                <SelectTrigger className="w-full h-8 bg-white border-mauve-200">
+                                                <SelectTrigger className="h-8 text-xs bg-input/50 border-transparent focus-visible:ring-mauve-300 w-full">
                                                     <SelectValue placeholder="Select level" />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-white">

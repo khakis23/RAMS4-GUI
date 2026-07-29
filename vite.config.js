@@ -240,7 +240,10 @@ const mockGatewayPlugin = () => {
                             }
 
                             const cleanPath = queryPath.replace(/^\//, '');
-                            const targetFile = path.join(mockStorageRoot, cleanPath);
+                            let targetFile = path.join(mockStorageRoot, cleanPath);
+                            if (!fs.existsSync(targetFile) && !cleanPath.endsWith('.json')) {
+                                targetFile = targetFile + '.json';
+                            }
 
                             if (fs.existsSync(targetFile)) {
                                 try {
@@ -265,7 +268,7 @@ const mockGatewayPlugin = () => {
                                     let dataToWrite;
 
                                     if (payload.customFilePath && payload.customFilePath.endsWith('settings_auto_increment')) {
-                                        // TEMPORARY MOCK GATEWAY AUTO-INCREMENTING FILE SAVE (TO BE IMPLEMENTED IN PYTHON BACKEND)
+                                        // MOCK GATEWAY AUTO-INCREMENTING FILE SAVE
                                         const cleanDirPath = payload.customFilePath.replace('settings_auto_increment', '').replace(/^\//, '');
                                         const settingsDir = path.join(mockStorageRoot, cleanDirPath);
                                         fs.mkdirSync(settingsDir, { recursive: true });
@@ -277,7 +280,7 @@ const mockGatewayPlugin = () => {
                                                 return m ? parseInt(m[1], 10) : -1;
                                             })
                                             .filter(n => n >= 0);
-                                        const nextVer = numbers.length > 0 ? Math.max(...numbers) + 1 : 0;
+                                        const nextVer = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
 
                                         targetFile = path.join(settingsDir, `settings${nextVer}.json`);
                                         dataToWrite = payload.data;
@@ -285,7 +288,7 @@ const mockGatewayPlugin = () => {
                                         fs.writeFileSync(targetFile, JSON.stringify(dataToWrite, null, 2), 'utf8');
 
                                         res.setHeader('Content-Type', 'application/json');
-                                        res.end(JSON.stringify({ success: true, version: nextVer, savedPath: targetFile }));
+                                        res.end(JSON.stringify({ version: nextVer }));
                                         return;
                                     }
 
@@ -308,8 +311,13 @@ const mockGatewayPlugin = () => {
                                     fs.mkdirSync(path.dirname(targetFile), { recursive: true });
                                     fs.writeFileSync(targetFile, JSON.stringify(dataToWrite, null, 2), 'utf8');
 
+                                    const settingsMatch = queryPath && queryPath.match(/settings(\d+)(?:\.json)?$/);
                                     res.setHeader('Content-Type', 'application/json');
-                                    res.end(JSON.stringify({ success: true, savedPath: targetFile }));
+                                    if (settingsMatch) {
+                                        res.end(JSON.stringify({ version: parseInt(settingsMatch[1], 10) }));
+                                    } else {
+                                        res.end(JSON.stringify({}));
+                                    }
                                 } catch (err) {
                                     res.statusCode = 500;
                                     res.end(JSON.stringify({ error: 'Failed to write file' }));

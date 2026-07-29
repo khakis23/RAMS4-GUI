@@ -137,7 +137,7 @@ export const TabXray = () => {
         <ConfigTabSection
             profilesTitle="X-ray Profiles"
             profilesDescription="Configure parameters for X-ray scan sweeps, layers, and grids."
-            headerAction={
+            profilesAction={
                 <Button 
                     type="button" 
                     onClick={handleAddProfile}
