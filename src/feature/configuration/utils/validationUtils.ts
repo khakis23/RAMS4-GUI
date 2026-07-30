@@ -51,7 +51,7 @@ const formatErrorPath = (path: string[]): string => {
     for (let i = 0; i < path.length; i++) {
         const part = path[i];
 
-        if ((part === 'handlersProfile' || part === 'xrayProfiles') && i + 1 < path.length) {
+        if ((part === 'handlersProfile' || part === 'xrayProfiles' || part === 'dicProfiles') && i + 1 < path.length) {
             const index = Number(path[i + 1]);
             if (!isNaN(index)) {
                 parts.push(`Profile #${index + 1}`);

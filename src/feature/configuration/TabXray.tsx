@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from "../../components/ui/button.tsx";
-import { ConfigTabSection } from "./components/ConfigTabSection.tsx";
-import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore.ts";
-import { compileZodErrors } from "./utils/validationUtils.ts";
-import { xrayFormSchema } from "./profileSchemas/xraySchema.ts";
-import { XrayProfileCard } from "./components/XrayProfileCard.tsx";
-import { useFormAutoSave } from "./hooks/useFormAutoSave.ts";
-import { tooltips } from "@/config/tooltips.ts";
+import { z } from 'zod';
+import { Button } from "../../components/ui/button";
+import { ConfigTabSection } from "./components/ConfigTabSection";
+import { useConfigurationStore, useValidationStore } from "@/store/useConfigurationStore";
+import { compileZodErrors } from "./utils/validationUtils";
+import { xrayFormSchema } from "./profileSchemas/xraySchema";
+import { XrayProfileCard } from "./components/XrayProfileCard";
+import { useFormAutoSave } from "./hooks/useFormAutoSave";
 import { Plus } from 'lucide-react';
 
 export const TabXray = () => {
@@ -21,7 +21,7 @@ export const TabXray = () => {
         watch,
         reset,
         formState: { errors }
-    } = useForm<any>({
+    } = useForm<z.infer<typeof xrayFormSchema>>({
         resolver: zodResolver(xrayFormSchema),
         mode: "onChange",
         defaultValues: {
@@ -65,7 +65,7 @@ export const TabXray = () => {
                 })),
             });
         }
-    }, [lastLoadedPath, reset, draft]);
+    }, [lastLoadedPath, reset, draft.xrayProfiles]);
 
     const {
         fields,
@@ -135,7 +135,7 @@ export const TabXray = () => {
 
     return (
         <ConfigTabSection
-            profilesTitle="X-ray Profiles"
+            profilesTitle="X-ray Scan Profiles"
             profilesDescription="Configure parameters for X-ray scan sweeps, layers, and grids."
             profilesAction={
                 <Button 

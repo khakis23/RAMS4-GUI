@@ -121,7 +121,8 @@ export const MechTestCardItem = ({
 
             // Take Part
             const xrayProfiles = draft?.xrayProfiles || [];
-            const profile = xrayProfiles.find((p: any) => p.id === takeProfileID);
+            const dicProfiles = draft?.dicProfiles || [];
+            const profile = xrayProfiles.find((p: any) => p.id === takeProfileID) || dicProfiles.find((p: any) => p.id === takeProfileID);
             const takeContent = profile ? (profile.name || 'Unnamed') : 'Unconfigured';
 
             // Step Part
@@ -140,7 +141,10 @@ export const MechTestCardItem = ({
             );
         } else {
             const xrayProfiles = draft?.xrayProfiles || [];
-            const profile = xrayProfiles.find((p: any) => p.id === profileID);
+            const dicProfiles = draft?.dicProfiles || [];
+            const isXrayProfile = xrayProfiles.some((p: any) => p.id === profileID);
+            const isDicProfile = dicProfiles.some((p: any) => p.id === profileID);
+            const profile = xrayProfiles.find((p: any) => p.id === profileID) || dicProfiles.find((p: any) => p.id === profileID);
             if (!profile) return 'Unconfigured Step';
 
             const getProfileModeName = (m: string) => {
@@ -161,14 +165,13 @@ export const MechTestCardItem = ({
                     case 'nf': return 'Near-Field';
                     case 'tomo': return 'Tomography';
                     case 'single-layer': return 'Single Layer';
-                    case 'dic': return 'DIC';
                     default: return im || '';
                 }
             };
 
             const profileName = profile.name || 'Unnamed Profile';
-            const profileModeName = getProfileModeName(profile.mode);
-            const showImageMode = profile.mode === 'rotation-series' || profile.mode === 'stills';
+            const profileModeName = isDicProfile ? 'DIC Stills' : getProfileModeName(profile.mode);
+            const showImageMode = isXrayProfile && (profile.mode === 'rotation-series' || profile.mode === 'stills');
             const imgModeLabel = (showImageMode && imgMode) ? `, ${getImgModeLabel(imgMode)}` : '';
 
             return `${profileName} (${profileModeName})${imgModeLabel}`;

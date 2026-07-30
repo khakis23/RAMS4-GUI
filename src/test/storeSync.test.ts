@@ -44,19 +44,14 @@ runTest('Store: isDirty evaluates to true when draft diverges from savedConfig',
         requiredAxes: ["A", "B"],
         handlerProfiles: [],
         xrayProfiles: [],
-        dicEnabled: false,
-        dicX: null,
-        dicZ: null,
-        dicAngle: null,
-        dicExposureTime: null,
-        dicStepSize: null,
+        dicProfiles: [],
         settingsVersion: 0
     };
 
-    store.setSavedConfig(baselineConfig);
+    store.setSavedConfig(baselineConfig as any);
     store.updateDraft(baselineConfig);
 
-    const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'dicEnabled', 'dicX', 'dicZ', 'dicAngle', 'dicExposureTime', 'dicStepSize', 'settingsVersion'] as const;
+    const keys = ['daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'dicProfiles', 'settingsVersion'] as const;
     
     // Baseline state is clean (not dirty)
     let isDirty = keys.some(key => !deepEqual(useConfigurationStore.getState().draft[key], useConfigurationStore.getState().savedConfig![key]));
@@ -68,9 +63,9 @@ runTest('Store: isDirty evaluates to true when draft diverges from savedConfig',
     assert.strictEqual(isDirty, true, "Divergent draft daqFrequency must evaluate to isDirty = true");
 
     // Reset draft and test DIC field modification
-    store.updateDraft({ daqFrequency: 1000, dicEnabled: true, dicX: 10 });
+    store.updateDraft({ daqFrequency: 1000, dicProfiles: [{ id: "dic-1", name: "DIC Profile", mode: "stills", ctime: 1.0, stillPoints: [] }] });
     isDirty = keys.some(key => !deepEqual(useConfigurationStore.getState().draft[key], useConfigurationStore.getState().savedConfig![key]));
-    assert.strictEqual(isDirty, true, "Enabling DIC and editing DIC X must evaluate to isDirty = true");
+    assert.strictEqual(isDirty, true, "Adding DIC profile must evaluate to isDirty = true");
 });
 
 // Settings Fallback Flag Integration Tests

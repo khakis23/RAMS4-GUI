@@ -65,12 +65,17 @@ const runTest = (name: string, fn: () => void | Promise<void>) => {
                 }
             ],
             xrayProfiles: [],
-            dicEnabled: true,
-            dicX: 10.5,
-            dicZ: -5.0,
-            dicAngle: 45.0,
-            dicExposureTime: 0.5,
-            dicStepSize: 0.1
+            dicProfiles: [
+                {
+                    id: "dic-1",
+                    name: "DIC Stills Profile",
+                    mode: "stills",
+                    ctime: 0.5,
+                    stillPoints: [
+                        { ramsx: 10.5, ramsz: -5.0, ome: 45.0, numPoints: 1 }
+                    ]
+                }
+            ]
         };
 
         const payload = compileToBackendPayload(mockStoreConfig);
@@ -82,18 +87,21 @@ const runTest = (name: string, fn: () => void | Promise<void>) => {
         assert.strictEqual(payload.sample_pts, 5000, "Sample points must map to payload.sample_pts");
         assert.strictEqual(payload.handlers.length, 1, "Handler profiles length must match");
         assert.deepStrictEqual(payload.handlers[0].verbose.axis, [1, 0], "Verbose axis string '1,0' must parse to array [1, 0]");
-        assert.deepStrictEqual(payload.dic, {
-            enabled: true,
-            x: 10.5,
-            z: -5.0,
-            angle: 45.0,
-            exposure_time: 0.5,
-            step_size: 0.1
-        }, "DIC payload must match enabled DIC configuration");
+        assert.deepStrictEqual(payload.dicProfiles, [
+            {
+                id: "dic-1",
+                name: "DIC Stills Profile",
+                mode: "stills",
+                ctime: 0.5,
+                stillPoints: [
+                    { ramsx: 10.5, ramsz: -5.0, ome: 45.0, numPoints: 1 }
+                ]
+            }
+        ], "DIC profiles payload must match configured DIC profiles");
     });
 
-    await runTest('Serialization: compileToBackendPayload formats disabled DIC state correctly', () => {
-        const mockDisabledDicConfig: any = {
+    await runTest('Serialization: compileToBackendPayload formats empty DIC profiles state correctly', () => {
+        const mockEmptyDicConfig: any = {
             cycleNumber: "2026-2",
             sampleName: "titanium_specimen_02",
             requiredAxes: ["A"],
@@ -101,23 +109,11 @@ const runTest = (name: string, fn: () => void | Promise<void>) => {
             samplePoints: 1000,
             handlerProfiles: [],
             xrayProfiles: [],
-            dicEnabled: false,
-            dicX: null,
-            dicZ: null,
-            dicAngle: null,
-            dicExposureTime: null,
-            dicStepSize: null
+            dicProfiles: []
         };
 
-        const payload = compileToBackendPayload(mockDisabledDicConfig);
-        assert.deepStrictEqual(payload.dic, {
-            enabled: false,
-            x: null,
-            z: null,
-            angle: null,
-            exposure_time: null,
-            step_size: null
-        }, "Disabled DIC must format payload with enabled: false and null values");
+        const payload = compileToBackendPayload(mockEmptyDicConfig);
+        assert.deepStrictEqual(payload.dicProfiles, [], "Empty DIC profiles must format payload with empty dicProfiles array");
     });
 
     // Missing Settings (404) Detection Tests

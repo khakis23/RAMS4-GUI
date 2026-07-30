@@ -394,43 +394,61 @@ runTest('Group: Triple nested group (depth 3) must exceed nesting limit and fail
 });
 
 // DIC Tab Validation Tests
-runTest('DIC: Disabled state with null parameters is valid', () => {
-    const disabledDic = {
-        dicEnabled: false,
-        dicX: null,
-        dicZ: null,
-        dicAngle: null,
-        dicExposureTime: null,
-        dicStepSize: null
+runTest('DIC: Valid DIC Stills profile with point list coordinates', () => {
+    const validDicForm = {
+        dicProfiles: [
+            {
+                id: "dic-1",
+                name: "Optical Strain Scan",
+                mode: "stills",
+                ctime: 1.0,
+                stillPoints: [
+                    {
+                        ramsx: 10.5,
+                        ramsz: 20.0,
+                        ome: 0,
+                        numPoints: 1
+                    }
+                ]
+            }
+        ]
     };
-    const result = dicFormSchema.safeParse(disabledDic);
-    assert.strictEqual(result.success, true, "Disabled DIC should be valid with null fields");
+    const result = dicFormSchema.safeParse(validDicForm);
+    assert.strictEqual(result.success, true, "DIC form with valid profile should pass validation");
 });
 
-runTest('DIC: Enabled state with required X, Z, Angle and optional blank fields is valid', () => {
-    const enabledValidDic = {
-        dicEnabled: true,
-        dicX: 12.5,
-        dicZ: 3.0,
-        dicAngle: 90,
-        dicExposureTime: null,
-        dicStepSize: null
+runTest('DIC: Invalid DIC Stills profile with zero points (must fail completeness validation)', () => {
+    const invalidDicForm = {
+        dicProfiles: [
+            {
+                id: "dic-2",
+                name: "Empty DIC Stills",
+                mode: "stills",
+                ctime: 1.0,
+                stillPoints: []
+            }
+        ]
     };
-    const result = dicFormSchema.safeParse(enabledValidDic);
-    assert.strictEqual(result.success, true, "Enabled DIC with X, Z, Angle set should be valid");
+    const result = dicFormSchema.safeParse(invalidDicForm);
+    assert.strictEqual(result.success, false, "DIC Stills profile with zero points must fail validation");
 });
 
-runTest('DIC: Enabled state with missing required X Position fails validation', () => {
-    const enabledMissingX = {
-        dicEnabled: true,
-        dicX: null,
-        dicZ: 3.0,
-        dicAngle: 90,
-        dicExposureTime: 1.5,
-        dicStepSize: 0.2
+runTest('DIC: Invalid DIC Stills profile missing Profile Name', () => {
+    const missingNameDicForm = {
+        dicProfiles: [
+            {
+                id: "dic-3",
+                name: "",
+                mode: "stills",
+                ctime: 1.0,
+                stillPoints: [
+                    { ramsx: 0, ramsz: 0, ome: 0, numPoints: 1 }
+                ]
+            }
+        ]
     };
-    const result = dicFormSchema.safeParse(enabledMissingX);
-    assert.strictEqual(result.success, false, "Enabled DIC missing X Position must fail validation");
+    const result = dicFormSchema.safeParse(missingNameDicForm);
+    assert.strictEqual(result.success, false, "DIC profile missing Profile Name must fail validation");
 });
 
 console.log("\nAll Mechanical Test Sequence validation rules passed successfully!\n");

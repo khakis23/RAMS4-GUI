@@ -41,31 +41,33 @@ Numeric fields limits are centrally located at `src/config/parameterLimits.ts`. 
 ### Essential Existing Features
 
 #### Manual Path Configuration
-TODO
+Advanced users request a manual path configuration that allows them more freedom when loading or saving configuration/settings/sequence files. This is implemented as a pencil icon next to the typical dropdown path configuration.
 
 #### Sequence Grouping & Looping
-TODO
+A highly desired feature is to group sequences of commands so that the sub-sequences could be repeated (looped) a given number of times. Nested groups were also requested and limited to a maximum of two levels, which is adequate for the users.
 
 #### Custom Sequence Step
-TODO
+This feature is necessary for long-term adaptation of the interface, since new commands can added to the backend before being implemented into the GUI. This also allows users to use their own custom commands that are not necessarily needed for other users. The custom commands can easily be parsed by the Python backend.
 
 #### Sequence Builder Workflow
-TODO
+# TODO!!!!
 
 
 ### Future Features & User Wishlist
 
 #### Test Sequence Visual Verification
 A viewable plot or visualization displaying the steps of the entire test sequence.
-- quick & easy verification for scientist
-- more user friendly
-- requested by several users
+- Quick & easy verification for scientist
+- More user friendly
+- Requested by several users
 
 #### Status Bar
-TODO
+An informative status bar displaying live information about RAMS.
+- Axis positions, gearing, movement, homing
+- Other information could also be displayed.
 
 #### Streamline Settings for Advanced Users
-TODO
+It is important for advanced users to be able to edit settings for the RAMS within the GUI and not in the backend codebase. The settings menu does provide some settings, but more may be desired. Currently, editing settings provides minor friction by displaying a warning popup, but a simple hard-coded passcode may be more preferable to add more friction.
 
 
 ---
@@ -339,6 +341,31 @@ Example DIC:
   }
 ]
 ```
+
+#### Custom
+
+| Parameter | Type | Default / Required | Description |
+| :--- | :--- | :---: | :--- |
+| `commandName` | String | Yes | The user-defined name of the command. |
+| `args` | JSON Object | `{}` | User-defined command key-value pairs parameters. |
+
+Example:
+
+```json
+[
+    {
+    "custom": {
+      "commandName": "my_cmd",
+      "args": {
+        "some_key": "some_value",
+      	"some_bool": true,
+      	"some_num": 123
+      }
+    }
+  },
+]
+```
+
 
 #### Take While
 

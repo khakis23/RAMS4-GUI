@@ -8,20 +8,36 @@ export interface XrayStillPoint {
     numPoints: number;
 }
 
+export interface MapscanAxis {
+    axisName: string;
+    start: number;
+    stop: number;
+    points: number;
+}
+
+export interface RotationLayerRange {
+    omeStart: number;
+    omeStop: number;
+    numPoints: number;
+    layerStart: number;
+    layerEnd: number;
+    numLayers: number;
+}
+
 export interface XrayProfile {
     id: string;
     name: string;
-    mode: 'rotation-series' | 'stills' | 'tseries' | 'dscan' | 'mesh';
-    ramsx: number;
-    ramsz: number;
-    ome: number;
-    ctime: number;
-    beamHeight: number;
-    beamWidth: number;
-    atten: number;
-    numPoints: number;
+    mode: 'rotation-series' | 'stills' | 'mapscan' | 'tseries' | 'dscan' | 'mesh';
+    ramsx?: number | null;
+    ramsz?: number | null;
+    ome?: number | null;
+    ctime?: number | null;
+    beamHeight?: number | null;
+    beamWidth?: number | null;
+    atten?: number | null;
+    numPoints?: number | null;
 
-    // Mode-specific optional parameters
+    /* Mode-specific optional parameters */
     omeStart?: number;
     omeStop?: number;
     layerStart?: number;
@@ -29,6 +45,8 @@ export interface XrayProfile {
     numLayers?: number;
 
     stillPoints?: XrayStillPoint[];
+    mapscanAxes?: MapscanAxis[];
+    layerRanges?: RotationLayerRange[];
 
     axis1Name?: string;
     axis1Start?: number;
@@ -39,6 +57,21 @@ export interface XrayProfile {
     axis2Start?: number;
     axis2Stop?: number;
     axis2Images?: number;
+}
+
+export interface DicStillPoint {
+    ramsx: number;
+    ramsz: number;
+    ome: number;
+    numPoints: number;
+}
+
+export interface DicProfile {
+    id: string;
+    name: string;
+    mode: 'stills';
+    ctime: number;
+    stillPoints: DicStillPoint[];
 }
 
 export interface AxisSetting {
@@ -67,7 +100,7 @@ export interface ConfigurationState {
     setHasHydrated: (val: boolean) => void;
 }
 
-// All configuration settings (metadata, DAQ, and X-ray) live here
+// All configuration settings (metadata, DAQ, X-ray, and DIC) live here
 export interface GlobalConfig {
     // Metadata
     cycleNumber: string;
@@ -86,12 +119,7 @@ export interface GlobalConfig {
     xrayProfiles: XrayProfile[];
 
     // DIC
-    dicEnabled: boolean;
-    dicX: number | null;
-    dicZ: number | null;
-    dicAngle: number | null;
-    dicExposureTime: number | null;
-    dicStepSize: number | null;
+    dicProfiles: DicProfile[];
 
     // Settings
     settingsVersion?: number;
@@ -149,12 +177,7 @@ const defaultDraftConfig = (): GlobalConfig => ({
     samplePoints: 1000,
     handlerProfiles: [],
     xrayProfiles: [],
-    dicEnabled: false,
-    dicX: null,
-    dicZ: null,
-    dicAngle: null,
-    dicExposureTime: null,
-    dicStepSize: null,
+    dicProfiles: [],
     settingsVersion: 0,
     specHost: "id1a3.classe.cornell.edu:spec",
     requireSpecEnable: true,

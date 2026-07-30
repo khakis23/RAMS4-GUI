@@ -1,45 +1,67 @@
 [
   {
-    "takeWhile": {
-      "take": {
-        "profileID": "xrayProfile1785343081392",
-        "imgMode": null,
-        "pauseTsDaq": false
-      },
-      "step": {
-        "type": "ramp",
-        "data": {
-          "target": 1,
-          "time": 1,
-          "max_displacement": 1,
-          "axis": "A",
-          "mode": "absolute",
-          "control": "displacement",
-          "dispToggle": "time",
-          "enable_dic": false,
-          "skipDICpos": false,
-          "incrementSeg": false,
-          "wait": true,
-          "velocity": null
+    "group": {
+      "loops": 1,
+      "steps": [
+        {
+          "group": {
+            "loops": 1,
+            "steps": [
+              {
+                "custom": {
+                  "commandName": "special_command",
+                  "args": {
+                    "test_key": true
+                  }
+                }
+              },
+              {
+                "ramp": {
+                  "target": 1,
+                  "time": 1,
+                  "max_displacement": 1,
+                  "axis": "A",
+                  "mode": "absolute",
+                  "control": "displacement",
+                  "dispToggle": "time",
+                  "enable_dic": false,
+                  "skipDICpos": false,
+                  "incrementSeg": false,
+                  "wait": true,
+                  "velocity": null
+                }
+              },
+              {
+                "takeWhile": {
+                  "take": {
+                    "profileID": "dic",
+                    "imgMode": null,
+                    "pauseTsDaq": false
+                  },
+                  "step": {
+                    "type": "dwell",
+                    "data": {
+                      "velocity": 2,
+                      "wait": true,
+                      "target": 1,
+                      "time": 3,
+                      "axis": "A",
+                      "control": "load"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "take": {
+            "profileID": "dicProfile1785421155784",
+            "pauseTsDaq": false,
+            "imgMode": null
+          }
         }
-      }
-    }
-  },
-  {
-    "custom": {
-      "commandName": "test",
-      "test1": "test",
-      "test3": "ksjdhfk"
-    }
-  },
-  {
-    "dwell": {
-      "target": 1,
-      "velocity": 1,
-      "time": 1,
-      "axis": "A",
-      "control": "load",
-      "wait": true
+      ]
     }
   }
 ]

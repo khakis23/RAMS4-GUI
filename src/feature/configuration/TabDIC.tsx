@@ -1,15 +1,14 @@
 import { useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button.tsx';
-import { Input } from '@/components/ui/input.tsx';
-import { FieldLabel } from '@/components/ui/FieldLabel.tsx';
 import { ConfigTabSection } from './components/ConfigTabSection.tsx';
 import { useConfigurationStore, useValidationStore } from '@/store/useConfigurationStore.ts';
 import { compileZodErrors } from './utils/validationUtils.ts';
 import { dicFormSchema } from './profileSchemas/dicSchema.ts';
+import { DicProfileCard } from './components/DicProfileCard.tsx';
 import { useFormAutoSave } from './hooks/useFormAutoSave.ts';
-import { tooltips } from '@/config/tooltips.ts';
+import { Plus } from 'lucide-react';
 
 export const TabDIC = () => {
     const { draft, updateDraft, lastLoadedPath } = useConfigurationStore();
@@ -17,20 +16,21 @@ export const TabDIC = () => {
 
     const {
         register,
+        control,
         watch,
-        setValue,
         reset,
         formState: { errors }
     } = useForm<any>({
         resolver: zodResolver(dicFormSchema),
         mode: "onChange",
         defaultValues: {
-            dicEnabled: draft.dicEnabled ?? false,
-            dicX: draft.dicX ?? null,
-            dicZ: draft.dicZ ?? null,
-            dicAngle: draft.dicAngle ?? null,
-            dicExposureTime: draft.dicExposureTime ?? null,
-            dicStepSize: draft.dicStepSize ?? null,
+            dicProfiles: (draft.dicProfiles || []).map(p => ({
+                id: p.id,
+                name: p.name,
+                mode: 'stills' as const,
+                ctime: p.ctime ?? null,
+                stillPoints: p.stillPoints || []
+            })),
         }
     });
 
@@ -38,30 +38,48 @@ export const TabDIC = () => {
         if (lastLoadedPath && lastLoadedPath !== loadedPathRef.current) {
             loadedPathRef.current = lastLoadedPath;
             reset({
-                dicEnabled: draft.dicEnabled ?? false,
-                dicX: draft.dicX ?? null,
-                dicZ: draft.dicZ ?? null,
-                dicAngle: draft.dicAngle ?? null,
-                dicExposureTime: draft.dicExposureTime ?? null,
-                dicStepSize: draft.dicStepSize ?? null,
+                dicProfiles: (draft.dicProfiles || []).map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    mode: 'stills' as const,
+                    ctime: p.ctime ?? null,
+                    stillPoints: p.stillPoints || []
+                })),
             });
         }
     }, [lastLoadedPath, reset, draft]);
 
+    const {
+        fields,
+        append,
+        remove
+    } = useFieldArray({
+        control,
+        name: "dicProfiles",
+    });
+
     const watchedValues = watch();
-    const dicEnabled = watchedValues.dicEnabled;
+    const profilesEndRef = useRef<HTMLDivElement>(null);
+
+    const handleAddProfile = () => {
+        append({
+            id: `dicProfile${Date.now()}`,
+            name: "",
+            mode: "stills",
+            ctime: null,
+            stillPoints: []
+        });
+        setTimeout(() => {
+            profilesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+    };
 
     useFormAutoSave({
         watchedValues,
         storeDraft: draft,
         updateDraft,
         mapValues: (watched: any) => ({
-            dicEnabled: !!watched.dicEnabled,
-            dicX: watched.dicX ?? null,
-            dicZ: watched.dicZ ?? null,
-            dicAngle: watched.dicAngle ?? null,
-            dicExposureTime: watched.dicExposureTime ?? null,
-            dicStepSize: watched.dicStepSize ?? null,
+            dicProfiles: watched.dicProfiles || []
         })
     });
 
@@ -86,129 +104,51 @@ export const TabDIC = () => {
         }
     }, [watchedValues, setErrors]);
 
-    const handleDisableDic = () => {
-        setValue('dicEnabled', false);
-        setValue('dicX', null);
-        setValue('dicZ', null);
-        setValue('dicAngle', null);
-        setValue('dicExposureTime', null);
-        setValue('dicStepSize', null);
-    };
-
     return (
-        <ConfigTabSection>
-            <div className="col-span-2 w-full">
-                <div className="flex justify-between items-start text-left w-full mb-4">
-                    <div className="flex flex-col">
-                        <h3 className="text-md font-bold text-mauve-850">DIC Configuration</h3>
-                        <p className="text-xs text-mauve-500 font-medium mt-0.5">Configure parameters for Digital Image Correlation (DIC).</p>
-                    </div>
-                    <div className="shrink-0 pt-0.5">
-                        {dicEnabled ? (
+        <ConfigTabSection
+            profilesTitle="DIC Profiles"
+            profilesDescription="Configure parameters for Digital Image Correlation (DIC) still scans."
+            profilesAction={
+                <Button 
+                    type="button" 
+                    onClick={handleAddProfile}
+                    className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
+                >
+                    <Plus className="h-3.5 w-3.5" /> Add DIC Profile
+                </Button>
+            }
+            profiles={
+                <div className="w-full space-y-6 pb-12">
+                    {fields.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center min-h-[120px] border border-mauve-200 rounded-lg p-6 text-center bg-white">
+                            <p className="text-sm text-mauve-500 whitespace-pre-line">
+                                No DIC profiles added yet.
+                            </p>
                             <Button
                                 type="button"
-                                variant="outline"
-                                onClick={handleDisableDic}
-                                className="h-8 px-3 text-xs font-semibold rounded-lg bg-white border border-mauve-300 text-mauve-800 hover:text-destructive hover:border-destructive hover:bg-destructive/10 cursor-pointer transition-colors shadow-sm"
+                                variant="link"
+                                onClick={handleAddProfile}
+                                className="mt-1 text-xs font-semibold text-mauve-650 hover:text-mauve-850 cursor-pointer text-decoration-none"
                             >
-                                Disable DIC
+                                Click here to add a profile.
                             </Button>
-                        ) : (
-                            <Button
-                                type="button"
-                                onClick={() => setValue('dicEnabled', true)}
-                                className="h-8 px-4 text-xs font-semibold rounded-lg bg-mauve-600 hover:bg-mauve-700 text-white flex items-center gap-1.5 cursor-pointer shadow-sm animate-fade-in"
-                            >
-                                Enable DIC
-                            </Button>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        fields.map((field, index) => (
+                            <DicProfileCard
+                                key={field.id}
+                                index={index}
+                                register={register}
+                                errors={errors}
+                                control={control}
+                                removeProfile={remove}
+                            />
+                        ))
+                    )}
+                    <div ref={profilesEndRef} />
                 </div>
-                {!dicEnabled ? (
-                    <div className="flex flex-col items-center justify-center min-h-[120px] border border-mauve-200 rounded-lg p-6 text-center bg-white">
-                        <p className="text-sm text-mauve-500 whitespace-pre-line">
-                            {"DIC not enabled yet."}
-                        </p>
-                        <Button
-                            type="button"
-                            variant="link"
-                            onClick={() => setValue('dicEnabled', true)}
-                            className="mt-1 text-xs font-semibold text-mauve-650 hover:text-mauve-850 cursor-pointer text-decoration-none"
-                        >
-                            Click here to enable DIC.
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5 border border-mauve-200 rounded-lg bg-white">
-                        <div className="flex flex-col gap-2">
-                            <FieldLabel text="X Position (mm)" tooltip={tooltips.dicXPosition} required={true} />
-                            <Input
-                                type="number"
-                                step="any"
-                                className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${errors?.dicX ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                {...register('dicX', { valueAsNumber: true })}
-                            />
-                            {errors?.dicX && (
-                                <p className="text-xs text-destructive">{errors.dicX.message as string}</p>
-                            )}
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <FieldLabel text="Z Position (mm)" tooltip={tooltips.dicZPosition} required={true} />
-                            <Input
-                                type="number"
-                                step="any"
-                                className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${errors?.dicZ ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                {...register('dicZ', { valueAsNumber: true })}
-                            />
-                            {errors?.dicZ && (
-                                <p className="text-xs text-destructive">{errors.dicZ.message as string}</p>
-                            )}
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <FieldLabel text="Angle (º)" tooltip={tooltips.dicAngle} required={true} />
-                            <Input
-                                type="number"
-                                step="any"
-                                className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${errors?.dicAngle ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                {...register('dicAngle', { valueAsNumber: true })}
-                            />
-                            {errors?.dicAngle && (
-                                <p className="text-xs text-destructive">{errors.dicAngle.message as string}</p>
-                            )}
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <FieldLabel text="Exposure time (s)" tooltip={tooltips.dicExposureTime} required={false} />
-                            <Input
-                                type="number"
-                                step="any"
-                                placeholder="optional"
-                                className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${errors?.dicExposureTime ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                {...register('dicExposureTime', { valueAsNumber: true })}
-                            />
-                            {errors?.dicExposureTime && (
-                                <p className="text-xs text-destructive">{errors.dicExposureTime.message as string}</p>
-                            )}
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <FieldLabel text="Step Size (mm)" tooltip={tooltips.dicStepSize} required={false} />
-                            <Input
-                                type="number"
-                                step="any"
-                                placeholder="optional"
-                                className={`h-8 bg-input/50 border-transparent focus-visible:ring-mauve-300 ${errors?.dicStepSize ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                                {...register('dicStepSize', { valueAsNumber: true })}
-                            />
-                            {errors?.dicStepSize && (
-                                <p className="text-xs text-destructive">{errors.dicStepSize.message as string}</p>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-        </ConfigTabSection>
+            }
+        />
     );
 };
+

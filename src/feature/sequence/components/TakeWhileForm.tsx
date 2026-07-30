@@ -44,7 +44,10 @@ export const TakeWhileForm = ({ namePrefix, register, errors, control, watch, se
         const imgMode = watch(`${namePrefix}.data.take.data.imgMode`);
         
         const xrayProfiles = draft?.xrayProfiles || [];
-        const profile = xrayProfiles.find((p: any) => p.id === profileID);
+        const dicProfiles = draft?.dicProfiles || [];
+        const isXrayProfile = xrayProfiles.some((p: any) => p.id === profileID);
+        const isDicProfile = dicProfiles.some((p: any) => p.id === profileID);
+        const profile = xrayProfiles.find((p: any) => p.id === profileID) || dicProfiles.find((p: any) => p.id === profileID);
         if (!profile) return 'Unconfigured';
 
         const getProfileModeName = (m: string) => {
@@ -64,14 +67,13 @@ export const TakeWhileForm = ({ namePrefix, register, errors, control, watch, se
                 case 'nf': return 'Near-Field';
                 case 'tomo': return 'Tomography';
                 case 'single-layer': return 'Single Layer';
-                case 'dic': return 'DIC';
                 default: return im || '';
             }
         };
 
         const profileName = profile.name || 'Unnamed Profile';
-        const profileModeName = getProfileModeName(profile.mode);
-        const showImageMode = profile.mode === 'rotation-series' || profile.mode === 'stills';
+        const profileModeName = isDicProfile ? 'DIC Stills' : getProfileModeName(profile.mode);
+        const showImageMode = isXrayProfile && (profile.mode === 'rotation-series' || profile.mode === 'stills');
         const imgModeLabel = (showImageMode && imgMode) ? `, ${getImgModeLabel(imgMode)}` : '';
 
         return `${profileName} (${profileModeName})${imgModeLabel}`;

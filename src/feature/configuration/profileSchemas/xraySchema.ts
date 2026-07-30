@@ -3,63 +3,48 @@ import { PARAMETER_LIMITS } from '../../../config/parameterLimits.ts';
 
 // Validation preprocessors following the safe required/nullable number trend in daqSchema.ts
 const safeNullableNumber = z.preprocess(
-    (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-    z.number().optional()
-) as z.ZodType<number | undefined, any, any>;
+    (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? null : Number(val)),
+    z.number().nullable().optional()
+) as z.ZodType<number | null | undefined, any, any>;
 
 const safeRequiredNumber = z.preprocess(
-    (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-    z.number({ message: "Value is required." })
-) as z.ZodType<number, any, any>;
+    (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? null : Number(val)),
+    z.number().nullable().optional()
+) as z.ZodType<number | null | undefined, any, any>;
 
 const stillPointSchema = z.object({
-    ramsx: safeRequiredNumber,
-    ramsz: safeRequiredNumber,
-    ome: safeRequiredNumber,
-    numPoints: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Images is required." }).int().min(PARAMETER_LIMITS.xray.stills.numPoints.min, `Must be ${PARAMETER_LIMITS.xray.stills.numPoints.min} or more images.`)
-    )
+    ramsx: safeNullableNumber,
+    ramsz: safeNullableNumber,
+    ome: safeNullableNumber,
+    numPoints: safeNullableNumber
 });
 
 export const mapscanAxisSchema = z.object({
     axisName: z.string().min(1, "Moving Axis is required."),
-    start: safeRequiredNumber,
-    stop: safeRequiredNumber,
-    points: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Points is required." }).int().min(PARAMETER_LIMITS.xray.mapscan.points.min, `Must be at least ${PARAMETER_LIMITS.xray.mapscan.points.min} point.`)
-    )
+    start: safeNullableNumber,
+    stop: safeNullableNumber,
+    points: safeNullableNumber
 });
 
 export const rotationLayerRangeSchema = z.object({
-    omeStart: safeRequiredNumber,
-    omeStop: safeRequiredNumber,
-    numPoints: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Points is required." }).int().min(PARAMETER_LIMITS.xray.rotation.numPoints.min, `Must be at least ${PARAMETER_LIMITS.xray.rotation.numPoints.min} point.`)
-    ),
-    layerStart: safeRequiredNumber,
-    layerEnd: safeRequiredNumber,
-    numLayers: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Layers is required." }).int().min(PARAMETER_LIMITS.xray.rotation.numLayers.min, `Must be at least ${PARAMETER_LIMITS.xray.rotation.numLayers.min} layer.`)
-    )
+    omeStart: safeNullableNumber,
+    omeStop: safeNullableNumber,
+    numPoints: safeNullableNumber,
+    layerStart: safeNullableNumber,
+    layerEnd: safeNullableNumber,
+    numLayers: safeNullableNumber
 });
 
 export const xrayProfileSchema = z.object({
     id: z.string(),
     name: z.string().min(1, "Profile Name is required."),
-    mode: z.enum(['rotation-series', 'stills', 'mapscan']),
+    mode: z.enum(['rotation-series', 'stills', 'mapscan', 'tseries', 'dscan', 'mesh']),
     
     // Shared general parameters
-    ctime: z.preprocess(
-        (val) => (val === "" || val === null || val === undefined || (typeof val === "number" && isNaN(val)) ? undefined : Number(val)),
-        z.number({ message: "Exposure Time is required." }).min(PARAMETER_LIMITS.xray.exposureTime.min, "Exposure Time must be greater than 0.")
-    ),
-    beamHeight: safeRequiredNumber.refine(val => val >= PARAMETER_LIMITS.xray.beamHeight.min, "Beam Height must be 0 or positive."),
-    beamWidth: safeRequiredNumber.refine(val => val >= PARAMETER_LIMITS.xray.beamWidth.min, "Beam Width must be 0 or positive."),
-    atten: safeRequiredNumber.refine(val => val >= PARAMETER_LIMITS.xray.attenuation.min, "Attenuation must be 0 or positive."),
+    ctime: safeNullableNumber,
+    beamHeight: safeNullableNumber,
+    beamWidth: safeNullableNumber,
+    atten: safeNullableNumber,
 
     // Shared reference coordinates
     ramsx: safeNullableNumber,
@@ -70,6 +55,35 @@ export const xrayProfileSchema = z.object({
     mapscanAxes: z.array(mapscanAxisSchema).max(PARAMETER_LIMITS.xray.mapscan.maxAxes, `Maximum ${PARAMETER_LIMITS.xray.mapscan.maxAxes} axes allowed for Mapscan.`).optional(),
     layerRanges: z.array(rotationLayerRangeSchema).optional()
 }).superRefine((data, ctx) => {
+    if (data.ctime === null || data.ctime === undefined || data.ctime <= 0) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Exposure Time must be greater than 0.",
+            path: ["ctime"]
+        });
+    }
+    if (data.beamHeight !== null && data.beamHeight !== undefined && data.beamHeight < PARAMETER_LIMITS.xray.beamHeight.min) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Beam Height must be 0 or positive.",
+            path: ["beamHeight"]
+        });
+    }
+    if (data.beamWidth !== null && data.beamWidth !== undefined && data.beamWidth < PARAMETER_LIMITS.xray.beamWidth.min) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Beam Width must be 0 or positive.",
+            path: ["beamWidth"]
+        });
+    }
+    if (data.atten !== null && data.atten !== undefined && data.atten < PARAMETER_LIMITS.xray.attenuation.min) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Attenuation must be 0 or positive.",
+            path: ["atten"]
+        });
+    }
+
     if (data.mode === 'stills') {
         if (!data.stillPoints || data.stillPoints.length === 0) {
             ctx.addIssue({
