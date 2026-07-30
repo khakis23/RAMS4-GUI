@@ -36,6 +36,7 @@ export const CycleForm = ({ namePrefix, register, errors, control, watch, setVal
         const currentDiscoverEndpoints = watch(`${namePrefix}.data.discoverEndpoints`);
         const currentRecallEndpoints = watch(`${namePrefix}.data.recallEndpoints`);
         const currentEnableDIC = watch(`${namePrefix}.data['enable DIC']`);
+        const currentIncSeg = watch(`${namePrefix}.data.incrementSeg`);
         const currentWait = watch(`${namePrefix}.data.wait`);
 
         if (currentControl === undefined || currentControl === null) {
@@ -61,6 +62,9 @@ export const CycleForm = ({ namePrefix, register, errors, control, watch, setVal
         }
         if (currentEnableDIC === undefined || currentEnableDIC === null) {
             setValue(`${namePrefix}.data['enable DIC']`, false);
+        }
+        if (currentIncSeg === undefined || currentIncSeg === null) {
+            setValue(`${namePrefix}.data.incrementSeg`, false);
         }
         if (currentWait === undefined || currentWait === null) {
             setValue(`${namePrefix}.data.wait`, true);
@@ -328,6 +332,21 @@ export const CycleForm = ({ namePrefix, register, errors, control, watch, setVal
                                 <Controller
                                     control={control}
                                     name={`${namePrefix}.data.enable DIC`}
+                                    render={({ field }) => (
+                                        <Switch
+                                            checked={!!field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                            </div>
+
+                            {/* Increment Segment */}
+                            <div className="flex items-center justify-between p-3 rounded-xl border border-mauve-150 bg-mauve-50/10">
+                                <FieldLabel text="Increment Segment" tooltip={tooltips.mechTestIncrementSeg} />
+                                <Controller
+                                    control={control}
+                                    name={`${namePrefix}.data.incrementSeg`}
                                     render={({ field }) => (
                                         <Switch
                                             checked={!!field.value}

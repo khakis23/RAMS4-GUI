@@ -138,17 +138,17 @@ export const TakeWhileForm = ({ namePrefix, register, errors, control, watch, se
             {/* Top Take Card */}
             <div className="flex flex-col bg-white border border-slate-200 dark:border-zinc-800 rounded-md shadow-sm">
                 <AccordionItem value="take-section" className="border-b-0">
-                    <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-zinc-900/40 gap-3">
-                        <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center justify-between py-2.5 px-3.5 bg-slate-50/50 dark:bg-zinc-900/40 gap-3">
+                        <div className="flex items-center gap-1.5 w-36 shrink-0">
                             {/* ScanEye icon to the left of the static Take badge */}
                             <ScanEye className="h-4 w-4 text-mauve-500 dark:text-mauve-600 shrink-0" />
-                            {/* Static "Take" Badge — looks like a select but is not interactive */}
+                            {/* Static "Take" Badge — natural pill width */}
                             <div className="h-7 text-xs font-bold px-3.5 py-1 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-lg border border-slate-200 dark:border-zinc-700 select-none flex items-center shadow-sm">
                                 Take
                             </div>
                         </div>
                         <AccordionTrigger className="flex-grow py-1.5 px-4 text-xs font-bold text-slate-700 dark:text-zinc-300 hover:no-underline [&>svg]:text-slate-400">
-                            <span className="truncate pr-4 select-none">{getTakeSummary()}</span>
+                            <span className="flex items-center truncate pr-4 select-none">{getTakeSummary()}</span>
                         </AccordionTrigger>
                     </div>
                     <AccordionContent className="p-5 bg-white border-t border-slate-150 dark:border-zinc-800 pb-5">
@@ -167,8 +167,8 @@ export const TakeWhileForm = ({ namePrefix, register, errors, control, watch, se
             {/* Bottom Mechanical Test Step Card */}
             <div className="flex flex-col bg-white border border-slate-200 dark:border-zinc-800 rounded-md shadow-sm">
                 <AccordionItem value="step-section" className="border-b-0">
-                    <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-zinc-900/40 gap-3">
-                        <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center justify-between py-2.5 px-3.5 bg-slate-50/50 dark:bg-zinc-900/40 gap-3">
+                        <div className="flex items-center gap-1.5 w-36 shrink-0">
                             {/* Icon matching the currently selected step type */}
                             <StepIcon className="h-4 w-4 text-mauve-500 dark:text-mauve-600 shrink-0" />
                             {/* Selector to change mechanical step type */}
@@ -192,7 +192,7 @@ export const TakeWhileForm = ({ namePrefix, register, errors, control, watch, se
                             </div>
                         </div>
                         <AccordionTrigger className="flex-grow py-1.5 px-4 text-xs font-bold text-slate-700 hover:no-underline dark:text-zinc-300 [&>svg]:text-slate-400">
-                            <span className="truncate pr-4 select-none">{getStepSummary()}</span>
+                            <span className="flex items-center truncate pr-4 select-none">{getStepSummary()}</span>
                         </AccordionTrigger>
                     </div>
                     <AccordionContent className="p-5 bg-white border-t border-slate-150 dark:border-zinc-800 pb-5">

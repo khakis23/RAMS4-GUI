@@ -224,12 +224,13 @@ export const MechTestCardItem = ({
 
                                     {/* Card Type Selector */}
                                     <div className="flex items-center gap-1.5">
-                                        {type !== 'takeWhile' && type !== 'group' && (() => {
+                                        {type !== 'group' && (() => {
                                             const TYPE_ICONS = {
                                                 ramp: TriangleRight,
                                                 take: ScanEye,
                                                 dwell: Gauge,
                                                 cycle: AudioWaveform,
+                                                takeWhile: ScanEye,
                                                 custom: PaintbrushVertical
                                             };
                                             const IconComp = TYPE_ICONS[type as keyof typeof TYPE_ICONS];

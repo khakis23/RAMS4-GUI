@@ -316,13 +316,18 @@ const pruneStepData = (type: string, data: any): any => {
             pruned.dispToggle = null;
         }
     } else if (type === 'dwell') {
+        pruned.incrementSeg = !!pruned.incrementSeg;
         pruned.wait = pruned.wait !== false;
     } else if (type === 'cycle') {
         pruned.ampScale = typeof pruned.ampScale === 'number' ? pruned.ampScale : 0.95;
         pruned.discoverEndpoints = !!pruned.discoverEndpoints;
         pruned.recallEndpoints = !!pruned.recallEndpoints;
         pruned["enable DIC"] = !!pruned["enable DIC"];
+        pruned.incrementSeg = !!pruned.incrementSeg;
         pruned.wait = pruned.wait !== false;
+    } else if (type === 'take') {
+        pruned.incrementSeg = !!pruned.incrementSeg;
+        pruned.pauseTsDaq = !!pruned.pauseTsDaq;
     }
 
     return pruned;
@@ -345,6 +350,7 @@ const defaultStepData = (type: string, data: any): any => {
     } else if (type === 'dwell') {
         defaulted.control = defaulted.control ?? 'load';
         defaulted.axis = defaulted.axis ?? 'A';
+        defaulted.incrementSeg = !!defaulted.incrementSeg;
         defaulted.wait = defaulted.wait !== false;
     } else if (type === 'cycle') {
         defaulted.control = defaulted.control ?? 'displacement';
@@ -355,7 +361,11 @@ const defaultStepData = (type: string, data: any): any => {
         defaulted.discoverEndpoints = !!defaulted.discoverEndpoints;
         defaulted.recallEndpoints = !!defaulted.recallEndpoints;
         defaulted["enable DIC"] = !!defaulted["enable DIC"];
+        defaulted.incrementSeg = !!defaulted.incrementSeg;
         defaulted.wait = defaulted.wait !== false;
+    } else if (type === 'take') {
+        defaulted.incrementSeg = !!defaulted.incrementSeg;
+        defaulted.pauseTsDaq = !!defaulted.pauseTsDaq;
     }
 
     return defaulted;

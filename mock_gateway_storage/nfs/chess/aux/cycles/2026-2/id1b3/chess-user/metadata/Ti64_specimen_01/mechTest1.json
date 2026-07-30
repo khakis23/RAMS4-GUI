@@ -1,0 +1,89 @@
+[
+  {
+    "ramp": {
+      "target": 50,
+      "time": null,
+      "max_displacement": 1,
+      "axis": "B",
+      "mode": "absolute",
+      "control": "load",
+      "dispToggle": null,
+      "enable_dic": false,
+      "skipDICpos": false,
+      "incrementSeg": true,
+      "wait": true,
+      "velocity": 0.002
+    }
+  },
+  {
+    "take": {
+      "profileID": "xrayProfile1785419098323",
+      "pauseTsDaq": false,
+      "imgMode": "ff"
+    }
+  },
+  {
+    "take": {
+      "profileID": "dicProfile1785422243491",
+      "pauseTsDaq": false,
+      "imgMode": null
+    }
+  },
+  {
+    "group": {
+      "loops": 1,
+      "steps": [
+        {
+          "takeWhile": {
+            "take": {
+              "profileID": "xrayProfile1785419098323",
+              "imgMode": "ff",
+              "pauseTsDaq": false
+            },
+            "step": {
+              "type": "ramp",
+              "data": {
+                "target": 500,
+                "time": null,
+                "max_displacement": 1,
+                "axis": "B",
+                "mode": "absolute",
+                "control": "load",
+                "dispToggle": null,
+                "enable_dic": false,
+                "skipDICpos": false,
+                "incrementSeg": false,
+                "wait": true,
+                "velocity": 0.002
+              }
+            }
+          }
+        },
+        {
+          "dwell": {
+            "target": 500,
+            "velocity": 0.002,
+            "time": 300,
+            "axis": "B",
+            "control": "load",
+            "wait": true
+          }
+        },
+        {
+          "take": {
+            "profileID": "xrayProfile1785419098323",
+            "pauseTsDaq": false,
+            "imgMode": "ff"
+          }
+        },
+        {
+          "take": {
+            "profileID": "dicProfile1785422243491",
+            "pauseTsDaq": false,
+            "imgMode": null
+          }
+        }
+      ]
+    }
+  }
+]

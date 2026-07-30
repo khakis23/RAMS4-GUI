@@ -103,6 +103,7 @@ runTest('Dwell: Valid dwell step configuration', () => {
         time: 1,
         axis: "A",
         control: "load",
+        incrementSeg: false,
         wait: true
     };
     const result = dwellSchema.safeParse(validDwell);
@@ -137,6 +138,7 @@ runTest('Cycle: Valid cyclic loading step configuration', () => {
         discoverEndpoints: false,
         recallEndpoints: false,
         "enable DIC": false,
+        incrementSeg: false,
         wait: true
     };
     const result = cycleSchema.safeParse(validCycle);
@@ -162,6 +164,7 @@ runTest('Take: Valid image acquisition step configuration', () => {
     const validTake = {
         profileID: "xrayProfile1784655169284",
         pauseTsDaq: false,
+        incrementSeg: false,
         imgMode: "nf"
     };
     const result = takeSchema.safeParse(validTake);

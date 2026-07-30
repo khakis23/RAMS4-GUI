@@ -133,6 +133,21 @@ export const pruneConfigForSave = (config: any) => {
         });
     }
 
+    if (cleanConfig.dicProfiles) {
+        cleanConfig.dicProfiles = cleanConfig.dicProfiles.map((dp: any) => ({
+            id: dp.id,
+            name: dp.name,
+            mode: dp.mode,
+            ctime: dp.ctime,
+            stillPoints: (dp.stillPoints || []).map((sp: any) => ({
+                ramsx: sp.ramsx,
+                ramsz: sp.ramsz,
+                ome: sp.ome,
+                numPoints: sp.numPoints
+            }))
+        }));
+    }
+
     return removeNulls(cleanConfig);
 };
 
@@ -175,6 +190,16 @@ const normalizeConfig = (config: any) => {
             stillPoints: xp.stillPoints || [],
             mapscanAxes: xp.mapscanAxes || [],
             layerRanges: xp.layerRanges || []
+        }));
+    }
+
+    if (cleanConfig.dicProfiles) {
+        cleanConfig.dicProfiles = cleanConfig.dicProfiles.map((dp: any) => ({
+            id: dp.id,
+            name: dp.name,
+            mode: dp.mode || 'stills',
+            ctime: dp.ctime ?? null,
+            stillPoints: dp.stillPoints || []
         }));
     }
 
@@ -235,8 +260,7 @@ export const ConfigurationManager = () => {
     const isDirty = useMemo(() => {
         if (!savedConfig) return false;
         const keys = [
-            'daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'settingsVersion',
-            'dicEnabled', 'dicX', 'dicZ', 'dicAngle', 'dicExposureTime', 'dicStepSize'
+            'daqFrequency', 'samplePoints', 'requiredAxes', 'handlerProfiles', 'xrayProfiles', 'dicProfiles', 'settingsVersion'
         ] as const;
         return keys.some(key => !deepEqual(draft[key], savedConfig[key]));
     }, [draft, savedConfig]);
@@ -474,12 +498,7 @@ export const ConfigurationManager = () => {
                         samplePoints: normalizedFetched.samplePoints ?? 1000,
                         handlerProfiles: normalizedFetched.handlerProfiles || [],
                         xrayProfiles: normalizedFetched.xrayProfiles || [],
-                        dicEnabled: normalizedFetched.dicEnabled ?? false,
-                        dicX: normalizedFetched.dicX ?? null,
-                        dicZ: normalizedFetched.dicZ ?? null,
-                        dicAngle: normalizedFetched.dicAngle ?? null,
-                        dicExposureTime: normalizedFetched.dicExposureTime ?? null,
-                        dicStepSize: normalizedFetched.dicStepSize ?? null,
+                        dicProfiles: normalizedFetched.dicProfiles || [],
                         ...settingsToApply,
                         settingsVersion: effectiveSettingsVersion
                     };
@@ -489,12 +508,7 @@ export const ConfigurationManager = () => {
                         samplePoints: mergedSaved.samplePoints,
                         handlerProfiles: mergedSaved.handlerProfiles,
                         xrayProfiles: mergedSaved.xrayProfiles,
-                        dicEnabled: mergedSaved.dicEnabled,
-                        dicX: mergedSaved.dicX,
-                        dicZ: mergedSaved.dicZ,
-                        dicAngle: mergedSaved.dicAngle,
-                        dicExposureTime: mergedSaved.dicExposureTime,
-                        dicStepSize: mergedSaved.dicStepSize,
+                        dicProfiles: mergedSaved.dicProfiles,
                         ...settingsToApply,
                         settingsVersion: effectiveSettingsVersion
                     });
@@ -512,12 +526,7 @@ export const ConfigurationManager = () => {
                         samplePoints: draft.samplePoints ?? 1000,
                         handlerProfiles: draft.handlerProfiles || [],
                         xrayProfiles: draft.xrayProfiles || [],
-                        dicEnabled: draft.dicEnabled ?? false,
-                        dicX: draft.dicX ?? null,
-                        dicZ: draft.dicZ ?? null,
-                        dicAngle: draft.dicAngle ?? null,
-                        dicExposureTime: draft.dicExposureTime ?? null,
-                        dicStepSize: draft.dicStepSize ?? null,
+                        dicProfiles: draft.dicProfiles || [],
                         ...settingsToApply
                     };
                     updateDraft({
@@ -526,12 +535,7 @@ export const ConfigurationManager = () => {
                         samplePoints: draft.samplePoints ?? 1000,
                         handlerProfiles: draft.handlerProfiles || [],
                         xrayProfiles: draft.xrayProfiles || [],
-                        dicEnabled: draft.dicEnabled ?? false,
-                        dicX: draft.dicX ?? null,
-                        dicZ: draft.dicZ ?? null,
-                        dicAngle: draft.dicAngle ?? null,
-                        dicExposureTime: draft.dicExposureTime ?? null,
-                        dicStepSize: draft.dicStepSize ?? null,
+                        dicProfiles: draft.dicProfiles || [],
                         ...settingsToApply
                     });
                     setSavedConfig(defaults);

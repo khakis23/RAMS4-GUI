@@ -68,7 +68,28 @@
       ]
     }
   ],
-  "dicEnabled": false,
+  "dicProfiles": [
+    {
+      "id": "dicProfile1785422243491",
+      "name": "DIC_simple",
+      "mode": "stills",
+      "ctime": 1,
+      "stillPoints": [
+        {
+          "ramsx": 0,
+          "ramsz": -4,
+          "ome": 0,
+          "numPoints": 5
+        },
+        {
+          "ramsx": 0.5,
+          "ramsz": -4,
+          "ome": 0,
+          "numPoints": 5
+        }
+      ]
+    }
+  ],
   "settingsVersion": 3,
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
@@ -122,5 +143,6 @@
       "intercept": 0,
       "channel": 2
     }
-  ]
+  ],
+  "dicEnabled": false
 }

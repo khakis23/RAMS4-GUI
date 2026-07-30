@@ -56,7 +56,8 @@ export const rampSchema = z.object({
 export const takeSchema = z.object({
     profileID: z.string({ message: "Image Profile is required" }).min(1, "Image Profile is required"),
     imgMode: z.string().min(1, "Image Mode is required").optional().nullable(),
-    pauseTsDaq: z.boolean().default(false)
+    pauseTsDaq: z.boolean().default(false),
+    incrementSeg: z.boolean().default(false)
 });
 
 export const dwellSchema = z.object({
@@ -74,6 +75,7 @@ export const dwellSchema = z.object({
         (val) => (val === '' || val === undefined || val === null || Number.isNaN(Number(val))) ? undefined : Number(val),
         z.number({ message: "Time is required" })
     ),
+    incrementSeg: z.boolean().default(false),
     wait: z.boolean().default(true)
 });
 
@@ -105,6 +107,7 @@ export const cycleSchema = z.object({
     discoverEndpoints: z.boolean().default(false),
     recallEndpoints: z.boolean().default(false),
     "enable DIC": z.boolean().default(false),
+    incrementSeg: z.boolean().default(false),
     wait: z.boolean().default(true),
     manualDispUpper: z.preprocess(
         (val) => (val === '' || val === undefined || val === null || Number.isNaN(Number(val))) ? undefined : Number(val),

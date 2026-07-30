@@ -4,6 +4,7 @@ import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { Switch } from '@/components/ui/switch';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { tooltips } from '@/config/tooltips';
 
 interface TakeFormProps {
@@ -46,11 +47,19 @@ export const TakeForm = ({ namePrefix, errors, control, watch, setValue }: TakeF
     // Default configuration mappings
     useEffect(() => {
         const currentProfileID = watch(`${namePrefix}.data.profileID`);
+        const currentPauseTsDaq = watch(`${namePrefix}.data.pauseTsDaq`);
+        const currentIncSeg = watch(`${namePrefix}.data.incrementSeg`);
+
         if (!currentProfileID && allProfiles.length > 0) {
             setValue(`${namePrefix}.data.profileID`, allProfiles[0].id);
+        }
+        if (currentPauseTsDaq === undefined || currentPauseTsDaq === null) {
             setValue(`${namePrefix}.data.pauseTsDaq`, false);
         }
-    }, [namePrefix, setValue, watch, xrayProfiles, dicProfiles]);
+        if (currentIncSeg === undefined || currentIncSeg === null) {
+            setValue(`${namePrefix}.data.incrementSeg`, false);
+        }
+    }, [namePrefix, setValue, watch, xrayProfiles, dicProfiles, allProfiles]);
 
     // Handle profile selection changes to set appropriate default image modes
     useEffect(() => {
@@ -163,22 +172,50 @@ export const TakeForm = ({ namePrefix, errors, control, watch, setValue }: TakeF
                         {takeErrors?.imgMode && <p className="text-xs text-destructive">{takeErrors.imgMode.message}</p>}
                     </div>
                 )}
-
-                {/* General parameters (Pause DAQ) inline on the row */}
-                <div className="flex items-center justify-between px-3 py-1.5 rounded-xl border border-mauve-150 bg-mauve-50/10 h-8 w-full md:w-48 shrink-0">
-                    <FieldLabel text="Pause DAQ" tooltip={tooltips.mechTestPauseDaq} />
-                    <Controller
-                        control={control}
-                        name={`${namePrefix}.data.pauseTsDaq`}
-                        render={({ field }) => (
-                            <Switch
-                                checked={!!field.value}
-                                onCheckedChange={field.onChange}
-                            />
-                        )}
-                    />
-                </div>
             </div>
+
+            {/* Advanced Settings Collapsible Section using Shadcn Accordion */}
+            <Accordion type="single" collapsible className="border border-mauve-200 rounded-xl overflow-hidden bg-white shadow-sm w-full">
+                <AccordionItem value="advanced-parameters" className="border-b-0">
+                    <AccordionTrigger className="px-4 py-3 bg-mauve-50/50 hover:bg-mauve-50 transition-colors text-xs font-bold text-mauve-850 hover:no-underline [&>svg]:text-mauve-500">
+                        Advanced Parameters
+                    </AccordionTrigger>
+                    <AccordionContent className="p-4 flex flex-col gap-5 border-t border-mauve-200 pb-4">
+                        {/* Switch parameters grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+                            {/* Pause DAQ */}
+                            <div className="flex items-center justify-between p-3 rounded-xl border border-mauve-150 bg-mauve-50/10">
+                                <FieldLabel text="Pause DAQ" tooltip={tooltips.mechTestPauseDaq} />
+                                <Controller
+                                    control={control}
+                                    name={`${namePrefix}.data.pauseTsDaq`}
+                                    render={({ field }) => (
+                                        <Switch
+                                            checked={!!field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                            </div>
+
+                            {/* Increment Segment */}
+                            <div className="flex items-center justify-between p-3 rounded-xl border border-mauve-150 bg-mauve-50/10">
+                                <FieldLabel text="Increment Segment" tooltip={tooltips.mechTestIncrementSeg} />
+                                <Controller
+                                    control={control}
+                                    name={`${namePrefix}.data.incrementSeg`}
+                                    render={({ field }) => (
+                                        <Switch
+                                            checked={!!field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </div>
     );
 };

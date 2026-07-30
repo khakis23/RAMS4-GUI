@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FieldLabel } from '@/components/ui/FieldLabel';
 import { Switch } from '@/components/ui/switch';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { tooltips } from '@/config/tooltips';
 import { useAvailableAxes } from '@/hooks/useAvailableAxes';
 
@@ -28,6 +29,7 @@ export const DwellForm = ({ namePrefix, register, errors, control, watch, setVal
     useEffect(() => {
         const currentControl = watch(`${namePrefix}.data.control`);
         const currentAxis = watch(`${namePrefix}.data.axis`);
+        const currentIncSeg = watch(`${namePrefix}.data.incrementSeg`);
         const currentWait = watch(`${namePrefix}.data.wait`);
 
         if (currentControl === undefined || currentControl === null) {
@@ -35,6 +37,9 @@ export const DwellForm = ({ namePrefix, register, errors, control, watch, setVal
         }
         if (currentAxis === undefined || currentAxis === null || !availableAxes.includes(currentAxis)) {
             setValue(`${namePrefix}.data.axis`, availableAxes[0] || 'A');
+        }
+        if (currentIncSeg === undefined || currentIncSeg === null) {
+            setValue(`${namePrefix}.data.incrementSeg`, false);
         }
         if (currentWait === undefined || currentWait === null) {
             setValue(`${namePrefix}.data.wait`, true);
@@ -142,20 +147,48 @@ export const DwellForm = ({ namePrefix, register, errors, control, watch, setVal
                 </div>
             </div>
 
-            {/* Wait Toggle */}
-            <div className="flex items-center justify-between p-3 rounded-xl border border-mauve-150 bg-mauve-50/10 max-w-xs shrink-0">
-                <FieldLabel text="Wait" tooltip={tooltips.mechTestDwellWait} />
-                <Controller
-                    control={control}
-                    name={`${namePrefix}.data.wait`}
-                    render={({ field }) => (
-                        <Switch
-                            checked={!!field.value}
-                            onCheckedChange={field.onChange}
-                        />
-                    )}
-                />
-            </div>
+            {/* Advanced Settings Collapsible Section using Shadcn Accordion */}
+            <Accordion type="single" collapsible className="border border-mauve-200 rounded-xl overflow-hidden bg-white shadow-sm w-full">
+                <AccordionItem value="advanced-parameters" className="border-b-0">
+                    <AccordionTrigger className="px-4 py-3 bg-mauve-50/50 hover:bg-mauve-50 transition-colors text-xs font-bold text-mauve-850 hover:no-underline [&>svg]:text-mauve-500">
+                        Advanced Parameters
+                    </AccordionTrigger>
+                    <AccordionContent className="p-4 flex flex-col gap-5 border-t border-mauve-200 pb-4">
+                        {/* Switch parameters grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+                            {/* Increment Segment */}
+                            <div className="flex items-center justify-between p-3 rounded-xl border border-mauve-150 bg-mauve-50/10">
+                                <FieldLabel text="Increment Segment" tooltip={tooltips.mechTestIncrementSeg} />
+                                <Controller
+                                    control={control}
+                                    name={`${namePrefix}.data.incrementSeg`}
+                                    render={({ field }) => (
+                                        <Switch
+                                            checked={!!field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                            </div>
+
+                            {/* Wait */}
+                            <div className="flex items-center justify-between p-3 rounded-xl border border-mauve-150 bg-mauve-50/10">
+                                <FieldLabel text="Wait" tooltip={tooltips.mechTestWait} />
+                                <Controller
+                                    control={control}
+                                    name={`${namePrefix}.data.wait`}
+                                    render={({ field }) => (
+                                        <Switch
+                                            checked={!!field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
         </div>
     );
 };
