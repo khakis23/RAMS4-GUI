@@ -28,6 +28,10 @@ export const CycleForm = ({ namePrefix, register, errors, control, watch, setVal
 
     // Set default values if not defined
     useEffect(() => {
+        const cardId = watch(`${namePrefix}.id`);
+        const cardType = watch(`${namePrefix}.type`);
+        if (!cardId && !cardType) return;
+
         const currentControl = watch(`${namePrefix}.data.control`);
         const currentAxis = watch(`${namePrefix}.data.axis`);
         const currentMode = watch(`${namePrefix}.data.mode`);

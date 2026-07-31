@@ -197,7 +197,6 @@ export const MechTestCardItem = ({
                             : 'bg-white border-mauve-200 hover:shadow-sm'
                     } ${isDragging ? 'opacity-40 border-mauve-400 ring-2 ring-mauve-300' : ''}`}
                 >
-                    <input type="hidden" {...register(`${namePrefix}.id`)} />
                     <Accordion type="single" collapsible className="w-full">
                         <AccordionItem value={cardId} className="border-b-0">
                             {/* Header section (Non-scrolling details) */}

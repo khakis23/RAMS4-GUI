@@ -29,6 +29,10 @@ export const RampForm = ({ namePrefix, register, errors, control, watch, setValu
 
     // Set default keys if they are not defined
     useEffect(() => {
+        const cardId = watch(`${namePrefix}.id`);
+        const cardType = watch(`${namePrefix}.type`);
+        if (!cardId && !cardType) return;
+
         const currentControl = watch(`${namePrefix}.data.control`);
         const currentAxis = watch(`${namePrefix}.data.axis`);
         const currentMode = watch(`${namePrefix}.data.mode`);

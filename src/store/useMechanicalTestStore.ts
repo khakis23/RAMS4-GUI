@@ -494,6 +494,24 @@ export const parseCardsFromBackend = (items: any[], depth = 0): MechTestCard[] =
     });
 };
 
+export const sanitizeCards = (cardsList: MechTestCard[]): MechTestCard[] => {
+    if (!Array.isArray(cardsList)) return [];
+    return cardsList
+        .filter(card => card && typeof card === 'object' && card.type && typeof card.id === 'string' && card.id.trim() !== '')
+        .map(card => {
+            if (card.type === 'group' && card.data?.cards) {
+                return {
+                    ...card,
+                    data: {
+                        ...card.data,
+                        cards: sanitizeCards(card.data.cards)
+                    }
+                };
+            }
+            return card;
+        });
+};
+
 export const useMechanicalTestStore = create<MechanicalTestState>()(
     persist(
         (set, get) => ({
@@ -511,7 +529,8 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
             })),
             setValidationErrors: (errors) => set({ validationErrors: errors }),
 
-            setCards: (cards) => {
+            setCards: (rawCards) => {
+                const cards = sanitizeCards(rawCards);
                 set((state) => {
                     const isDirty = checkIsDirty(cards, state.savedCards);
                     return { cards, isDirty };
@@ -608,7 +627,8 @@ export const useMechanicalTestStore = create<MechanicalTestState>()(
                 const { cards: detachedTree, detached } = findAndDetachCardRecursive(currentCards, cardId);
                 if (!detached) return null;
 
-                const updatedCards = attachCardRecursive(detachedTree, targetGroupId, detached, targetIndex);
+                const rawUpdatedCards = attachCardRecursive(detachedTree, targetGroupId, detached, targetIndex);
+                const updatedCards = sanitizeCards(rawUpdatedCards);
                 set({
                     cards: updatedCards,
                     isDirty: checkIsDirty(updatedCards, get().savedCards)

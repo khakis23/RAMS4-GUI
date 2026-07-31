@@ -26,6 +26,10 @@ export const TakeWhileForm = ({ namePrefix, register, errors, control, watch, se
     // TakeForm expects its namePrefix to point at the parent, and accesses .data.profileID etc internally.
     // So we initialize data.take as the object TakeForm will receive as its namePrefix.
     useEffect(() => {
+        const cardId = watch(`${namePrefix}.id`);
+        const cardType = watch(`${namePrefix}.type`);
+        if (!cardId && !cardType) return;
+
         const currentTake = watch(`${namePrefix}.data.take`);
         if (!currentTake) {
             setValue(`${namePrefix}.data.take`, { data: { profileID: '', imgMode: 'ff', pauseTsDaq: false } });

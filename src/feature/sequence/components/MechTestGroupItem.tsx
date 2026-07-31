@@ -339,7 +339,6 @@ export const MechTestGroupItem = ({
                             : 'border-mauve-200 hover:shadow-sm'
                     }`}
                 >
-                    <input type="hidden" {...register(`${namePrefix}.id`)} />
                     <Accordion 
                         type="single" 
                         collapsible 

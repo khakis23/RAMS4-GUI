@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useConfigurationStore } from '@/store/useConfigurationStore';
-import { useMechanicalTestStore } from '@/store/useMechanicalTestStore';
+import { useMechanicalTestStore, sanitizeCards } from '@/store/useMechanicalTestStore';
 import { Button } from '@/components/ui/button';
 import { WarningModal } from '@/components/ui/WarningModal';
 import { Sliders, Plus, Save, FileJson, Check, Group, GripVertical } from 'lucide-react';
@@ -172,7 +172,7 @@ const MechanicalTestInner = () => {
             setCards(data.cards || []);
         },
         mapValues: (watched: any) => ({
-            cards: watched.cards || []
+            cards: sanitizeCards(watched.cards || [])
         }),
         disabled: isLoading || !configDirectory || !experimentNumber
     } as any);
@@ -287,8 +287,9 @@ const MechanicalTestInner = () => {
         return null;
     };
 
-    const activeParentContainerId = activeId ? findParentContainerId(watch('cards') || cards, activeId) : null;
-    const activeCardPath = activeId ? findCardPathInTree(watch('cards') || cards, activeId) : null;
+    const storeCards = cards;
+    const activeParentContainerId = activeId ? findParentContainerId(storeCards, activeId) : null;
+    const activeCardPath = activeId ? findCardPathInTree(storeCards, activeId) : null;
     const isDraggingFromGroup = Boolean(activeParentContainerId && activeParentContainerId !== 'root-sequence');
 
     const customCollisionDetection: CollisionDetection = (args) => {
@@ -321,7 +322,7 @@ const MechanicalTestInner = () => {
 
     const handleDragStart = (event: any) => {
         const { active } = event;
-        const currentCards = watch('cards') || cards;
+        const currentCards = useMechanicalTestStore.getState().cards;
         const card = findCardInTree(currentCards, String(active.id));
         setActiveId(String(active.id));
         setActiveCard(card);
@@ -339,8 +340,7 @@ const MechanicalTestInner = () => {
 
         if (activeIdStr === overIdStr) return;
 
-        const currentCards = watch('cards') || cards;
-        setCards(currentCards);
+        const currentCards = useMechanicalTestStore.getState().cards;
 
         let targetGroupId: string | null = null;
         let targetIndex: number | undefined = undefined;

@@ -46,6 +46,10 @@ export const TakeForm = ({ namePrefix, errors, control, watch, setValue }: TakeF
 
     // Default configuration mappings
     useEffect(() => {
+        const cardId = watch(`${namePrefix}.id`);
+        const cardType = watch(`${namePrefix}.type`);
+        if (!cardId && !cardType) return;
+
         const currentProfileID = watch(`${namePrefix}.data.profileID`);
         const currentPauseTsDaq = watch(`${namePrefix}.data.pauseTsDaq`);
         const currentIncSeg = watch(`${namePrefix}.data.incrementSeg`);
