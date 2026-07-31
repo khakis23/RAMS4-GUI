@@ -17,6 +17,7 @@ interface MechTestCardItemProps {
     cardIdProp?: string;
     index: number;
     namePrefix: string;
+    initialCard?: any;
     register: any;
     errors: any;
     control: any;
@@ -37,6 +38,7 @@ export const MechTestCardItem = ({
     cardIdProp,
     index,
     namePrefix,
+    initialCard,
     register,
     errors,
     control,
@@ -49,7 +51,8 @@ export const MechTestCardItem = ({
     const { draft } = useConfigurationStore();
 
     // Consolidate watch calls to single card object watch to eliminate re-render churn
-    const currentCard = watch(namePrefix) || {};
+    const watchedCard = watch(namePrefix);
+    const currentCard = (watchedCard && watchedCard.type) ? watchedCard : (initialCard || watchedCard || {});
     const type = currentCard.type || 'ramp';
     const cardData = currentCard.data || {};
     const axis = cardData.axis;

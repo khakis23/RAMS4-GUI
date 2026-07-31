@@ -263,6 +263,19 @@ const MechanicalTestInner = () => {
         return null;
     };
 
+    const findCardPathInTree = (cardsList: any[], id: string, currentPath: string = 'cards'): string | null => {
+        for (let i = 0; i < cardsList.length; i++) {
+            const item = cardsList[i];
+            const itemPath = `${currentPath}.${i}`;
+            if (item.id === id) return itemPath;
+            if (item.type === 'group' && item.data?.cards) {
+                const foundPath = findCardPathInTree(item.data.cards, id, `${itemPath}.data.cards`);
+                if (foundPath) return foundPath;
+            }
+        }
+        return null;
+    };
+
     const findParentContainerId = (cardsList: any[], id: string, parentId: string = 'root-sequence'): string | null => {
         for (const card of cardsList) {
             if (card.id === id) return parentId;
@@ -275,6 +288,7 @@ const MechanicalTestInner = () => {
     };
 
     const activeParentContainerId = activeId ? findParentContainerId(watch('cards') || cards, activeId) : null;
+    const activeCardPath = activeId ? findCardPathInTree(watch('cards') || cards, activeId) : null;
     const isDraggingFromGroup = Boolean(activeParentContainerId && activeParentContainerId !== 'root-sequence');
 
     const customCollisionDetection: CollisionDetection = (args) => {
@@ -480,7 +494,7 @@ const MechanicalTestInner = () => {
                                     <MechTestGroupItem
                                         cardIdProp={activeCard.id}
                                         index={0}
-                                        namePrefix="overlay"
+                                        namePrefix={activeCardPath || "overlay"}
                                         depth={1}
                                         register={register}
                                         errors={errors}
@@ -495,7 +509,8 @@ const MechanicalTestInner = () => {
                                     <MechTestCardItem
                                         cardIdProp={activeCard.id}
                                         index={0}
-                                        namePrefix="overlay"
+                                        namePrefix={activeCardPath || "overlay"}
+                                        initialCard={activeCard}
                                         register={register}
                                         errors={errors}
                                         control={control}
