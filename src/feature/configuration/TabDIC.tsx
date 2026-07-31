@@ -74,6 +74,18 @@ export const TabDIC = () => {
         }, 50);
     };
 
+    const handleDuplicateProfile = (indexToDuplicate: number) => {
+        const source = watchedValues.dicProfiles?.[indexToDuplicate];
+        if (!source) return;
+        const cloned = JSON.parse(JSON.stringify(source));
+        cloned.id = `dicProfile${Date.now()}`;
+        cloned.name = cloned.name ? `${cloned.name} (Copy)` : 'Copy';
+        append(cloned);
+        setTimeout(() => {
+            profilesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+    };
+
     useFormAutoSave({
         watchedValues,
         storeDraft: draft,
@@ -142,6 +154,7 @@ export const TabDIC = () => {
                                 errors={errors}
                                 control={control}
                                 removeProfile={remove}
+                                duplicateProfile={handleDuplicateProfile}
                             />
                         ))
                     )}

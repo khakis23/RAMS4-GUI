@@ -14,6 +14,7 @@ interface DicProfileCardProps {
     errors: FieldErrors<any>;
     control: any;
     removeProfile: (index: number) => void;
+    duplicateProfile?: (index: number) => void;
 }
 
 export const DicProfileCard = ({
@@ -21,7 +22,8 @@ export const DicProfileCard = ({
     register,
     errors,
     control,
-    removeProfile
+    removeProfile,
+    duplicateProfile
 }: DicProfileCardProps) => {
     const profileErrors = (errors.dicProfiles as any)?.[index] as any;
 
@@ -50,12 +52,28 @@ export const DicProfileCard = ({
         return dicProfileSchema.safeParse(profileValues).success;
     }, [profileValues]);
 
+    const handleAddPoint = () => {
+        const currentPoints = profileValues?.stillPoints || [];
+        if (currentPoints.length > 0) {
+            const last = currentPoints[currentPoints.length - 1];
+            appendPoint({
+                ramsx: last?.ramsx ?? null,
+                ramsz: last?.ramsz ?? null,
+                ome: last?.ome ?? null,
+                numPoints: last?.numPoints ?? null
+            });
+        } else {
+            appendPoint({ ramsx: null, ramsz: null, ome: null, numPoints: null });
+        }
+    };
+
     return (
         <ProfileCardLayout
             index={index}
             name={profileName}
             isComplete={isComplete}
             onRemove={() => removeProfile(index)}
+            onDuplicate={duplicateProfile ? () => duplicateProfile(index) : undefined}
             modeSelector={
                 <div className="h-8 text-xs font-semibold px-3 py-1.5 bg-white rounded-lg border border-mauve-200 text-mauve-850 shadow-sm select-none flex items-center w-fit">
                     DIC Stills
@@ -95,7 +113,7 @@ export const DicProfileCard = ({
                         type="button" 
                         variant="secondary" 
                         className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white cursor-pointer"
-                        onClick={() => appendPoint({ ramsx: null, ramsz: null, ome: null, numPoints: null })}
+                        onClick={handleAddPoint}
                     >
                         <Plus className="h-3.5 w-3.5 mr-1" /> Add Point
                     </Button>

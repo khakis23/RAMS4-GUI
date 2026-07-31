@@ -15,6 +15,7 @@ interface XrayProfileCardProps {
     errors: FieldErrors<any>;
     control: any;
     removeProfile: (index: number) => void;
+    duplicateProfile?: (index: number) => void;
 }
 
 export const XrayProfileCard = ({
@@ -22,7 +23,8 @@ export const XrayProfileCard = ({
     register,
     errors,
     control,
-    removeProfile
+    removeProfile,
+    duplicateProfile
 }: XrayProfileCardProps) => {
     const profileErrors = (errors.xrayProfiles as any)?.[index] as any;
 
@@ -79,12 +81,45 @@ export const XrayProfileCard = ({
         return xrayProfileSchema.safeParse(profileValues).success;
     }, [profileValues]);
 
+    const handleAddPoint = () => {
+        const currentPoints = profileValues?.stillPoints || [];
+        if (currentPoints.length > 0) {
+            const last = currentPoints[currentPoints.length - 1];
+            appendPoint({
+                ramsx: last?.ramsx ?? null,
+                ramsz: last?.ramsz ?? null,
+                ome: last?.ome ?? null,
+                numPoints: last?.numPoints ?? null
+            });
+        } else {
+            appendPoint({ ramsx: null, ramsz: null, ome: null, numPoints: null });
+        }
+    };
+
+    const handleAddLayerRange = () => {
+        const currentLayers = profileValues?.layerRanges || [];
+        if (currentLayers.length > 0) {
+            const last = currentLayers[currentLayers.length - 1];
+            appendLayerRange({
+                omeStart: last?.omeStart ?? null,
+                omeStop: last?.omeStop ?? null,
+                numPoints: last?.numPoints ?? null,
+                layerStart: last?.layerStart ?? null,
+                layerEnd: last?.layerEnd ?? null,
+                numLayers: last?.numLayers ?? null
+            });
+        } else {
+            appendLayerRange({ omeStart: null, omeStop: null, numPoints: null, layerStart: null, layerEnd: null, numLayers: null });
+        }
+    };
+
     return (
         <ProfileCardLayout
             index={index}
             name={profileName}
             isComplete={isComplete}
             onRemove={() => removeProfile(index)}
+            onDuplicate={duplicateProfile ? () => duplicateProfile(index) : undefined}
             modeSelector={
                 <Controller
                     control={control}
@@ -173,7 +208,7 @@ export const XrayProfileCard = ({
                                 type="button" 
                                 variant="secondary" 
                                 className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white cursor-pointer"
-                                onClick={() => appendPoint({ ramsx: null, ramsz: null, ome: null, numPoints: null })}
+                                onClick={handleAddPoint}
                             >
                                 <Plus className="h-3.5 w-3.5 mr-1" /> Add Point
                             </Button>
@@ -401,7 +436,7 @@ export const XrayProfileCard = ({
                                 type="button" 
                                 variant="secondary" 
                                 className="h-8 text-xs border border-mauve-200 hover:bg-mauve-50 text-mauve-700 bg-white cursor-pointer"
-                                onClick={() => appendLayerRange({ omeStart: null, omeStop: null, numPoints: null, layerStart: null, layerEnd: null, numLayers: null })}
+                                onClick={handleAddLayerRange}
                             >
                                 <Plus className="h-3.5 w-3.5 mr-1" /> Add Layer Range
                             </Button>

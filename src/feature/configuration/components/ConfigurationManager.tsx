@@ -236,7 +236,7 @@ export const ConfigurationManager = () => {
     const { errors: validationErrors } = useValidationStore();
 
     // Baseline configuration state is read from global useConfigurationStore
-    const { draft, updateDraft, lastLoadedPath, setLastLoadedPath, savedConfig, setSavedConfig, settingsFallbackActive } = useConfigurationStore();
+    const { draft, updateDraft, lastLoadedPath, setLastLoadedPath, savedConfig, setSavedConfig } = useConfigurationStore();
     const [selectedStation, setSelectedStation] = useState<string>("");
 
     const lastCycle = useRef(draft.cycleNumber);
@@ -434,6 +434,7 @@ export const ConfigurationManager = () => {
 
                     if (settingsRes && settingsRes.isFallback) {
                         fallbackData = {
+                            settingsVersion: settingsRes.version ?? defaultSettings.settingsVersion,
                             specHost: settingsRes.data.specHost || defaultSettings.specHost,
                             requireSpecEnable: settingsRes.data.requireSpecEnable ?? defaultSettings.requireSpecEnable,
                             systemName: settingsRes.data.systemName || defaultSettings.systemName,
@@ -446,6 +447,7 @@ export const ConfigurationManager = () => {
                         loadedDiskVersion = settingsRes.version;
                     } else if (fetched && (fetched.specHost || fetched.axesSettings)) {
                         fallbackData = {
+                            settingsVersion: typeof fetched.settingsVersion === 'number' ? fetched.settingsVersion : defaultSettings.settingsVersion,
                             specHost: fetched.specHost || defaultSettings.specHost,
                             requireSpecEnable: fetched.requireSpecEnable ?? defaultSettings.requireSpecEnable,
                             systemName: fetched.systemName || defaultSettings.systemName,
@@ -1045,7 +1047,7 @@ export const ConfigurationManager = () => {
                                     <div className="flex items-center gap-1.5 shrink-0">
                                         <span className="text-xs text-mauve-850">Sample</span>
                                         <Select value={draft.sampleName} onValueChange={handleSampleChange} disabled={!draft.userId}>
-                                            <SelectTrigger className="h-7 w-[160px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
+                                            <SelectTrigger className="h-7 w-[200px] bg-white border-mauve-200 rounded-lg text-xs px-2 shadow-sm disabled:opacity-50">
                                                 <SelectValue placeholder="" />
                                             </SelectTrigger>
                                             <SelectContent>

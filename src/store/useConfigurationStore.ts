@@ -91,12 +91,12 @@ export interface ConfigurationState {
     draft: GlobalConfig;
     savedConfig: GlobalConfig | null;
     lastLoadedPath: string;
-    settingsFallbackActive: { expected: number; loaded: number | 'default' } | null;
+    settingsFallbackActive: { expected: number; loaded: number | 'default' | 'missing' } | null;
     _hasHydrated: boolean;
     updateDraft: (fieldsToUpdate: Partial<GlobalConfig>) => void;
     setSavedConfig: (config: GlobalConfig | null) => void;
     setLastLoadedPath: (path: string) => void;
-    setSettingsFallbackActive: (fallback: { expected: number; loaded: number | 'default' } | null) => void;
+    setSettingsFallbackActive: (fallback: { expected: number; loaded: number | 'default' | 'missing' } | null) => void;
     setHasHydrated: (val: boolean) => void;
 }
 

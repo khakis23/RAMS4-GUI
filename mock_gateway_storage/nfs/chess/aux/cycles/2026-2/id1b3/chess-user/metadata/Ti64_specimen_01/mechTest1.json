@@ -19,37 +19,40 @@
     "take": {
       "profileID": "xrayProfile1785419098323",
       "pauseTsDaq": false,
-      "imgMode": "ff"
+      "imgMode": "ff",
+      "incrementSeg": false
     }
   },
   {
     "take": {
       "profileID": "dicProfile1785422243491",
       "pauseTsDaq": false,
-      "imgMode": null
+      "imgMode": null,
+      "incrementSeg": false
     }
   },
   {
     "group": {
-      "loops": 1,
+      "loops": 4,
       "steps": [
         {
           "takeWhile": {
             "take": {
               "profileID": "xrayProfile1785419098323",
               "imgMode": "ff",
-              "pauseTsDaq": false
+              "pauseTsDaq": false,
+              "incrementSeg": false
             },
             "step": {
               "type": "ramp",
               "data": {
                 "target": 500,
                 "time": null,
-                "max_displacement": 1,
                 "axis": "B",
                 "mode": "absolute",
                 "control": "load",
                 "dispToggle": null,
+                "max_displacement": 1,
                 "enable_dic": false,
                 "skipDICpos": false,
                 "incrementSeg": false,
@@ -66,24 +69,43 @@
             "time": 300,
             "axis": "B",
             "control": "load",
-            "wait": true
+            "wait": true,
+            "incrementSeg": true
           }
         },
         {
           "take": {
             "profileID": "xrayProfile1785419098323",
             "pauseTsDaq": false,
-            "imgMode": "ff"
+            "imgMode": "ff",
+            "incrementSeg": false
           }
         },
         {
           "take": {
             "profileID": "dicProfile1785422243491",
             "pauseTsDaq": false,
-            "imgMode": null
+            "imgMode": null,
+            "incrementSeg": true
           }
         }
       ]
+    }
+  },
+  {
+    "ramp": {
+      "target": 0.0048,
+      "time": null,
+      "max_displacement": 1,
+      "axis": "B",
+      "mode": "absolute",
+      "control": "strain",
+      "dispToggle": null,
+      "enable_dic": false,
+      "skipDICpos": false,
+      "incrementSeg": false,
+      "wait": true,
+      "velocity": 0.0006
     }
   }
 ]

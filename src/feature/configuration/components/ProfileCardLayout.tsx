@@ -1,13 +1,14 @@
 import { ReactNode } from 'react';
 import { Button } from '../../../components/ui/button';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Trash2 } from 'lucide-react';
+import { Copy, Trash2 } from 'lucide-react';
 
 interface ProfileCardLayoutProps {
     index: number;
     name: string;
     isComplete: boolean;
     onRemove: () => void;
+    onDuplicate?: () => void;
     modeSelector: ReactNode;
     children: ReactNode;
 }
@@ -17,6 +18,7 @@ export const ProfileCardLayout = ({
     name,
     isComplete,
     onRemove,
+    onDuplicate,
     modeSelector,
     children
 }: ProfileCardLayoutProps) => {
@@ -42,12 +44,25 @@ export const ProfileCardLayout = ({
                             </span>
                         </AccordionTrigger>
 
-                        <div className="shrink-0 flex items-center">
+                        <div className="shrink-0 flex items-center gap-1">
+                            {onDuplicate && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={onDuplicate}
+                                    title="Duplicate profile"
+                                    className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-mauve-700 hover:bg-mauve-100 dark:hover:text-mauve-200 dark:hover:bg-mauve-800 rounded-lg cursor-pointer transition-colors"
+                                >
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            )}
                             <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
                                 onClick={onRemove}
+                                title="Delete profile"
                                 className="h-8 w-8 text-mauve-400 dark:text-mauve-500 hover:text-destructive hover:bg-destructive/10 dark:hover:text-red-400 dark:hover:bg-red-500/20 rounded-lg cursor-pointer transition-colors"
                             >
                                 <Trash2 className="h-4 w-4" />
