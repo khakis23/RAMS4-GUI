@@ -23,15 +23,6 @@ interface MechTestGroupItemProps {
     reset?: any;
     removeCard: (index: number) => void;
     duplicateCard: (index: number) => void;
-    onDragStart?: (e: React.DragEvent) => void;
-    onDragOver?: (e: React.DragEvent) => void;
-    onDragEnd?: () => void;
-    isDragging?: boolean;
-    draggingSourceId?: string | null;
-    dragOverGroupId?: string | null;
-    setDragOverGroupId?: (id: string | null) => void;
-    provided?: any;
-    snapshot?: any;
 }
 
 export const MechTestGroupItem = ({
@@ -47,19 +38,8 @@ export const MechTestGroupItem = ({
     reset,
     removeCard,
     duplicateCard,
-    onDragStart,
-    onDragOver,
-    onDragEnd,
-    isDragging,
-    draggingSourceId,
-    dragOverGroupId,
-    setDragOverGroupId,
-    provided: outerProvided,
-    snapshot: outerSnapshot,
 }: MechTestGroupItemProps) => {
     const { draft } = useConfigurationStore();
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-
     // Watch child cards inside this group
     const childCards = watch(`${namePrefix}.data.cards`) || [];
 
@@ -68,13 +48,13 @@ export const MechTestGroupItem = ({
 
     // Capture group container height to lock bounds during active dragging
     useEffect(() => {
-        if (containerRef.current && !isDragging) {
+        if (containerRef.current) {
             const height = containerRef.current.offsetHeight;
             if (height > 0) {
                 setLockedMinHeight(height);
             }
         }
-    }, [childCards.length, isDragging]);
+    }, [childCards.length]);
 
     const loopsVal = watch(`${namePrefix}.data.loops`) || 1;
     const [showLoopInput, setShowLoopInput] = useState(loopsVal > 1);

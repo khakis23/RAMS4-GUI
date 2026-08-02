@@ -26,12 +26,6 @@ interface MechTestCardItemProps {
     removeCard: (index: number) => void;
     duplicateCard?: (index: number) => void;
     moveOutOfGroup?: (index: number) => void;
-    onDragStart?: (e: React.DragEvent) => void;
-    onDragOver?: (e: React.DragEvent) => void;
-    onDragEnd?: () => void;
-    isDragging?: boolean;
-    provided?: any;
-    snapshot?: any;
 }
 
 export const MechTestCardItem = ({

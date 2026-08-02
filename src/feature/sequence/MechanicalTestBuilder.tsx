@@ -4,7 +4,7 @@ import { useConfigurationStore } from '@/store/useConfigurationStore';
 import { useMechanicalTestStore, sanitizeCards } from '@/store/useMechanicalTestStore';
 import { Button } from '@/components/ui/button';
 import { WarningModal } from '@/components/ui/WarningModal';
-import { Sliders, Plus, Save, FileJson, Check, Group, GripVertical } from 'lucide-react';
+import { Sliders, Plus, Save, FileJson, Check, Group } from 'lucide-react';
 import { useFormAutoSave } from '../configuration/hooks/useFormAutoSave';
 import { MechTestCardItem } from './components/MechTestCardItem';
 import { MechTestGroupItem } from './components/MechTestGroupItem';
@@ -97,10 +97,6 @@ const MechanicalTestInner = () => {
 
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [modalErrors, setModalErrors] = useState<string[]>([]);
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-    const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
-    const [isDraggingActive, setIsDraggingActive] = useState(false);
-    const [draggingSourceId, setDraggingSourceId] = useState<string | null>(null);
 
     // React Hook Form initialization with Zod Resolver
     const { register, control, watch, setValue, reset, formState: { errors } } = useForm({
@@ -111,7 +107,7 @@ const MechanicalTestInner = () => {
         }
     });
 
-    const { fields, append, remove, move, insert } = useFieldArray({
+    const { fields, append, remove, insert } = useFieldArray({
         control,
         name: "cards"
     });
@@ -228,15 +224,7 @@ const MechanicalTestInner = () => {
         }
     };
 
-    const lastPointerPos = useRef({ x: 0, y: 0 });
 
-    useEffect(() => {
-        const handlePointerMove = (e: PointerEvent) => {
-            lastPointerPos.current = { x: e.clientX, y: e.clientY };
-        };
-        window.addEventListener('pointermove', handlePointerMove, { passive: true });
-        return () => window.removeEventListener('pointermove', handlePointerMove);
-    }, []);
 
     const [activeId, setActiveId] = useState<string | null>(null);
     const [activeCard, setActiveCard] = useState<any | null>(null);

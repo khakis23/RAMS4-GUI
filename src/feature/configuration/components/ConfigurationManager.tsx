@@ -24,7 +24,7 @@ import { tooltips } from "@/config/tooltips.ts";
 type TabName = 'daq' | 'xray' | 'dic';
 
 import { pruneConfigForSave, normalizeConfig, deepEqual } from '../utils/configPruner';
-import { useDirectoryCascade } from '../hooks/useDirectoryCascade';
+import { useDirectoryCascade, parseDirectoryPath } from '../hooks/useDirectoryCascade';
 export const ConfigurationManager = () => {
     const tabs: { id: TabName; label: string }[] = [
         { id: 'daq', label: 'DAQ' },
@@ -43,7 +43,7 @@ export const ConfigurationManager = () => {
     const { draft, updateDraft, lastLoadedPath, setLastLoadedPath, savedConfig, setSavedConfig } = useConfigurationStore();
 
     const {
-        cycleOptions, setCycleOptions,
+        cycleOptions,
         stationOptions, setStationOptions,
         btrOptions, setBtrOptions,
         sampleOptions, setSampleOptions,

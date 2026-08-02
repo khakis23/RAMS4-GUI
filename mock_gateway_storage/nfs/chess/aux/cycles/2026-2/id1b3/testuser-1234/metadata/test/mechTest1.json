@@ -8,22 +8,6 @@
             "loops": 1,
             "steps": [
               {
-                "custom": {
-                  "commandName": "special_command",
-                  "args": {
-                    "test_key": true
-                  }
-                }
-              },
-              {
-                "take": {
-                  "profileID": "dicProfile1785421155784",
-                  "pauseTsDaq": false,
-                  "imgMode": null,
-                  "incrementSeg": false
-                }
-              },
-              {
                 "takeWhile": {
                   "take": {
                     "profileID": "dic",
@@ -43,27 +27,59 @@
                     }
                   }
                 }
+              },
+              {
+                "custom": {
+                  "commandName": "special_command",
+                  "args": {
+                    "test_key": true
+                  }
+                }
+              },
+              {
+                "ramp": {
+                  "target": 1,
+                  "time": 1,
+                  "max_displacement": 1,
+                  "axis": "A",
+                  "mode": "absolute",
+                  "control": "displacement",
+                  "dispToggle": "time",
+                  "enable_dic": false,
+                  "skipDICpos": false,
+                  "incrementSeg": false,
+                  "wait": true,
+                  "velocity": null
+                }
               }
             ]
           }
         },
         {
-          "ramp": {
-            "target": 1,
-            "time": 1,
-            "max_displacement": 1,
-            "axis": "A",
-            "mode": "absolute",
-            "control": "displacement",
-            "dispToggle": "time",
-            "enable_dic": false,
-            "skipDICpos": false,
-            "incrementSeg": false,
-            "wait": true,
-            "velocity": null
+          "take": {
+            "profileID": "dicProfile1785421155784",
+            "pauseTsDaq": false,
+            "imgMode": null,
+            "incrementSeg": false
           }
         }
       ]
+    }
+  },
+  {
+    "ramp": {
+      "target": 1,
+      "time": 3,
+      "max_displacement": 1,
+      "axis": "A",
+      "mode": "absolute",
+      "control": "displacement",
+      "dispToggle": "time",
+      "enable_dic": false,
+      "skipDICpos": false,
+      "incrementSeg": false,
+      "wait": true,
+      "velocity": null
     }
   }
 ]
