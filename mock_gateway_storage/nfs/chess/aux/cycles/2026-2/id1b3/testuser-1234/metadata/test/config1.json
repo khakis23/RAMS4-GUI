@@ -13,19 +13,47 @@
   ],
   "daqFrequency": 1,
   "samplePoints": 1000,
-  "handlerProfiles": [],
+  "handlerProfiles": [
+    {
+      "mode": "time-series",
+      "filename": "test",
+      "verboseAxis": "-1",
+      "verboseSystem": -1,
+      "verboseTask": "-1",
+      "verboseIO": -1,
+      "verboseAi": [],
+      "frequency": 1000,
+      "cycles": [
+        {
+          "start": 1,
+          "stop": 10,
+          "step": 1
+        },
+        {
+          "start": 20,
+          "stop": "inf",
+          "step": 3
+        }
+      ]
+    }
+  ],
   "xrayProfiles": [
     {
       "id": "xrayProfile1785421146149",
       "name": "test",
-      "mode": "mapscan",
+      "mode": "stills",
       "ctime": 1,
       "beamHeight": 1,
       "beamWidth": 1,
       "atten": 1,
-      "ramsx": 1,
-      "ramsz": 1,
-      "ome": 1
+      "stillPoints": [
+        {
+          "ramsx": 1,
+          "ramsz": 2,
+          "ome": 3,
+          "numPoints": 4
+        }
+      ]
     }
   ],
   "dicProfiles": [
@@ -44,10 +72,10 @@
       ]
     }
   ],
-  "settingsVersion": 3,
+  "settingsVersion": 4,
   "specHost": "id1a3.classe.cornell.edu:spec",
   "requireSpecEnable": true,
-  "systemName": "Version3Settings",
+  "systemName": "Version4Settings",
   "controllerHost": "10.0.0.1",
   "axisCount": 5,
   "taskCount": 5,
@@ -97,6 +125,5 @@
       "intercept": 0,
       "channel": 2
     }
-  ],
-  "dicEnabled": false
+  ]
 }

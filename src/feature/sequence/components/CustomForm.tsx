@@ -1,4 +1,4 @@
-import { Control, Controller, UseFormRegister, UseFormSetValue, UseFormWatch, useFieldArray } from 'react-hook-form';
+import { Control, UseFormRegister, useFieldArray } from 'react-hook-form';
 import { Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,9 +10,6 @@ interface CustomFormProps {
     namePrefix: string;
     register: UseFormRegister<any>;
     control: Control<any>;
-    errors?: any;
-    watch: UseFormWatch<any>;
-    setValue: UseFormSetValue<any>;
 }
 
 export const CustomForm = ({

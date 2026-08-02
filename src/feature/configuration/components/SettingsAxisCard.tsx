@@ -1,4 +1,4 @@
-import { Control, Controller, UseFormRegister, FieldErrors } from 'react-hook-form';
+import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { Input } from '../../../components/ui/input';
 import { Button } from '../../../components/ui/button';
 import { FieldLabel } from '../../../components/ui/FieldLabel';
@@ -7,22 +7,18 @@ import { Trash2 } from 'lucide-react';
 
 interface SettingsAxisCardProps {
     index: number;
-    control: Control<any>;
     register: UseFormRegister<any>;
     errors: FieldErrors<any>;
     remove: (index: number) => void;
     showRemove: boolean;
-    takenNames: string[];
 }
 
 export const SettingsAxisCard = ({
     index,
-    control,
     register,
     errors,
     remove,
     showRemove,
-    takenNames
 }: SettingsAxisCardProps) => {
     const axisErrors = (errors.axesSettings as any)?.[index] as any;
 

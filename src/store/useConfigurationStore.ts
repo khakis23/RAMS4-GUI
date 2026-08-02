@@ -1,92 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { GlobalConfig, HandlerProfile, XrayProfile, DicProfile, XrayStillPoint, MapscanAxis, RotationLayerRange, DicStillPoint, AxisSetting, SignalSetting, HandlerProfileCycle } from '@/types/config'
 
-export interface XrayStillPoint {
-    ramsx: number;
-    ramsz: number;
-    ome: number;
-    numPoints: number;
-}
-
-export interface MapscanAxis {
-    axisName: string;
-    start: number;
-    stop: number;
-    points: number;
-}
-
-export interface RotationLayerRange {
-    omeStart: number;
-    omeStop: number;
-    numPoints: number;
-    layerStart: number;
-    layerEnd: number;
-    numLayers: number;
-}
-
-export interface XrayProfile {
-    id: string;
-    name: string;
-    mode: 'rotation-series' | 'stills' | 'mapscan' | 'tseries' | 'dscan' | 'mesh';
-    ramsx?: number | null;
-    ramsz?: number | null;
-    ome?: number | null;
-    ctime?: number | null;
-    beamHeight?: number | null;
-    beamWidth?: number | null;
-    atten?: number | null;
-    numPoints?: number | null;
-
-    /* Mode-specific optional parameters */
-    omeStart?: number;
-    omeStop?: number;
-    layerStart?: number;
-    layerEnd?: number;
-    numLayers?: number;
-
-    stillPoints?: XrayStillPoint[];
-    mapscanAxes?: MapscanAxis[];
-    layerRanges?: RotationLayerRange[];
-
-    axis1Name?: string;
-    axis1Start?: number;
-    axis1Stop?: number;
-    axis1Images?: number;
-
-    axis2Name?: string;
-    axis2Start?: number;
-    axis2Stop?: number;
-    axis2Images?: number;
-}
-
-export interface DicStillPoint {
-    ramsx: number;
-    ramsz: number;
-    ome: number;
-    numPoints: number;
-}
-
-export interface DicProfile {
-    id: string;
-    name: string;
-    mode: 'stills';
-    ctime: number;
-    stillPoints: DicStillPoint[];
-}
-
-export interface AxisSetting {
-    name: string;
-    max_velocity: number;
-    max_acceleration: number;
-}
-
-export interface SignalSetting {
-    name: string;
-    slope: number;
-    intercept: number;
-    channel: number;
-}
-
+/**
+ * Zustand state slice for managing the global configuration lifecycle.
+ */
 export interface ConfigurationState {
     draft: GlobalConfig;
     savedConfig: GlobalConfig | null;
@@ -98,72 +16,6 @@ export interface ConfigurationState {
     setLastLoadedPath: (path: string) => void;
     setSettingsFallbackActive: (fallback: { expected: number; loaded: number | 'default' | 'missing' } | null) => void;
     setHasHydrated: (val: boolean) => void;
-}
-
-// All configuration settings (metadata, DAQ, X-ray, and DIC) live here
-export interface GlobalConfig {
-    // Metadata
-    cycleNumber: string;
-    sampleName: string;
-    userId: string;
-    experimentNumber: string;
-    configDirectory: string;
-
-    // DAQ
-    requiredAxes: string[];
-    daqFrequency: number;
-    samplePoints: number;
-    handlerProfiles: HandlerProfile[];
-
-    // X-ray
-    xrayProfiles: XrayProfile[];
-
-    // DIC
-    dicProfiles: DicProfile[];
-
-    // Settings
-    settingsVersion?: number;
-    specHost: string;
-    requireSpecEnable: boolean;
-    systemName: string;
-    controllerHost: string;
-    axisCount: number;
-    taskCount: number;
-    axesSettings: AxisSetting[];
-    signalSettings: SignalSetting[];
-}
-
-export interface HandlerProfileCycle {
-    start: number;
-    stop: number | 'inf';
-    step: number;
-}
-
-export interface HandlerProfile {
-    // General fields
-    mode: string;
-    filename: string;
-    signalLoad?: string;
-    signalStrain?: string;
-
-    // Verbose fields
-    verboseAxis: string;
-    verboseSystem: number;
-    verboseTask: string;
-    verboseIO: number;
-    verboseAi: string[];
-
-    // Time-series specific fields
-    frequency?: number;
-    cycles?: HandlerProfileCycle[];
-
-    // Peak-valley specific fields
-    signalAxis?: string;
-    signalItem?: string;
-    signalProminence?: number;
-
-    // PSO specific fields
-    psoAxis?: string;
 }
 
 const defaultDraftConfig = (): GlobalConfig => ({
@@ -199,6 +51,10 @@ const defaultDraftConfig = (): GlobalConfig => ({
     ]
 });
 
+/**
+ * Persistent Zustand store holding the global configuration state.
+ * Contains draft values, saved state, hydration status, and fallback tracking.
+ */
 export const useConfigurationStore = create<ConfigurationState>()(
     persist(
         (set) => ({
@@ -232,11 +88,19 @@ export const useConfigurationStore = create<ConfigurationState>()(
     )
 );
 
+/**
+ * State slice tracking validation errors per configuration tab.
+ * Used to block navigation if a tab (like DAQ, X-ray) has invalid configurations.
+ */
 interface ValidationState {
     errors: Record<string, string[]>;
     setErrors: (tab: string, errors: string[]) => void;
 }
 
+/**
+ * Transient Zustand store for tab validation errors.
+ * This state is NOT persisted across sessions.
+ */
 export const useValidationStore = create<ValidationState>((set) => ({
     errors: {},
     setErrors: (tab, errors) => set((state) => ({

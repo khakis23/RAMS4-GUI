@@ -16,19 +16,11 @@
                 }
               },
               {
-                "ramp": {
-                  "target": 1,
-                  "time": 1,
-                  "max_displacement": 1,
-                  "axis": "A",
-                  "mode": "absolute",
-                  "control": "displacement",
-                  "dispToggle": "time",
-                  "enable_dic": false,
-                  "skipDICpos": false,
-                  "incrementSeg": false,
-                  "wait": true,
-                  "velocity": null
+                "take": {
+                  "profileID": "dicProfile1785421155784",
+                  "pauseTsDaq": false,
+                  "imgMode": null,
+                  "incrementSeg": false
                 }
               },
               {
@@ -46,7 +38,8 @@
                       "target": 1,
                       "time": 3,
                       "axis": "A",
-                      "control": "load"
+                      "control": "load",
+                      "incrementSeg": false
                     }
                   }
                 }
@@ -55,10 +48,19 @@
           }
         },
         {
-          "take": {
-            "profileID": "dicProfile1785421155784",
-            "pauseTsDaq": false,
-            "imgMode": null
+          "ramp": {
+            "target": 1,
+            "time": 1,
+            "max_displacement": 1,
+            "axis": "A",
+            "mode": "absolute",
+            "control": "displacement",
+            "dispToggle": "time",
+            "enable_dic": false,
+            "skipDICpos": false,
+            "incrementSeg": false,
+            "wait": true,
+            "velocity": null
           }
         }
       ]

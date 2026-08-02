@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { SettingsFormContent } from '../../feature/configuration/components/SettingsFormContent.tsx';
 import { useConfigurationStore, useValidationStore } from '../../store/useConfigurationStore.ts';
 import { postSettingsToGateway, postConfigToGateway } from '../../api/configApi.ts';
-import { pruneConfigForSave } from '../../feature/configuration/components/ConfigurationManager.tsx';
+import { pruneConfigForSave } from '../../feature/configuration/utils/configPruner.ts';
 import { WarningModal } from '../../components/ui/WarningModal.tsx';
 
 interface SettingsMenuProps {

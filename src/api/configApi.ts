@@ -54,6 +54,10 @@ const staticMockData: Record<string, (prev: string) => string[]> = {
  * Trigger / Call Context:
  * Invoked during auto-save or manual configuration saves whenever
  * inputs in the Configuration tab are modified.
+ * 
+ * @param filePath The absolute file path on the backend gateway.
+ * @param payload The serialized GlobalConfig JSON object to save.
+ * @returns A promise that resolves when the save completes.
  */
 export const postConfigToGateway = async (
     filePath: string,
@@ -101,6 +105,10 @@ export const postConfigToGateway = async (
  * Trigger / Call Context:
  * Triggered when switching active experiments or loading directory paths
  * in the Configuration Gateway header bar.
+ * 
+ * @param directory The base directory string.
+ * @param experiment The experiment number identifier.
+ * @returns The parsed configuration object, or null if missing.
  */
 export const fetchConfigFromGateway = async (
     directory: string,
@@ -198,6 +206,10 @@ export interface PathsResponse {
  * Trigger / Call Context:
  * Invoked dynamically during cascade navigation in `ConfigurationGateway.tsx`
  * when selecting a folder level (Cycle -> Station -> BTR -> Sample -> Experiment).
+ * 
+ * @param getDir The directory tier level to fetch.
+ * @param prevDirName The resolved path up to the parent directory.
+ * @returns An array of directory strings or an empty array.
  */
 export const fetchDirItems = async (getDir: PathType, prevDirName: string): Promise<string[]> => {
     let relativePath = '';
@@ -241,6 +253,9 @@ export const fetchDirItems = async (getDir: PathType, prevDirName: string): Prom
  * Helper utility to derive the hardware settings directory path
  * (`/nfs/chess/aux/cycles/<cycle>/<station>/RAMS-settings/`)
  * from a given experiment configuration directory path.
+ * 
+ * @param configDirectory The experiment directory path string.
+ * @returns The resolved settings directory path string.
  */
 export const getSettingsDir = (configDirectory: string): string => {
     const match = configDirectory.match(/(?:nfs\/chess\/aux\/)?cycles\/([^\/]+)\/([^\/]+)/);
@@ -275,6 +290,10 @@ export const getSettingsDir = (configDirectory: string): string => {
  * Trigger / Call Context:
  * Invoked when loading global settings or switching experiments to bind
  * system-wide hardware constraints to the workspace.
+ * 
+ * @param directory The experiment directory path.
+ * @param version The expected version integer (null to auto-discover latest).
+ * @returns An object containing the settings data, actual version, and a fallback boolean flag.
  */
 export const fetchSettingsFromGateway = async (directory: string, version: number | null | undefined): Promise<{ data: any; version: number; isFallback: boolean } | null> => {
     const settingsDir = getSettingsDir(directory);
@@ -357,6 +376,11 @@ export const fetchSettingsFromGateway = async (directory: string, version: numbe
  * 
  * Trigger / Call Context:
  * Called when a user explicitly saves changes in the Settings modal / section.
+ * 
+ * @param directory The base directory of the configuration.
+ * @param settings The settings payload to be serialized.
+ * @param targetVersionOverride Optional version integer to enforce.
+ * @returns An object containing the saved version number.
  */
 export const postSettingsToGateway = async (directory: string, settings: any, targetVersionOverride?: number): Promise<{ version: number }> => {
     // Simulate API latency

@@ -23,204 +23,8 @@ import { tooltips } from "@/config/tooltips.ts";
 
 type TabName = 'daq' | 'xray' | 'dic';
 
-const removeNulls = (obj: any): any => {
-    if (Array.isArray(obj)) {
-        return obj.map(removeNulls);
-    } else if (obj !== null && typeof obj === 'object') {
-        const cleanObj: any = {};
-        for (const key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                const val = obj[key];
-                if (val !== null && val !== undefined) {
-                    cleanObj[key] = removeNulls(val);
-                }
-            }
-        }
-        return cleanObj;
-    }
-    return obj;
-};
-
-export const pruneConfigForSave = (config: any) => {
-    const cleanConfig = JSON.parse(JSON.stringify(config));
-
-    // Prune handlerProfiles
-    if (cleanConfig.handlerProfiles) {
-        const totalCount = cleanConfig.handlerProfiles.length;
-        cleanConfig.handlerProfiles = cleanConfig.handlerProfiles.map((hp: any, idx: number) => {
-            const daqType = hp.mode === 'time-series' 
-                ? 'timeseries' 
-                : (hp.mode === 'peak-valley' ? 'peakvalley' : 'pso');
-            const sample = (cleanConfig.sampleName || '').trim();
-            const exp = (cleanConfig.experimentNumber || '').trim();
-            const autoName = `${sample}_${daqType}_${exp}-${totalCount - idx}`;
-            const resolvedName = (hp.filename && hp.filename.trim() !== '') ? hp.filename.trim() : autoName;
-
-            const cleanHp: any = {
-                mode: hp.mode,
-                filename: resolvedName,
-                verboseAxis: hp.verboseAxis,
-                verboseSystem: hp.verboseSystem,
-                verboseTask: hp.verboseTask,
-                verboseIO: hp.verboseIO,
-                verboseAi: hp.verboseAi,
-            };
-            if (hp.signalLoad !== null && hp.signalLoad !== undefined) cleanHp.signalLoad = hp.signalLoad;
-            if (hp.signalStrain !== null && hp.signalStrain !== undefined) cleanHp.signalStrain = hp.signalStrain;
-
-            if (hp.mode === 'time-series') {
-                if (hp.frequency !== null && hp.frequency !== undefined) cleanHp.frequency = hp.frequency;
-                if (hp.cycles) cleanHp.cycles = hp.cycles;
-            } else if (hp.mode === 'peak-valley') {
-                if (hp.signalAxis !== null && hp.signalAxis !== undefined) cleanHp.signalAxis = hp.signalAxis;
-                if (hp.signalItem !== null && hp.signalItem !== undefined) cleanHp.signalItem = hp.signalItem;
-                if (hp.signalProminence !== null && hp.signalProminence !== undefined) cleanHp.signalProminence = hp.signalProminence;
-            } else if (hp.mode === 'pso') {
-                if (hp.psoAxis !== null && hp.psoAxis !== undefined) cleanHp.psoAxis = hp.psoAxis;
-            }
-            return cleanHp;
-        });
-    }
-
-    // Prune xrayProfiles
-    if (cleanConfig.xrayProfiles) {
-        cleanConfig.xrayProfiles = cleanConfig.xrayProfiles.map((xp: any) => {
-            const cleanXp: any = {
-                id: xp.id,
-                name: xp.name,
-                mode: xp.mode,
-                ctime: xp.ctime,
-                beamHeight: xp.beamHeight,
-                beamWidth: xp.beamWidth,
-                atten: xp.atten,
-            };
-
-            if (xp.mode === 'rotation-series') {
-                if (xp.ramsx !== null && xp.ramsx !== undefined) cleanXp.ramsx = xp.ramsx;
-                if (xp.layerRanges && xp.layerRanges.length > 0) {
-                    cleanXp.layerRanges = xp.layerRanges.map((lr: any) => ({
-                        omeStart: lr.omeStart,
-                        omeStop: lr.omeStop,
-                        numPoints: lr.numPoints,
-                        layerStart: lr.layerStart,
-                        layerEnd: lr.layerEnd,
-                        numLayers: lr.numLayers
-                    }));
-                }
-            } else if (xp.mode === 'stills') {
-                if (xp.stillPoints && xp.stillPoints.length > 0) {
-                    cleanXp.stillPoints = xp.stillPoints.map((sp: any) => ({
-                        ramsx: sp.ramsx,
-                        ramsz: sp.ramsz,
-                        ome: sp.ome,
-                        numPoints: sp.numPoints
-                    }));
-                }
-            } else if (xp.mode === 'mapscan') {
-                if (xp.ramsx !== null && xp.ramsx !== undefined) cleanXp.ramsx = xp.ramsx;
-                if (xp.ramsz !== null && xp.ramsz !== undefined) cleanXp.ramsz = xp.ramsz;
-                if (xp.ome !== null && xp.ome !== undefined) cleanXp.ome = xp.ome;
-                if (xp.mapscanAxes && xp.mapscanAxes.length > 0) {
-                    cleanXp.mapscanAxes = xp.mapscanAxes.map((ma: any) => ({
-                        axisName: ma.axisName,
-                        start: ma.start,
-                        stop: ma.stop,
-                        points: ma.points
-                    }));
-                }
-            }
-            return cleanXp;
-        });
-    }
-
-    if (cleanConfig.dicProfiles) {
-        cleanConfig.dicProfiles = cleanConfig.dicProfiles.map((dp: any) => ({
-            id: dp.id,
-            name: dp.name,
-            mode: dp.mode,
-            ctime: dp.ctime,
-            stillPoints: (dp.stillPoints || []).map((sp: any) => ({
-                ramsx: sp.ramsx,
-                ramsz: sp.ramsz,
-                ome: sp.ome,
-                numPoints: sp.numPoints
-            }))
-        }));
-    }
-
-    return removeNulls(cleanConfig);
-};
-
-const normalizeConfig = (config: any) => {
-    if (!config) return null;
-    const cleanConfig = JSON.parse(JSON.stringify(config));
-
-    if (cleanConfig.handlerProfiles) {
-        cleanConfig.handlerProfiles = cleanConfig.handlerProfiles.map((hp: any) => ({
-            mode: hp.mode,
-            filename: hp.filename,
-            signalLoad: hp.signalLoad ?? null,
-            signalStrain: hp.signalStrain ?? null,
-            verboseAxis: hp.verboseAxis || "-1",
-            verboseTask: hp.verboseTask || "-1",
-            verboseSystem: hp.verboseSystem ?? -1,
-            verboseIO: hp.verboseIO ?? -1,
-            verboseAi: Array.isArray(hp.verboseAi) ? hp.verboseAi : (hp.verboseAi ? hp.verboseAi.split(',').map((s: string) => s.trim()) : []),
-            frequency: hp.frequency ?? null,
-            cycles: hp.cycles || [],
-            signalAxis: hp.signalAxis ?? null,
-            signalItem: hp.signalItem ?? null,
-            signalProminence: hp.signalProminence ?? null,
-            psoAxis: hp.psoAxis ?? null,
-        }));
-    }
-
-    if (cleanConfig.xrayProfiles) {
-        cleanConfig.xrayProfiles = cleanConfig.xrayProfiles.map((xp: any) => ({
-            id: xp.id,
-            name: xp.name,
-            mode: xp.mode || 'rotation-series',
-            ramsx: xp.ramsx ?? null,
-            ramsz: xp.ramsz ?? null,
-            ome: xp.ome ?? null,
-            ctime: xp.ctime ?? null,
-            beamHeight: xp.beamHeight ?? null,
-            beamWidth: xp.beamWidth ?? null,
-            atten: xp.atten ?? null,
-            stillPoints: xp.stillPoints || [],
-            mapscanAxes: xp.mapscanAxes || [],
-            layerRanges: xp.layerRanges || []
-        }));
-    }
-
-    if (cleanConfig.dicProfiles) {
-        cleanConfig.dicProfiles = cleanConfig.dicProfiles.map((dp: any) => ({
-            id: dp.id,
-            name: dp.name,
-            mode: dp.mode || 'stills',
-            ctime: dp.ctime ?? null,
-            stillPoints: dp.stillPoints || []
-        }));
-    }
-
-    return cleanConfig;
-};
-
-const deepEqual = (a: any, b: any): boolean => {
-    if (a === b) return true;
-    if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) {
-        return false;
-    }
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) return false;
-    for (const key of keysA) {
-        if (!keysB.includes(key)) return false;
-        if (!deepEqual(a[key], b[key])) return false;
-    }
-    return true;
-};
-
+import { pruneConfigForSave, normalizeConfig, deepEqual } from '../utils/configPruner';
+import { useDirectoryCascade } from '../hooks/useDirectoryCascade';
 export const ConfigurationManager = () => {
     const tabs: { id: TabName; label: string }[] = [
         { id: 'daq', label: 'DAQ' },
@@ -237,7 +41,15 @@ export const ConfigurationManager = () => {
 
     // Baseline configuration state is read from global useConfigurationStore
     const { draft, updateDraft, lastLoadedPath, setLastLoadedPath, savedConfig, setSavedConfig } = useConfigurationStore();
-    const [selectedStation, setSelectedStation] = useState<string>("");
+
+    const {
+        cycleOptions, setCycleOptions,
+        stationOptions, setStationOptions,
+        btrOptions, setBtrOptions,
+        sampleOptions, setSampleOptions,
+        experimentOptions, setExperimentOptions,
+        selectedStation, setSelectedStation
+    } = useDirectoryCascade(isManualPath);
 
     const lastCycle = useRef(draft.cycleNumber);
     const lastStation = useRef(selectedStation);
@@ -269,31 +81,6 @@ export const ConfigurationManager = () => {
         setActiveTab(nextTab as TabName);
     };
 
-    // Option states for the dropdown selectors
-    const [cycleOptions, setCycleOptions] = useState<string[]>([]);
-    const [stationOptions, setStationOptions] = useState<string[]>([]);
-    const [btrOptions, setBtrOptions] = useState<string[]>([]);
-    const [sampleOptions, setSampleOptions] = useState<string[]>([]);
-    const [experimentOptions, setExperimentOptions] = useState<string[]>([]);
-
-    // Helper to parse cycle, station, btr, sample from a path string
-    const parseDirectoryPath = (path: string) => {
-        const parts = path.split('/').filter(Boolean);
-        if (parts.length >= 8 && parts[0] === 'nfs' && parts[1] === 'chess' && parts[2] === 'aux' && parts[3] === 'cycles') {
-            const hasMetadata = parts[7] === 'metadata';
-            if (hasMetadata && parts.length < 9) return null;
-            return {
-                cycle: parts[4],
-                station: parts[5],
-                btr: parts[6],
-                sample: hasMetadata ? parts[8] : parts[7]
-            };
-        }
-        return null;
-    };
-
-    const hasLoadedInitial = useRef(false);
-
     const commitPathRefs = () => {
         lastCycle.current = draft.cycleNumber;
         lastStation.current = selectedStation;
@@ -304,62 +91,6 @@ export const ConfigurationManager = () => {
         lastIsManualPath.current = isManualPath;
     };
 
-    // Load initial root Cycle list, and reconstruct options chain if configDirectory exists
-    useEffect(() => {
-        if (hasLoadedInitial.current) return;
-        hasLoadedInitial.current = true;
-
-        const loadInitialData = async () => {
-            try {
-                const cycles = await fetchDirItems('cycle', "");
-                setCycleOptions(cycles);
-
-                if (draft.configDirectory) {
-                    const parsed = parseDirectoryPath(draft.configDirectory);
-                    if (parsed) {
-                        setSelectedStation(parsed.station);
-                        
-                        // Load options for the pre-saved paths sequentially
-                        const stations = await fetchDirItems('station', parsed.cycle);
-                        setStationOptions(stations);
-                        
-                        const btrs = await fetchDirItems('btr', parsed.cycle + "/" + parsed.station);
-                        setBtrOptions(btrs);
-                        
-                        const samples = await fetchDirItems('sample', parsed.cycle + "/" + parsed.station + "/" + parsed.btr);
-                        setSampleOptions(samples);
-                        
-                        const exps = await fetchDirItems('experiment', parsed.cycle + "/" + parsed.station + "/" + parsed.btr + "/metadata/" + parsed.sample);
-                        setExperimentOptions(exps);
-
-                        updateDraft({
-                            cycleNumber: parsed.cycle,
-                            userId: parsed.btr,
-                            sampleName: parsed.sample
-                        });
-
-                        // Set initial committed refs
-                        lastCycle.current = parsed.cycle;
-                        lastStation.current = parsed.station;
-                        lastBtr.current = parsed.btr;
-                        lastSample.current = parsed.sample;
-                        lastExp.current = draft.experimentNumber;
-                        lastManualPath.current = draft.configDirectory;
-                        lastIsManualPath.current = isManualPath;
-                    }
-                } else {
-                    // Fallback: if dropdown keys exist individually, reconstruct
-                    if (draft.cycleNumber) {
-                        const stations = await fetchDirItems('station', draft.cycleNumber);
-                        setStationOptions(stations);
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to load initial directories from gateway", error);
-            }
-        };
-        loadInitialData();
-    }, [draft.configDirectory, updateDraft, draft.cycleNumber, draft.experimentNumber, isManualPath, selectedStation]);
 
     // Hook to dynamically load config file from gateway when path changes
     useEffect(() => {

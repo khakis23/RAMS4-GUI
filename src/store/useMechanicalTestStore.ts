@@ -1,13 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { fetchMechTestFromGateway, postMechTestToGateway } from '../api/mechanicalTestApi.ts';
+import type { MechTestCard } from '@/types/sequence';
 
-export interface MechTestCard {
-    id: string;
-    type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom';
-    data: any;
-}
-
+/**
+ * Zustand state slice for managing mechanical test sequences.
+ */
 interface MechanicalTestState {
     cards: MechTestCard[];
     savedCards: MechTestCard[];
@@ -512,6 +510,10 @@ export const sanitizeCards = (cardsList: MechTestCard[]): MechTestCard[] => {
         });
 };
 
+/**
+ * Persistent Zustand store holding the mechanical test sequence state.
+ * Manages tree re-ordering, recursion, save/load API integrations, and dirty state checks.
+ */
 export const useMechanicalTestStore = create<MechanicalTestState>()(
     persist(
         (set, get) => ({

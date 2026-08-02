@@ -1,6 +1,6 @@
 import React from 'react';
 import { SideBarMenu } from './menu/SideBarMenu.tsx';
-import { ConfigureView } from './view/ConfigureView.tsx';
+import { ConfigurationManager } from '../feature/configuration/components/ConfigurationManager.tsx';
 import { MechanicalTestBuilder } from '../feature/sequence/MechanicalTestBuilder.tsx';
 import { Views } from "../types/views.ts";
 import { SettingsMenu } from "./menu/SettingsMenu.tsx";
@@ -38,11 +38,11 @@ export const CoreLayout = () => {
             case 'manualControl':
                 return <div>Manual Control Placeholder</div>;
             case 'configure':
-                return <ConfigureView />;
+                return <ConfigurationManager />;
             case 'viewData':
                 return <div>View Data Placeholder</div>;
             default:
-                return <ConfigureView />;
+                return <ConfigurationManager />;
         }
     };
 
