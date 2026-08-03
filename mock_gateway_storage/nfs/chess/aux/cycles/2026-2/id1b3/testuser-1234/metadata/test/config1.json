@@ -15,59 +15,55 @@
   "samplePoints": 1000,
   "handlerProfiles": [
     {
-      "mode": "time-series",
+      "mode": "peak-valley",
       "filename": "test",
       "verboseAxis": "-1",
       "verboseSystem": -1,
       "verboseTask": "-1",
       "verboseIO": -1,
       "verboseAi": [],
-      "frequency": 1000,
-      "cycles": [
-        {
-          "start": 1,
-          "stop": 10,
-          "step": 1
-        },
-        {
-          "start": 20,
-          "stop": "inf",
-          "step": 3
-        }
-      ]
+      "signalAxis": "B",
+      "signalItem": "Acceleration",
+      "signalProminence": 9
+    },
+    {
+      "mode": "peak-valley",
+      "filename": "test_peakvalley_1-2",
+      "verboseAxis": "-1",
+      "verboseSystem": -1,
+      "verboseTask": "-1",
+      "verboseIO": -1,
+      "verboseAi": [],
+      "signalAxis": "A",
+      "signalItem": "PositionFeedback",
+      "signalProminence": 99
+    },
+    {
+      "mode": "peak-valley",
+      "filename": "test_peakvalley_1-1",
+      "verboseAxis": "-1",
+      "verboseSystem": -1,
+      "verboseTask": "-1",
+      "verboseIO": -1,
+      "verboseAi": [],
+      "signalAxis": "A",
+      "signalItem": "PositionFeedback",
+      "signalProminence": 0
     }
   ],
-  "xrayProfiles": [
+  "xrayProfiles": [],
+  "dicProfiles": [
     {
-      "id": "xrayProfile1785421146149",
+      "id": "dicProfile1785762721494",
       "name": "test",
       "mode": "stills",
       "ctime": 1,
-      "beamHeight": 1,
-      "beamWidth": 1,
-      "atten": 1,
       "stillPoints": [
         {
           "ramsx": 1,
           "ramsz": 2,
           "ome": 3,
           "numPoints": 4
-        }
-      ]
-    }
-  ],
-  "dicProfiles": [
-    {
-      "id": "dicProfile1785421155784",
-      "name": "test",
-      "mode": "stills",
-      "ctime": 1,
-      "stillPoints": [
-        {
-          "ramsx": 1,
-          "ramsz": 1,
-          "ome": 1,
-          "numPoints": 1
         }
       ]
     }

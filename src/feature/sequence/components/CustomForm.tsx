@@ -1,4 +1,4 @@
-import { Control, UseFormRegister, useFieldArray } from 'react-hook-form';
+import { Control, Controller, UseFormRegister, useFieldArray } from 'react-hook-form';
 import { Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

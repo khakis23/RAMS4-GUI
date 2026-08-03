@@ -41,8 +41,7 @@ const checkIsDirty = (current: MechTestCard[], saved: MechTestCard[]) => {
 const addCardRecursive = (cards: MechTestCard[], parentId: string, newCard: MechTestCard): boolean => {
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
-        if (card.id === parentId) {
-            if (!card.data) card.data = {};
+        if (card.id === parentId && card.type === 'group') {
             if (!card.data.cards) card.data.cards = [];
             card.data.cards.push(newCard);
             return true;
@@ -128,8 +127,8 @@ const reorderCardsRecursive = (
         return result;
     }
     return cards.map(card => {
-        if (card.id === parentId) {
-            const innerCards = card.data?.cards ? Array.from(card.data.cards as MechTestCard[]) : [];
+        if (card.id === parentId && card.type === 'group') {
+            const innerCards = card.data.cards ? Array.from(card.data.cards) : [];
             const [removed] = innerCards.splice(startIndex, 1);
             innerCards.splice(endIndex, 0, removed);
             return {

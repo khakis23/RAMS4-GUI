@@ -1,6 +1,6 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import type { GlobalConfig, HandlerProfile, XrayProfile, DicProfile, XrayStillPoint, MapscanAxis, RotationLayerRange, DicStillPoint, AxisSetting, SignalSetting, HandlerProfileCycle } from '@/types/config'
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { GlobalConfig } from '@/types/config';
 
 /**
  * Zustand state slice for managing the global configuration lifecycle.
@@ -89,8 +89,8 @@ export const useConfigurationStore = create<ConfigurationState>()(
 );
 
 /**
- * State slice tracking validation errors per configuration tab.
- * Used to block navigation if a tab (like DAQ, X-ray) has invalid configurations.
+ * State slice tracking validation errors per configuration tab (DAQ, X-ray, DIC, Settings).
+ * Used to aggregate form validation errors and alert users via warning modal prior to saving.
  */
 interface ValidationState {
     errors: Record<string, string[]>;

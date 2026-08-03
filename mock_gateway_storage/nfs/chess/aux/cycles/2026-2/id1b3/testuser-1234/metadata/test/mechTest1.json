@@ -1,63 +1,27 @@
 [
   {
+    "ramp": {
+      "mode": "absolute",
+      "target": 1,
+      "time": null,
+      "axis": "A",
+      "control": "load",
+      "dispToggle": null,
+      "max_displacement": 1,
+      "enable_dic": false,
+      "skipDICpos": false,
+      "incrementSeg": false,
+      "wait": true,
+      "velocity": 9
+    }
+  },
+  {
     "group": {
       "loops": 1,
       "steps": [
         {
-          "group": {
-            "loops": 1,
-            "steps": [
-              {
-                "takeWhile": {
-                  "take": {
-                    "profileID": "dic",
-                    "imgMode": null,
-                    "pauseTsDaq": false
-                  },
-                  "step": {
-                    "type": "dwell",
-                    "data": {
-                      "velocity": 2,
-                      "wait": true,
-                      "target": 1,
-                      "time": 3,
-                      "axis": "A",
-                      "control": "load",
-                      "incrementSeg": false
-                    }
-                  }
-                }
-              },
-              {
-                "custom": {
-                  "commandName": "special_command",
-                  "args": {
-                    "test_key": true
-                  }
-                }
-              },
-              {
-                "ramp": {
-                  "target": 1,
-                  "time": 1,
-                  "max_displacement": 1,
-                  "axis": "A",
-                  "mode": "absolute",
-                  "control": "displacement",
-                  "dispToggle": "time",
-                  "enable_dic": false,
-                  "skipDICpos": false,
-                  "incrementSeg": false,
-                  "wait": true,
-                  "velocity": null
-                }
-              }
-            ]
-          }
-        },
-        {
           "take": {
-            "profileID": "dicProfile1785421155784",
+            "profileID": "dicProfile1785762721494",
             "pauseTsDaq": false,
             "imgMode": null,
             "incrementSeg": false
@@ -67,19 +31,55 @@
     }
   },
   {
-    "ramp": {
-      "target": 1,
-      "time": 3,
-      "max_displacement": 1,
-      "axis": "A",
-      "mode": "absolute",
-      "control": "displacement",
-      "dispToggle": "time",
-      "enable_dic": false,
-      "skipDICpos": false,
-      "incrementSeg": false,
-      "wait": true,
-      "velocity": null
+    "group": {
+      "loops": 1,
+      "steps": [
+        {
+          "takeWhile": {
+            "take": {
+              "profileID": "dicProfile1785421155784",
+              "imgMode": null,
+              "pauseTsDaq": false
+            },
+            "step": {
+              "type": "dwell",
+              "data": {
+                "velocity": 2,
+                "wait": true,
+                "target": 1,
+                "time": 9,
+                "axis": "A",
+                "control": "load",
+                "incrementSeg": false
+              }
+            }
+          }
+        },
+        {
+          "custom": {
+            "commandName": "special_command",
+            "args": {
+              "test_key": true
+            }
+          }
+        },
+        {
+          "ramp": {
+            "target": 1,
+            "time": 1,
+            "max_displacement": 1,
+            "axis": "A",
+            "mode": "absolute",
+            "control": "displacement",
+            "dispToggle": "time",
+            "enable_dic": false,
+            "skipDICpos": false,
+            "incrementSeg": false,
+            "wait": true,
+            "velocity": null
+          }
+        }
+      ]
     }
   }
 ]

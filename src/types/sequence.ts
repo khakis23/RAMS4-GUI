@@ -1,8 +1,12 @@
-export interface MechTestCard {
-    id: string;
-    type: 'ramp' | 'take' | 'dwell' | 'cycle' | 'group' | 'takeWhile' | 'custom';
-    data: MechTestStepData;
-}
+export type MechTestCard = 
+    | { id: string; type: 'ramp'; data: MechRampData }
+    | { id: string; type: 'take'; data: MechTakeData }
+    | { id: string; type: 'dwell'; data: MechDwellData }
+    | { id: string; type: 'cycle'; data: MechCycleData }
+    | { id: string; type: 'group'; data: MechGroupData }
+    | { id: string; type: 'takeWhile'; data: MechTakeWhileData }
+    | { id: string; type: 'custom'; data: MechCustomData }
+    | { id: string; type: string; data: Record<string, any> };
 
 export type MechTestStepData = 
     | MechRampData
@@ -12,13 +16,14 @@ export type MechTestStepData =
     | MechGroupData
     | MechTakeWhileData
     | MechCustomData
-    | Record<string, any>; // Fallback during transition
+    | Record<string, any>;
 
 export interface MechRampData {
-    control?: 'displacement' | 'load';
+    control?: 'displacement' | 'load' | 'strain';
     dispToggle?: 'time' | 'velocity';
     axis?: string;
     mode?: 'absolute' | 'relative';
+    target?: number;
     max_displacement?: number;
     enable_dic?: boolean;
     skipDICpos?: boolean;
@@ -29,28 +34,39 @@ export interface MechRampData {
 }
 
 export interface MechTakeData {
+    profileID?: string;
+    imgMode?: string;
     incrementSeg?: boolean;
     pauseTsDaq?: boolean;
 }
 
 export interface MechDwellData {
-    control?: 'displacement' | 'load';
+    control?: 'load' | 'strain';
     axis?: string;
+    target?: number;
+    velocity?: number;
+    time?: number;
     incrementSeg?: boolean;
     wait?: boolean;
 }
 
 export interface MechCycleData {
-    control?: 'displacement' | 'load';
+    control?: 'displacement' | 'load' | 'strain';
     axis?: string;
     mode?: 'absolute' | 'relative';
+    upper?: number;
+    lower?: number;
+    frequency?: number;
     countMode?: 'absolute' | 'relative';
+    cycleEnd?: number;
     ampScale?: number;
     discoverEndpoints?: boolean;
     recallEndpoints?: boolean;
     "enable DIC"?: boolean;
     incrementSeg?: boolean;
     wait?: boolean;
+    manualDispUpper?: number | null;
+    manualDispLower?: number | null;
 }
 
 export interface MechGroupData {
@@ -60,11 +76,11 @@ export interface MechGroupData {
 
 export interface MechTakeWhileData {
     take?: {
-        data?: any;
+        data?: MechTakeData;
     };
     step?: {
-        type?: string;
-        data?: any;
+        type?: 'ramp' | 'dwell' | 'cycle';
+        data?: MechRampData | MechDwellData | MechCycleData | any;
     };
 }
 

@@ -125,7 +125,8 @@ export const MechTestGroupItem = ({
         } else if (card.type === 'take') {
             const profileID = watch(`${prefix}.data.profileID`);
             const xrayProfiles = draft?.xrayProfiles || [];
-            const profile = xrayProfiles.find((p: any) => p.id === profileID);
+            const dicProfiles = draft?.dicProfiles || [];
+            const profile = xrayProfiles.find((p: any) => p.id === profileID) || dicProfiles.find((p: any) => p.id === profileID);
             const content = profile ? (profile.name || 'Unnamed') : 'Unconfigured';
             return (
                 <span className="inline-flex items-center gap-1">
@@ -156,7 +157,8 @@ export const MechTestGroupItem = ({
         } else if (card.type === 'takeWhile') {
             const profileID = watch(`${prefix}.data.take.data.profileID`);
             const xrayProfiles = draft?.xrayProfiles || [];
-            const profile = xrayProfiles.find((p: any) => p.id === profileID);
+            const dicProfiles = draft?.dicProfiles || [];
+            const profile = xrayProfiles.find((p: any) => p.id === profileID) || dicProfiles.find((p: any) => p.id === profileID);
             const takeContent = profile ? (profile.name || 'Unnamed') : 'Unconfigured';
 
             const stepType = watch(`${prefix}.data.step.type`) || 'ramp';
