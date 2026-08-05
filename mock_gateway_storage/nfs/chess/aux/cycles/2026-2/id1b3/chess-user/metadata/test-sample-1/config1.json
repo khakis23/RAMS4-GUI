@@ -1,0 +1,144 @@
+{
+  "cycleNumber": "2026-2",
+  "sampleName": "test-sample-1",
+  "userId": "chess-user",
+  "experimentNumber": "1",
+  "configDirectory": "/nfs/chess/aux/cycles/2026-2/id1b3/chess-user/metadata/test-sample-1/",
+  "requiredAxes": [
+    "A",
+    "B",
+    "RA",
+    "RB",
+    "TENS"
+  ],
+  "daqFrequency": 5,
+  "samplePoints": 1000,
+  "handlerProfiles": [
+    {
+      "mode": "time-series",
+      "filename": "test-sample-1_timeseries_1-1",
+      "verboseAxis": "-1",
+      "verboseSystem": -1,
+      "verboseTask": "-1",
+      "verboseIO": -1,
+      "verboseAi": [],
+      "frequency": 2500,
+      "cycles": [
+        {
+          "start": 1,
+          "stop": 10,
+          "step": 1
+        },
+        {
+          "start": 20,
+          "stop": "inf",
+          "step": 2
+        }
+      ]
+    }
+  ],
+  "xrayProfiles": [
+    {
+      "id": "xrayProfile1785867611325",
+      "name": "d-scan",
+      "mode": "mapscan",
+      "ctime": 1,
+      "beamHeight": 1,
+      "beamWidth": 1,
+      "atten": 1,
+      "ramsx": 1,
+      "ramsz": 1,
+      "ome": 1
+    },
+    {
+      "id": "xrayProfile1785867656674",
+      "name": "rot-series-1",
+      "mode": "rotation-series",
+      "ctime": 0.02,
+      "beamHeight": 2,
+      "beamWidth": 2,
+      "atten": 0.03,
+      "ramsx": 0,
+      "layerRanges": [
+        {
+          "omeStart": 0,
+          "omeStop": 360,
+          "numPoints": 1000,
+          "layerStart": 0,
+          "layerEnd": 2,
+          "numLayers": 10
+        }
+      ]
+    }
+  ],
+  "dicProfiles": [
+    {
+      "id": "dicProfile1785867749720",
+      "name": "DIC",
+      "mode": "stills",
+      "ctime": 0.144,
+      "stillPoints": [
+        {
+          "ramsx": 0,
+          "ramsz": 5,
+          "ome": 0,
+          "numPoints": 250
+        }
+      ]
+    }
+  ],
+  "settingsVersion": 4,
+  "specHost": "id1a3.classe.cornell.edu:spec",
+  "requireSpecEnable": true,
+  "systemName": "Version4Settings",
+  "controllerHost": "10.0.0.1",
+  "axisCount": 5,
+  "taskCount": 5,
+  "axesSettings": [
+    {
+      "name": "A",
+      "max_velocity": 50,
+      "max_acceleration": 100
+    },
+    {
+      "name": "B",
+      "max_velocity": 50,
+      "max_acceleration": 100
+    },
+    {
+      "name": "RA",
+      "max_velocity": 10,
+      "max_acceleration": 20
+    },
+    {
+      "name": "RB",
+      "max_velocity": 10,
+      "max_acceleration": 20
+    },
+    {
+      "name": "TENS",
+      "max_velocity": 5,
+      "max_acceleration": 10
+    }
+  ],
+  "signalSettings": [
+    {
+      "name": "LoadA",
+      "slope": 1,
+      "intercept": 0,
+      "channel": 0
+    },
+    {
+      "name": "LoadB",
+      "slope": 1,
+      "intercept": 0,
+      "channel": 1
+    },
+    {
+      "name": "Torque",
+      "slope": 1,
+      "intercept": 0,
+      "channel": 2
+    }
+  ]
+}

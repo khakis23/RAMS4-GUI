@@ -7,13 +7,13 @@ import type { MechTestCard } from '@/types/sequence';
  * Zustand state slice for managing mechanical test sequences.
  */
 interface MechanicalTestState {
-    cards: MechTestCard[];
-    savedCards: MechTestCard[];
-    isDirty: boolean;
-    isLoading: boolean;
+    cards: MechTestCard[];               // current user mech-test draft
+    savedCards: MechTestCard[];          // last save/loaded mech-test
+    isDirty: boolean;                    // flag indicating: cards != savedCards
+    isLoading: boolean;                  // flag for when data is being fetched from server
     error: string | null;
     lastLoadedPath: string | null;
-    _hasHydrated: boolean;
+    _hasHydrated: boolean;               // flag indicating when Zustand finishes reading data
 
     expandedGroupIds: Record<string, boolean>;
     setGroupExpanded: (id: string, expanded: boolean) => void;

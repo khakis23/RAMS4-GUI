@@ -1,0 +1,60 @@
+[
+  {
+    "custom": {
+      "commandName": "test_command_1",
+      "args": {
+        "test_key": true,
+        "test_key_2": 65
+      }
+    }
+  },
+  {
+    "group": {
+      "loops": 10,
+      "steps": [
+        {
+          "ramp": {
+            "target": 0.02,
+            "time": null,
+            "max_displacement": 1,
+            "axis": "B",
+            "mode": "relative",
+            "control": "displacement",
+            "dispToggle": "velocity",
+            "enable_dic": false,
+            "skipDICpos": false,
+            "incrementSeg": false,
+            "wait": true,
+            "velocity": 0.01
+          }
+        },
+        {
+          "takeWhile": {
+            "take": {
+              "profileID": "dicProfile1785867749720",
+              "imgMode": null,
+              "pauseTsDaq": false
+            },
+            "step": {
+              "type": "ramp",
+              "data": {
+                "target": 5,
+                "time": null,
+                "max_displacement": 1,
+                "axis": "B",
+                "mode": "relative",
+                "control": "load",
+                "dispToggle": null,
+                "enable_dic": false,
+                "skipDICpos": false,
+                "incrementSeg": false,
+                "wait": true,
+                "velocity": 0.1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+]

@@ -6,11 +6,11 @@ import type { GlobalConfig } from '@/types/config';
  * Zustand state slice for managing the global configuration lifecycle.
  */
 export interface ConfigurationState {
-    draft: GlobalConfig;
-    savedConfig: GlobalConfig | null;
+    draft: GlobalConfig;                                    // Current user config draft
+    savedConfig: GlobalConfig | null;                       // Last-saved/loaded config
     lastLoadedPath: string;
     settingsFallbackActive: { expected: number; loaded: number | 'default' | 'missing' } | null;
-    _hasHydrated: boolean;
+    _hasHydrated: boolean;                                  // flag indicating when Zustand finishes reading data
     updateDraft: (fieldsToUpdate: Partial<GlobalConfig>) => void;
     setSavedConfig: (config: GlobalConfig | null) => void;
     setLastLoadedPath: (path: string) => void;
