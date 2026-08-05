@@ -1,0 +1,65 @@
+[
+  {
+    "take": {
+      "profileID": "xrayProfile1785945094389",
+      "pauseTsDaq": false,
+      "incrementSeg": false,
+      "imgMode": "ff"
+    }
+  },
+  {
+    "group": {
+      "loops": 1,
+      "steps": [
+        {
+          "ramp": {
+            "target": 1,
+            "time": null,
+            "max_displacement": 1,
+            "axis": "A",
+            "mode": "absolute",
+            "control": "load",
+            "dispToggle": null,
+            "enable_dic": false,
+            "skipDICpos": false,
+            "incrementSeg": false,
+            "wait": true,
+            "velocity": 1
+          }
+        },
+        {
+          "takeWhile": {
+            "take": {
+              "profileID": "dicProfile1785945122363",
+              "imgMode": null,
+              "pauseTsDaq": false
+            },
+            "step": {
+              "type": "ramp",
+              "data": {
+                "target": 1,
+                "time": 1,
+                "max_displacement": 1,
+                "axis": "A",
+                "mode": "absolute",
+                "control": "displacement",
+                "dispToggle": "time",
+                "enable_dic": false,
+                "skipDICpos": false,
+                "incrementSeg": false,
+                "wait": true,
+                "velocity": null
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "custom": {
+      "commandName": "test",
+      "args": {}
+    }
+  }
+]

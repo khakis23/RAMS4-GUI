@@ -1,7 +1,7 @@
 # Proposal: Graphical User Interface for the RAMS4 Load Frame
 
 ### Preliminary Documentation & Further Planning
-- [Configuration](Configuration.md)
+- [Configuration](ConfigurationProposal.md)
 
 ---
 
